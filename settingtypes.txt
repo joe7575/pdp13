@@ -1,0 +1,3 @@
+# Number of CPU instructions per cycle (100ms)
+pdp13_num_cpu_instructions (Number of CPU instructions per cycle) int 20000
+
