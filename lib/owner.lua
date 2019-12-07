@@ -39,7 +39,8 @@ minetest.after(2, function()
 	for owner, items in pairs(Owners) do
 		pdp13.ArrayRemove(items, function(t,i)
 			local node = pdp13.get_node_lvm(t[i])
-			return node.name ~= "pdp13:cpu1" and node.name ~= "pdp13:cpu1_on"
+			print("delete invalid entries", node.name)
+			return node.name == "pdp13:cpu1" or node.name == "pdp13:cpu1_on"
 		end)
 	end
 end)
@@ -63,34 +64,48 @@ function pdp13.remove_from_owner_list(owner, pos)
 	end
 end
 
-
-
-minetest.register_on_joinplayer(function(player)
-	local owner = player:get_player_name()
+local function restore(owner)
+	print("restore", dump(Owners))
 	if Owners[owner] then
 		for _,pos in ipairs(Owners[owner]) do
 			pdp13.vm_restore(owner, pos)
-			pdp13.vm_resume(owner, pos)
+			pdp13.update_action_list(pos)
+			if pdp13.cpu_running(pos) then
+				pdp13.vm_resume(owner, pos)
+			end
 		end
 	end
+end
+
+minetest.register_on_joinplayer(function(player)
+	print("register_on_joinplayer")
+	local owner = player:get_player_name()
+	minetest.after(3, restore, owner)
 end)
 
 minetest.register_on_leaveplayer(function(player)
+	print("register_on_leaveplayer")
 	local owner = player:get_player_name()
 	if Owners[owner] then
 		for _,pos in ipairs(Owners[owner]) do
 			pdp13.vm_store(owner, pos)
-			pdp13.vm_suspend(owner, pos)
+			if pdp13.cpu_running(pos) then
+				pdp13.vm_suspend(owner, pos)
+			end
 		end
 	end
 end)
 
 minetest.register_on_shutdown(function()
+	print("register_on_shutdown")
 	for _,player in ipairs(minetest.get_connected_players()) do
 		local owner = player:get_player_name()
 		if Owners[owner] then
 			for _,pos in ipairs(Owners[owner]) do
 				pdp13.vm_store(owner, pos)
+				if pdp13.cpu_running(pos) then
+					pdp13.vm_suspend(owner, pos)
+				end
 			end
 		end
 	end

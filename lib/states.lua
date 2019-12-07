@@ -17,25 +17,30 @@ local P2P = minetest.string_to_pos
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local M = minetest.get_meta
 
-local RAM_SIZE = 12  -- 2^12 = 4096 words RAM
+local RAM_SIZE = 6 --12  -- 2^12 = 4096 words RAM
 
 local VMList = {}
 
+function pdp13.cpu_running(pos)
+	local mem = tubelib2.get_mem(pos)
+	return mem.started
+end
 
-function pdp13.vm_create(owner, pos, vm)
-	print("vm_create")
+function pdp13.vm_create(owner, pos)
+	print("vm_create", owner)
 	local hash = minetest.hash_node_position(pos)
 	VMList[owner] = VMList[owner] or {}
-	VMList[owner][hash] = vm
+	VMList[owner][hash] = pdp13lib.create(RAM_SIZE)
 end	
 
 function pdp13.vm_get(owner, pos)
 	print("vm_get")
 	local hash = minetest.hash_node_position(pos)
 	if not VMList[owner] or not VMList[owner][hash] then
-		VMList[owner] = VMList[owner] or {}
-		VMList[owner][hash] = pdp13lib.create(RAM_SIZE)
-		print("->created")
+--		VMList[owner] = VMList[owner] or {}
+--		VMList[owner][hash] = pdp13.vm_restore(owner, pos)
+		print("#################### Das hätte nicht passieren dürfen !!!")
+		return
 	end
 	return VMList[owner][hash]
 end	
@@ -54,6 +59,7 @@ function pdp13.vm_store(owner, pos)
 	local hash = minetest.hash_node_position(pos)
 	if VMList[owner] and VMList[owner][hash] then
 		local s = pdp13lib.get_vm(VMList[owner][hash])
+		print(#s, s)
 		M(pos):set_string("vm", s)
 		M(pos):mark_as_private("vm")
 	end
@@ -61,13 +67,16 @@ end
 
 function pdp13.vm_restore(owner, pos)
 	print("vm_restore")
-	local s = M(pos):get_string("vm")
-	if s ~= "" then
-		local vm = pdp13lib.create(RAM_SIZE)
-		if vm then
+	local vm = pdp13lib.create(RAM_SIZE)
+	if vm then
+		local s = M(pos):get_string("vm")
+		if s ~= "" then
+			print(#s, s)
 			pdp13lib.set_vm(vm, s)
-			pdp13.vm_create(owner, pos, vm)
 		end
+		local hash = minetest.hash_node_position(pos)
+		VMList[owner] = VMList[owner] or {}
+		VMList[owner][hash] = vm
 	end
 end
 

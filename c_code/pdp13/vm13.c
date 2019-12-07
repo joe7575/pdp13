@@ -264,7 +264,7 @@ void vm13_examine(cpu13_t *C) {
 
 uint32_t vm13_get_vm(cpu13_t *C, uint32_t size_buffer, uint8_t *p_buffer) {
     if(VM_VALID(C)) {
-        uint32_t size = VM_SIZE(C->mem_size);
+        uint32_t size = MIN(VM_SIZE(C->mem_size), size_buffer);
         if((p_buffer != NULL) && (size_buffer >= size)) {
             memcpy(p_buffer, C, size);
             return size;
@@ -275,9 +275,16 @@ uint32_t vm13_get_vm(cpu13_t *C, uint32_t size_buffer, uint8_t *p_buffer) {
 
 uint32_t vm13_set_vm(cpu13_t *C, uint32_t size_buffer, uint8_t *p_buffer) {
     if(VM_VALID(C)) {
-        uint32_t size = VM_SIZE(C->mem_size);
-        if((p_buffer != NULL) && (size_buffer >= size)) {
+        uint32_t size = MIN(VM_SIZE(C->mem_size), size_buffer);
+        if(p_buffer != NULL) {
+            uint16_t mem_mask = C->mem_mask;
+            uint32_t mem_size = C->mem_size;
             memcpy(C, p_buffer, size);
+            // restore the header again
+            C->ident = IDENT;
+            C->version = VERSION;
+            C->mem_mask = mem_mask;
+            C->mem_size = mem_size;
             return size;
         }
     }
@@ -454,7 +461,7 @@ int vm13_run(cpu13_t *C, uint32_t num_cycles, uint32_t *ran) {
                 C->l_addr = getoprnd(C, addr_mode1);
                 C->l_data = getoprnd(C, addr_mode2);
                 *ran = num_cycles - num;
-                return VM13_IN;
+                return VM13_OUT;
             }
             case PUSH: {
                 uint16_t opd1 = getoprnd(C, addr_mode1);

@@ -34,7 +34,7 @@ def table_opcode():
             row.append("%4s" % opnd)
     lOut.append(row)
     for idx, opc in enumerate(Opcodes):
-        if opc.split(":")[1] != "-":
+        if opc.split(":")[1] not in ["-", "CNST"]:
             row = ["%-5s" % opc.split(":")[0]]
             for offs, opnd in enumerate(Operands):
                 if opnd in DST:
@@ -51,6 +51,18 @@ def table_opcode():
         print("|" + "|".join(["%-6s" % item for item in row]) + "|")
         if idx == 0:
             print("|" + "|".join(["------" for item in row]) + "|")
+    ####################################################   
+
+    print
+    for idx, item in enumerate(Opcodes):
+        opc = item.split(":")[0]
+        if opc == "out":
+            print("|  2      |      |")
+            print("|---------|------|")
+            for opnd in ["#0", "#1", "#imm"]:
+                offs = Operands.index(opnd)
+                opc = (idx << 10) + (offs << 5)
+                print("|out %4s |%5X |" % (opnd, opc))
     ####################################################   
 
     print

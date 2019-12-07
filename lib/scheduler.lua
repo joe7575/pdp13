@@ -59,7 +59,7 @@ minetest.register_globalstep(function(dtime)
 		item = pop()
 	end
 	t = minetest.get_us_time() - t
-	LoadAverage = (LoadAverage * 100) + t) / 101  -- low pass filter
+	LoadAverage = ((LoadAverage * 100) + t) / 101  -- low pass filter
 end)
 
 function pdp13.add_to_scheduler(pos, vm)
@@ -80,7 +80,8 @@ end
 
 
 local function status_report()
-	minetest.log("action", "[pdp13] CPUs running="..RunningCPUs..", CPU load="..LoadAverage)
+	local load = string.format("%f ppm", LoadAverage * 10)
+	minetest.log("action", "[pdp13] CPUs running="..RunningCPUs..", CPU load="..load)
 	minetest.after(600, status_report)
 end
 
