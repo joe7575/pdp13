@@ -15,6 +15,10 @@
 -- for lazy programmers
 local M = minetest.get_meta
 
+local function hex(val)
+	return string.format("%04X", val)
+end
+
 minetest.register_node("pdp13:telewriter", {
 	description = "PDP-13 Telewriter",
 	tiles = {

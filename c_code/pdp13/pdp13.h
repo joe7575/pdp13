@@ -17,28 +17,16 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#pragma once
+#ifndef pdp13_h
+#define pdp13_h
 
-#include "lua_api/l_base.h"
 
-class ModApiPdp13 : public ModApiBase
-{
-private:
-    static int l_create(lua_State *L);
-    static int l_clear(lua_State *L);
-    static int l_loadaddr(lua_State *L);
-    static int l_deposit(lua_State *L);
-    static int l_examine(lua_State *L);
-    static int l_get_vm(lua_State *L);
-    static int l_set_vm(lua_State *L);
-    static int l_read_mem(lua_State *L);
-    static int l_write_mem(lua_State *L);
-    static int l_get_cpu_reg(lua_State *L);
-    static int l_run(lua_State *L);
-    static int l_get_event(lua_State *L);
-    static int l_event_response(lua_State *L);
-    static int l_destroy(lua_State *L);
+#include <stddef.h>
 
-public:
-    static void Initialize(lua_State *L, int top);
-};
+#include "lua.h"
+
+#define LUA_PDP13LIBNAME "pdp13lib"
+
+LUALIB_API int luaopen_pdp13(lua_State *L);
+
+#endif

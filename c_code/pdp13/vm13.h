@@ -18,6 +18,10 @@ You should have received a copy of the GNU General Public License
 along with PDP-13.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#ifndef vm13_h
+#define vm13_h
+
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
@@ -50,8 +54,8 @@ typedef struct {
     uint16_t yreg;      // Y index register
     uint16_t pcnt;      // program counter
     uint16_t sptr;      // stack pointer
-    uint16_t io_addr;       // for IN/OUT command
-    uint16_t out_data;      // for OUT command
+    uint16_t l_addr;    // latched addr (I/O, examine)
+    uint16_t l_data;    // latched data (I/O, examine)
     uint16_t mem_mask;
     uint32_t mem_size;
     uint16_t *p_in_dest;    // for IN command
@@ -64,12 +68,23 @@ typedef struct {
 void vm13_disassemble(cpu13_t *C, uint8_t opcode, uint8_t addr_mode1, uint8_t addr_mode2);
 
 /*
-** Create the CM with the memory size 2^'size'
+** Determine the size in bytes for the VM
+** Size is the memory size 2^'size'
 */
-cpu13_t *vm13_create(uint8_t size);
+uint32_t vm13_calc_size(uint8_t size);
 
 /*
-** Clear memory (set to zero)
+** Return the size store in the VM
+*/
+uint32_t vm13_real_size(cpu13_t *C);
+
+/*
+** Initialize the allocation VM memory.
+*/
+bool vm13_init(cpu13_t *C, uint32_t mem_size);
+
+/*
+** Clear registers and memory (set to zero)
 */
 void vm13_clear(cpu13_t *C);
 
@@ -79,19 +94,16 @@ void vm13_clear(cpu13_t *C);
 void vm13_loadaddr(cpu13_t *C, uint16_t addr);
 
 /*
-** Deposit 'value' into address loaded and/or examined
+** Deposit 'value' to PC address and post-increment PC
+** addr/data is available via C->io_addr/C->out_data
 */
 void vm13_deposit(cpu13_t *C, uint16_t value);
 
 /*
-** Examine address loaded
+** Read 'value' from PC address and post-increment PC
+** addr/data is available via C->io_addr/C->out_data
 */
-uint16_t vm13_examine(cpu13_t *C);
-
-/*
-** Retrieve the VM size for malloc purposes
-*/
-uint32_t vm13_get_vm_size(cpu13_t *C);
+void vm13_examine(cpu13_t *C);
 
 /*
 ** Read complete VM inclusive RAM for storage purposes.
@@ -122,8 +134,4 @@ uint32_t vm13_write_mem(cpu13_t *C, uint16_t addr, uint16_t num, uint16_t *p_buf
 */
 int vm13_run(cpu13_t *C, uint32_t num_cycles, uint32_t *run);
 
-/*
-** Free the allocated VM memory
-*/
-void vm13_destroy(cpu13_t *C);
-
+#endif

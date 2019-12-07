@@ -14,6 +14,14 @@
 
 local MP = minetest.get_modpath("pdp13")
 
+pdp13 = {}
+
+-- Data maintenance
+dofile(MP.."/lib/lib.lua")
+dofile(MP.."/lib/scheduler.lua")
+dofile(MP.."/lib/owner.lua")
+dofile(MP.."/lib/states.lua")
+
 -- PDP-13
 dofile(MP.."/pdp13/cpu.lua")
 dofile(MP.."/pdp13/power.lua")

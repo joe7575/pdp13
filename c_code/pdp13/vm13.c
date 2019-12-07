@@ -23,7 +23,7 @@ along with PDP-13.  If not, see <https://www.gnu.org/licenses/>.
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
-#include "l_vm13.h"
+#include "vm13.h"
 
 /*
 **      MSB          LSB
@@ -107,6 +107,7 @@ along with PDP-13.  If not, see <https://www.gnu.org/licenses/>.
 #define INC_PC(C)               ((C)->pcnt = VMA(C, (C)->pcnt + 1))
 #define INC_ADDR(C, addr)       ((addr) = VMA(C, (addr) + 1))
 #define VM_SIZE(size)           (sizeof(cpu13_t) + (sizeof(uint16_t) * (size - 1)))
+#define MEM_SIZE(vm_size)       ((vm_size - sizeof(cpu13_t) + sizeof(uint16_t)) / sizeof(uint16_t))
 #define VM_VALID(C)             ((C != 0) && (C->ident == IDENT) && (C->version == VERSION))
 
 
@@ -224,25 +225,25 @@ void vm13_clear(cpu13_t *C) {
     }
 }
 
-cpu13_t *vm13_create(uint8_t size) {
-    size = MIN(size, 16);
-    uint32_t mem_size = (1 << size);
-    cpu13_t *C = (cpu13_t *)malloc(VM_SIZE(mem_size));
+uint32_t vm13_calc_size(uint8_t size) {
+    uint32_t mem_size = (1 << MIN(size, 16));
+    return VM_SIZE(mem_size);
+}
+
+uint32_t vm13_real_size(cpu13_t *C) {
+    return VM_SIZE(C->mem_size);
+}
+
+bool vm13_init(cpu13_t *C, uint32_t vm_size) {
     if(C != NULL) {
         C->ident = IDENT;
         C->version = VERSION;
-        C->mem_size = mem_size;
-        C->mem_mask = mem_size - 1;
+        C->mem_size = MEM_SIZE(vm_size);
+        C->mem_mask = MEM_SIZE(vm_size) - 1;
         vm13_clear(C);
-        return C;
+        return true;
     }
-    return NULL;
-}
-
-void vm13_destroy(cpu13_t *C) {
-    if(VM_VALID(C)) {
-        free(C);
-    }
+    return false;
 }
 
 void vm13_loadaddr(cpu13_t *C, uint16_t addr) {
@@ -251,27 +252,21 @@ void vm13_loadaddr(cpu13_t *C, uint16_t addr) {
     }
 }
 
-uint16_t vm13_examine(cpu13_t *C) {
-    if(VM_VALID(C)) {
-        uint16_t val = MEM_READ(C, C->pcnt);
-        C->pcnt = VMA(C, C->pcnt + num_words(val));
-        return val;
-    }
-    return 0;
-}
-
 void vm13_deposit(cpu13_t *C, uint16_t value) {
     if(VM_VALID(C)) {
         MEM_WRITE(C, C->pcnt, value);
+        C->l_addr = C->pcnt;
+        C->l_data = value;
         INC_PC(C);
     }
 }
 
-uint32_t vm13_get_vm_size(cpu13_t *C) {
+void vm13_examine(cpu13_t *C) {
     if(VM_VALID(C)) {
-        return VM_SIZE(C->mem_size);
+        C->l_addr = C->pcnt;
+        C->l_data = MEM_READ(C, C->pcnt);
+        INC_PC(C);
     }
-    return 0;
 }
 
 uint32_t vm13_get_vm(cpu13_t *C, uint32_t size_buffer, uint8_t *p_buffer) {
@@ -458,13 +453,13 @@ int vm13_run(cpu13_t *C, uint32_t num_cycles, uint32_t *ran) {
             }
             case IN: {
                 C->p_in_dest = getaddr(C, addr_mode1);
-                C->io_addr = getoprnd(C, addr_mode2);
+                C->l_addr = getoprnd(C, addr_mode2);
                 *ran = num_cycles - num;
                 return VM13_IN;
             }
             case OUT: {
-                C->io_addr = getoprnd(C, addr_mode1);
-                C->out_data = getoprnd(C, addr_mode2);
+                C->l_addr = getoprnd(C, addr_mode1);
+                C->l_data = getoprnd(C, addr_mode2);
                 *ran = num_cycles - num;
                 return VM13_IN;
             }
@@ -499,7 +494,7 @@ int vm13_run(cpu13_t *C, uint32_t num_cycles, uint32_t *ran) {
                 return VM13_DELAY;
             }
             case SYS: {
-                C->out_data = getoprnd(C, addr_mode2);
+                C->l_data = getoprnd(C, addr_mode2);
                 *ran = num_cycles - num;
                 return VM13_SYS;
             }

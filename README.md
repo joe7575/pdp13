@@ -1,6 +1,6 @@
 # PDP-13 [pdp13]
 
-A 16-bit minicomputer simulation inspired by DEC, VAX, and other Vintage Computers from the 60s and 70s.
+A 16-bit minicomputer simulation inspired by DEC, IBM, and other Vintage Computers from the 60s and 70s.
 
 
 ### License
