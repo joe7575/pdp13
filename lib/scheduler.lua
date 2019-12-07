@@ -17,13 +17,16 @@ local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local M = minetest.get_meta
 
 
-local CYCLE_TIME = 2 --0.2 -- CPU call frequency
+local CYCLE_TIME = 0.1      -- CPU call frequency
+local NUM_INSTR  = 4547     -- num of instructions per cycle
 
 local call_cpu = pdp13.call_cpu
 local JobQueue = {}
 local first = 0
 local last = -1
 local LocalTime = 0
+local LoadAverage = 0
+local RunningCPUs = 0
 
 local function push(item)
 	last = last + 1
@@ -43,17 +46,20 @@ end
 
 -- Scheduler
 minetest.register_globalstep(function(dtime)
+	local t = minetest.get_us_time()
 	LocalTime = LocalTime + dtime
 	local item = pop()
+	RunningCPUs = 0
 	while item do
-		print("Scheduler", next(JobQueue))
 		if item.pos and item.vm then
-			print("call", P2S(item.pos))
-			call_cpu(item.pos, item.vm)
+			call_cpu(item.pos, item.vm, NUM_INSTR)
 			push(item)
+			RunningCPUs = RunningCPUs + 1
 		end
 		item = pop()
 	end
+	t = minetest.get_us_time() - t
+	LoadAverage = (LoadAverage * 100) + t) / 101  -- low pass filter
 end)
 
 function pdp13.add_to_scheduler(pos, vm)
@@ -71,3 +77,11 @@ function pdp13.remove_from_scheduler(pos, vm)
 		end
 	end
 end
+
+
+local function status_report()
+	minetest.log("action", "[pdp13] CPUs running="..RunningCPUs..", CPU load="..LoadAverage)
+	minetest.after(600, status_report)
+end
+
+minetest.after(600, status_report)

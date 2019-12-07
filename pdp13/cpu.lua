@@ -16,21 +16,26 @@
 -- for lazy programmers
 local M = minetest.get_meta
 
-local VM13_OK       = 0  -- run to completion
+local VM13_OK       = 0  -- run to the end
 local VM13_DELAY    = 1  -- one cycle pause
 local VM13_IN       = 2  -- input command
 local VM13_OUT      = 3  -- output command
-local VM13_HALT     = 4  -- debugging halt
-local VM13_SYS      = 5  -- system call
-local VM13_STOP     = 6  -- speudo stopped state
+local VM13_SYS      = 4  -- system call
+local VM13_HALT     = 5  -- CPU halt
+local VM13_ERROR    = 6  -- invalid call
+local VM13_STOP     = 7  -- speudo stopped state
 
 local UPD_COUNT   = 20
-local NUM_INSTR   = 10013
 
-local InHandler = {}
-local OutHandler = {}
-local SysHandler = {}
+local ActionHandlers = {
+	[VM13_IN] = {}
+	[VM13_OUT] = {}
+	[VM13_SYS] = {}
+	[VM13_HALT] = {}
+	[VM13_ERROR] = {}
+]
 
+pdp13.register_action(pos
 local function leds(address, data)
 	local lLed = {}
 	for i = 16,1,-1 do
@@ -76,10 +81,9 @@ local function formspec(mem, cpu, last)
 	else
 		sLED = leds(0, 0)
 	end
-	mem.upd_cnt = mem.upd_cnt or 0
 	mem.state = mem.state or VM13_STOP
 	local state = vm_state(mem.state)
-	local update = (mem.upd_cnt > 1 and mem.upd_cnt) or "update"
+	local update = (mem.upd_cnt and mem.upd_cnt > 1 and mem.upd_cnt) or "update"
 	return "size[10,7.7]"..
 		"background[-0.1,-0.2;10.2,5.6;pdp13_cpu_form.png]"..
 		sLED..
@@ -141,6 +145,22 @@ local function update_formspec(pos, mem, vm, last)
 	end
 	M(pos):set_string("formspec", formspec(mem))
 end	
+
+function pdp13.call_cpu(pos, vm, cycles)
+	local mem = tubelib2.get_mem(pos)
+	local res = pdp13lib.run(vm, cycles)
+	if res > VM13_DELAY then
+		ret_code_handling(vm, mem, res)
+	end
+	if mem.upd_cnt then
+		update_formspec(pos, mem, vm, false)
+		mem.upd_cnt = mem.upd_cnt - 1
+		if mem.upd_cnt < 0 then
+			mem.upd_cnt = nil
+		end
+	end
+end
+
 
 local function on_receive_fields(pos, formname, fields, player)
 	if minetest.is_protected(pos, player:get_player_name()) then
@@ -219,16 +239,6 @@ local function pdp13_command(pos, cmnd)
 		pdp13.vm_destroy(owner, pos)
 		swap_node(pos, "pdp13:cpu1")
 		update_formspec(pos, mem)
-	end
-end
-
-function pdp13.call_cpu(pos, vm)
-	local mem = tubelib2.get_mem(pos)
-	local res, _ = pdp13lib.run(vm, NUM_INSTR)
-	ret_code_handling(vm, mem, res)
-	if mem.upd_cnt and mem.upd_cnt >= 0 then
-		update_formspec(pos, mem, vm, false)
-		mem.upd_cnt = mem.upd_cnt - 1
 	end
 end
 

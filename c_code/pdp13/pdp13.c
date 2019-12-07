@@ -233,14 +233,14 @@ static int get_event(lua_State *L) {
                 setfield(L, "data", C->l_data);
                 break;
 
-            case VM13_HALT:
-                setstrfield(L, "type", "halt");
-                break;
-
             case VM13_SYS:
                 setstrfield(L, "type", "system");
                 setfield(L, "addr", C->l_data);
                 setfield(L, "data", C->areg);
+                break;
+
+            case VM13_HALT:
+                setstrfield(L, "type", "halt");
                 break;
 
             case VM13_ERROR:

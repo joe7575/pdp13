@@ -1,0 +1,13 @@
+                                 ;  Boot Loader v1.0
+
+                                 ;  Deposite the code at address 0x0F00
+
+                                 ;        .code
+
+0000h: 108Ch                     ; START:  move    x, #0           ; code start address
+
+0001h: 5011h, 0000h              ; LOOP:   in      A, 0            ; read status from addr 0
+0003h: 4412h, FFFEh              ;         bze     A, +LOOP        ; No data => try again
+0005h: 5011h, 0001h              ;         in      A, 1            ; read data from addr 1
+0007h: 1140h                     ;         move    [X]+, A         ; move data to memory via X
+0008h: 1412h, FFF9h              ;         jump    +LOOP           ; repeat
