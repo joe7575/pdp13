@@ -35,13 +35,13 @@ along with PDP-13.  If not, see <https://www.gnu.org/licenses/>.
 ** VM return values
 */
 
-#define VM13_ERROR     (-1) // invalid call
-#define VM13_OK        (0)  // run to completion
+#define VM13_OK        (0)  // run to the end
 #define VM13_DELAY     (1)  // one cycle pause
 #define VM13_IN        (2)  // input command
 #define VM13_OUT       (3)  // output command
-#define VM13_HALT      (4)  // debugging halt
-#define VM13_SYS       (5)  // system call
+#define VM13_SYS       (4)  // system call
+#define VM13_HALT      (5)  // CPU halt
+#define VM13_ERROR     (6)  // invalid call
 
 typedef struct {
     uint32_t ident;     // VM identifier

@@ -111,15 +111,8 @@ along with PDP-13.  If not, see <https://www.gnu.org/licenses/>.
 #define VM_VALID(C)             ((C != 0) && (C->ident == IDENT) && (C->version == VERSION))
 
 
-static uint8_t num_words(uint16_t opcode)
-{
-  if(opcode & 0x0200) return 2;
-  if(opcode & 0x0010) return 2;
-  return 1;
-}
-
 /*
-  Determine the operand destination address (register/memory)
+** Determine the operand destination address (register/memory)
 */
 static uint16_t *getaddr(cpu13_t *C, uint8_t addr_mod) {
   switch(addr_mod) {
@@ -160,7 +153,7 @@ static uint16_t *getaddr(cpu13_t *C, uint8_t addr_mod) {
 }
 
 /*
-  Determine the operand source value (register/memory)
+* Determine the operand source value (register/memory)
 */
 static uint16_t getoprnd(cpu13_t *C, uint8_t addr_mod) {
   switch(addr_mod) {
