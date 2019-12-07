@@ -17,7 +17,7 @@ local P2P = minetest.string_to_pos
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local M = minetest.get_meta
 
-local RAM_SIZE    = 12  -- 2^12 = 4096 words RAM
+local RAM_SIZE = 12  -- 2^12 = 4096 words RAM
 
 local VMList = {}
 

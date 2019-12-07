@@ -35,7 +35,6 @@ local ActionHandlers = {
 	[VM13_ERROR] = {}
 ]
 
-pdp13.register_action(pos
 local function leds(address, data)
 	local lLed = {}
 	for i = 16,1,-1 do
