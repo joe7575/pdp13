@@ -15,7 +15,7 @@
 local M = minetest.get_meta
 
 local function swap_node(pos, offs, data)
-	if offs == 0 and data >= 0 and data < 16 then
+	if offs == 0 and data >= 0 and data <= 16 then
 		local name = "pdp13:7segment"..string.format("%X", data)
 		local node = minetest.get_node(pos)
 		if node.name == name then
@@ -28,8 +28,14 @@ local function swap_node(pos, offs, data)
 end
 
 
-for i = 0,15 do
+for i = 0,16 do
 	local c = string.format("%X", i)
+	local groups
+	if c ~= "10" then  -- off
+		groups = {not_in_creative_inventory=1}
+	else
+		groups = {cracky=2, crumbly=2, choppy=2}
+	end
 	minetest.register_node("pdp13:7segment"..c, {
 		description = "7-Segment",
 		tiles = {
@@ -53,20 +59,25 @@ for i = 0,15 do
 			tubelib2.del_mem(pos)
 		end,
 		paramtype2 = "facedir",
-		groups = {cracky=2, crumbly=2, choppy=2},
+		groups = table.copy(groups),
 		on_rotate = screwdriver.disallow,
 		is_ground_content = false,
 		light_source = 4,
+		drop = "pdp13:7segment10",
 		sounds = default.node_sound_wood_defaults(),
 	})
 
 	techage.register_node({"pdp13:7segment"..c}, {
 		on_recv_message = function(pos, src, topic, payload)
-			if topic == "pdp13_output" then
+			if topic == "pdp13_info" then
+				return {
+					type = "OUT",
+					help = "0..15 for the hex digit, 16 for off",
+				}
+			elseif topic == "pdp13_output" then
 				return {
 					credit = 25,
 					func = swap_node,
-					data = "0..15",
 				}
 			end
 		end,

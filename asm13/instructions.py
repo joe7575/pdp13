@@ -29,7 +29,8 @@ Opcodes = [
     "and:DST:SRC", "or:DST:SRC", "xor:DST:SRC", "not:DST:SRC",
     "bnze:REG:ADR", "bze:REG:ADR", "bpos:REG:ADR", "bneg:REG:ADR",
     "in:DST:CNST", "out:CNST:SRC", "push:SRC:-", "pop:DST:-", 
-    "swap:DST:-", "dbnz:REG:ADR", "dly:-:-", "sys:-:CNST"
+    "swap:DST:-", "dbnz:REG:ADR", "shl:DST:SRC", "shr:DST:SRC",
+    "dly:-:-", "sys:-:CNST"
 ]
 
 JumpInst = ["call", "jump", "bnze", "bze", "bpos", "bneg", "dbnz"]

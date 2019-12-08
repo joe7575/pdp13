@@ -94,8 +94,11 @@ along with PDP-13.  If not, see <https://www.gnu.org/licenses/>.
 
 #define  SWAP   (0x18)
 #define  DBNZ   (0x19)
-#define  DLY    (0x1A)
-#define  SYS    (0x1B)
+#define  SHL    (0x1A)
+#define  SHR    (0x1B)
+
+#define  DLY    (0x1C)
+#define  SYS    (0x1D)
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
@@ -487,6 +490,18 @@ int vm13_run(cpu13_t *C, uint32_t num_cycles, uint32_t *ran) {
                 if(*p_opd1 != 0) {
                     C->pcnt = opd2;
                 }
+                break;
+            }
+            case SHL: {
+                uint16_t *p_opd1 = getaddr(C, addr_mode1);
+                uint16_t opd2 = getoprnd(C, addr_mode2);
+                *p_opd1 = *p_opd1 << opd2;
+                break;
+            }
+            case SHR: {
+                uint16_t *p_opd1 = getaddr(C, addr_mode1);
+                uint16_t opd2 = getoprnd(C, addr_mode2);
+                *p_opd1 = *p_opd1 >> opd2;
                 break;
             }
             case DLY: {

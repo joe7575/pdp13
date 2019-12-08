@@ -80,13 +80,13 @@ local function leds(address, data)
 	return table.concat(lLed, "")
 end
 
-local function vm_state(state)
-	if state == VM13_STOP then return ""end
-	if state == VM13_OK   then return "image[2.2,0.4;0.4,0.4;pdp13_led_form.png]" end
-	if state == VM13_IN   then return "image[4.2,0.4;0.4,0.4;pdp13_led_form.png]" end
-	if state == VM13_OUT  then return "image[4.2,0.4;0.4,0.4;pdp13_led_form.png]" end
-	if state == VM13_HALT then return "image[6.2,0.4;0.4,0.4;pdp13_led_form.png]" end
-	if state == VM13_SYS  then return "image[8.2,0.4;0.4,0.4;pdp13_led_form.png]" end
+local function vm_state(mem)
+	if mem.started            then return "image[2.2,0.4;0.4,0.4;pdp13_led_form.png]" end
+	if mem.state == VM13_STOP then return "" end
+	if mem.state == VM13_IN   then return "image[4.2,0.4;0.4,0.4;pdp13_led_form.png]" end
+	if mem.state == VM13_OUT  then return "image[4.2,0.4;0.4,0.4;pdp13_led_form.png]" end
+	if mem.state == VM13_HALT then return "image[6.2,0.4;0.4,0.4;pdp13_led_form.png]" end
+	if mem.state == VM13_SYS  then return "image[8.2,0.4;0.4,0.4;pdp13_led_form.png]" end
 	return ""
 end
 
@@ -113,8 +113,11 @@ local function formspec1(mem, cpu, last)
 		sLED = leds(0, 0)
 	end
 	mem.state = mem.state or VM13_STOP
-	local state = vm_state(mem.state)
+	local state = vm_state(mem)
 	local update = (mem.upd_cnt and mem.upd_cnt > 1 and mem.upd_cnt) or "update"
+	local cmnd1 = mem.cmnd1 or ""
+	local cmnd2 = mem.cmnd2 or ""
+	local cmnd3 = mem.cmnd3 or ""
 	return "size[10,7.7]"..
 		"tabheader[0,0;tab;CPU,I/O;1;;true]"..
 		"background[-0.1,-0.2;10.2,5.6;pdp13_cpu_form.png]"..
@@ -138,6 +141,9 @@ local function formspec1(mem, cpu, last)
 		"button[1.9,7.2;1.8,1;update;"..update.."]"..
 		
 		"background[3.8,5.6;6.1,1.2;pdp13_form_mask.png]"..
+		"label[3.8,5.5;"..cmnd1.."]"..
+		"label[3.8,5.9;"..cmnd2.."]"..
+		"label[3.8,6.3;"..cmnd3.."]"..
 		
 		"label[3.8,6.8;l <addr> (load)     d <val> (deposite)]"..
 		
@@ -145,6 +151,24 @@ local function formspec1(mem, cpu, last)
 		"field_close_on_enter[command;false]"
 end
 
+local function info_cmnd(num)
+	if num ~= "" then
+		local pos = techage.get_node_info(num).pos
+		if pos then
+			local info = techage.send_single(0, num, "pdp13_info")
+			if info then
+				local node = techage.get_node_lvm(pos)
+				local ndef = minetest.registered_nodes[node.name]
+				if ndef and ndef.description then
+					local help = ndef.description..":\n"..(info.help or "?")
+					return info.type or "", help
+				end
+			end
+		end
+	end
+	return "", ""
+end
+	
 local function formspec2(pos)
 	local tbl = get_tbl(pos, "addr_tbl")
 	print(dump(tbl))
@@ -156,10 +180,8 @@ local function formspec2(pos)
 		local addr2 = hex8(((i-1) * 16) + 8).." - "..hex8(((i-1) * 16 + 7) + 8)
 		local num1 = tbl[(i-1)*2 + 1] or ""
 		local num2 = tbl[(i-1)*2 + 2] or ""
-		local info1 = "IN(2)"
-		local info2 = "OUT(1)"
-		local tooltip1 = "wois ned"
-		local tooltip2 = "wois ned"
+		local info1, tooltip1 = info_cmnd(num1)
+		local info2, tooltip2 = info_cmnd(num2)
 		
 		-- label
 		t[#t+1] = "label[0.0,"..ypos..";"..((i-1)*2 + 1).."]"
@@ -194,7 +216,6 @@ local function action_handling(pos, vm, resp)
 	local num = math.floor(evt.addr / 8) + 1
 	local offs = (evt.addr % 8)
 	local item = ActionHandlers[hash] and ActionHandlers[hash][num] and ActionHandlers[hash][num][resp]
-	print("action_handling", num, offs, resp, hash, dump(item), dump(ActionHandlers))
 	if item then
 		pdp13lib.event_response(vm, resp, item.func(item.pos, offs, evt.data) or 0)
 		return item.credit
@@ -295,6 +316,11 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 		end
 	elseif fields.key_enter_field == "command" and fields.key_enter == "true" then
 		local cmnd, val = string.match (fields.command, "^([rld]) +([0-9a-fA-F]+)$")
+		if cmnd and val then
+			mem.cmnd1 = mem.cmnd2
+			mem.cmnd2 = mem.cmnd3
+			mem.cmnd3 = fields.command
+		end
 		if cmnd == "l" then 
 			mem.state = VM13_STOP
 			pdp13lib.loadaddr(vm, tonumber(val, 16))
