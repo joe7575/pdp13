@@ -56,38 +56,38 @@ The table below uses two groups of addressing modes:
 
 Table of instructions with addressing modes:
 
-| Instr. | Oprnd1 | Oprnd2   | Comment                                                      |
-| ------ | ------ | -------- | ------------------------------------------------------------ |
-| nop    | -      | -        | No operation, the CPU does nothing, only consuming time (one cycle) |
-| halt   | -      | -        | Halts/stops the program execution                            |
-| call   | -      | ABS, REL | Call a subroutine. The address for the next instruction is stored on the stack and the stack pointer is decremented |
-| ret    | -      | -        | Return from subroutine. The used address is taken from the stack, the stack pointer is incremented |
-| move   | DST    | SRC      | Move a value from memory or any register to memory or any register. `move A,B` means move the content from B to A |
-| jump   | -      | ABS, REL | Jump to the given address by setting the PC to the new value. The stack is untouched |
-| inc    | DST    | -        | Increment the content of a register or memory address (DST = DST + 1) |
-| dec    | DST    | -        | Decrement the content of a register or memory address (DST = DST - 1) |
-| add    | DST    | SRC      | Add contents/value of SRC to DST. The result is stored in DST |
-| sub    | DST    | SRC      | Subtract contents/value of SRC from DST. The result is stored in DST |
-| mul    | DST    | SRC      | Multiply contents/value of SRC with DST. The result is stored in DST |
-| div    | DST    | SRC      | Divide contents/value of DST by SRC. The result is stored in DST |
-| and    | DST    | SRC      | AND operation with SRC and DST. The result is stored in DST  |
-| or     | DST    | SRC      | OR operation with SRC and DST. The result is stored in DST   |
-| xor    | DST    | SRC      | XOR operation with SRC and DST. The result is stored in DST  |
-| not    | DST    | SRC      | NOT operation with SRC and DST. The result is stored in DST  |
-| bnze   | REG    | ABS, REL | Branch to the operand2 address  if REG is not zero.          |
-| bze    | REG    | ABS, REL | Branch to the operand2 address  if REG is zero.              |
-| bpos   | REG    | ABS, REL | Branch to the operand2 address  if REG is positive (bit 15 is 0). |
-| bneg   | REG    | ABS, REL | Branch to the operand2 address  if REG is negative (bit 15 is 1). |
-| in     | DST    | CNST     | (I/O) operation to read an input value from an external device |
-| out    | CNST   | SRC      | (I/O) operation to write an output value to an external device |
-| push   | SCR    | -        | Push a value onto the stack with a pre-decrement of the SP   |
-| pop    | DST    | -        | Pop a value from the stack with a post-increment of the SP   |
-| swap   | DST    | -        | Exchange high- and low-byte of DST                           |
-| dbnz   | REG    | ABS, REL | Decrement and branch to the operand2 address if REG has not become zero |
-| shl    | DST    | SRC      | Shift the bits of DST to the left, by the number of bits specified in SRC |
-| shr    | DST    | SRC      | Shift the bits of DST to the right, by the number of bits specified in SRC |
-| dly    | -      | -        | Perform a delay of one world cycle to slow down program execution |
-| sys    | -      | CNST     | system call with number specified in CNST                    |
+| Instr. | Oprnd1 | Oprnd2  | Comment                                                      |
+| ------ | ------ | ------- | ------------------------------------------------------------ |
+| nop    | -      | -       | No operation, the CPU does nothing, only consuming time (one cycle) |
+| halt   | -      | -       | Halts/stops the program execution                            |
+| call   | -      | ABS,REL | Call a subroutine. The address for the next instruction is stored on the stack and the stack pointer is decremented |
+| ret    | -      | -       | Return from subroutine. The used address is taken from the stack, the stack pointer is incremented |
+| move   | DST    | SRC     | Move a value from memory or any register to memory or any register. `move A,B` means move the content from B to A |
+| jump   | -      | ABS,REL | Jump to the given address by setting the PC to the new value. The stack is untouched |
+| inc    | DST    | -       | Increment the content of a register or memory address (DST = DST + 1) |
+| dec    | DST    | -       | Decrement the content of a register or memory address (DST = DST - 1) |
+| add    | DST    | SRC     | Add contents/value of SRC to DST. The result is stored in DST |
+| sub    | DST    | SRC     | Subtract contents/value of SRC from DST. The result is stored in DST |
+| mul    | DST    | SRC     | Multiply contents/value of SRC with DST. The result is stored in DST |
+| div    | DST    | SRC     | Divide contents/value of DST by SRC. The result is stored in DST |
+| and    | DST    | SRC     | AND operation with SRC and DST. The result is stored in DST  |
+| or     | DST    | SRC     | OR operation with SRC and DST. The result is stored in DST   |
+| xor    | DST    | SRC     | XOR operation with SRC and DST. The result is stored in DST  |
+| not    | DST    | SRC     | NOT operation with SRC and DST. The result is stored in DST  |
+| bnze   | REG    | ABS,REL | Branch to the operand2 address  if REG is not zero.          |
+| bze    | REG    | ABS,REL | Branch to the operand2 address  if REG is zero.              |
+| bpos   | REG    | ABS,REL | Branch to the operand2 address  if REG is positive (bit 15 is 0). |
+| bneg   | REG    | ABS,REL | Branch to the operand2 address  if REG is negative (bit 15 is 1). |
+| in     | DST    | CNST    | (I/O) operation to read an input value from an external device |
+| out    | CNST   | SRC     | (I/O) operation to write an output value to an external device |
+| push   | SCR    | -       | Push a value onto the stack with a pre-decrement of the SP   |
+| pop    | DST    | -       | Pop a value from the stack with a post-increment of the SP   |
+| swap   | DST    | -       | Exchange high- and low-byte of DST                           |
+| dbnz   | REG    | ABS,REL | Decrement and branch to the operand2 address if REG has not become zero |
+| shl    | DST    | SRC     | Shift the bits of DST to the left, by the number of bits specified in SRC |
+| shr    | DST    | SRC     | Shift the bits of DST to the right, by the number of bits specified in SRC |
+| dly    | -      | -       | Perform a delay of one world cycle to slow down program execution |
+| sys    | -      | CNST    | system call with number specified in CNST                    |
 
 
 

@@ -112,17 +112,17 @@ class Assembler(object):
         except:
             m = reCONST.match(s)
             if m:
-                self.codes[0] = (self.codes[0] << 5) + Operands.index("#imm") 
+                self.codes[0] = (self.codes[0] << 5) + Operands.INDex("IMM") 
                 self.codes.append(self.value(m.group(1)))
                 return
             m = reADDR.match(s)
             if m: 
-                self.codes[0] = (self.codes[0] << 5) + Operands.index("ind") 
+                self.codes[0] = (self.codes[0] << 5) + Operands.INDex("IND") 
                 self.codes.append(self.value(m.group(1)))
                 return
             m = reREL.match(s)
             if m: 
-                self.codes[0] = (self.codes[0] << 5) + Operands.index("+/-rel") 
+                self.codes[0] = (self.codes[0] << 5) + Operands.INDex("REL") 
                 if m.groups(1) == "-": 
                     self.codes.append(-self.value(m.group(2)))
                 else:
@@ -130,23 +130,23 @@ class Assembler(object):
                 return
             m = reSTACK.match(s)
             if m: 
-                self.codes[0] = (self.codes[0] << 5) + Operands.index("[sp+n]") 
+                self.codes[0] = (self.codes[0] << 5) + Operands.INDex("[sp+n]") 
                 self.codes.append(self.value(m.group(1)))
                 return
             if s[0] == "#":
                 if self.dSymbols.has_key(s[1:]):
-                    self.codes[0] = (self.codes[0] << 5) + Operands.index("#imm")
+                    self.codes[0] = (self.codes[0] << 5) + Operands.INDex("IMM")
                     self.codes.append(self.dSymbols[s[1:]])
                     return
             elif s[0] in ["+", "-"]:
                 if self.dSymbols.has_key(s[1:]):
-                    self.codes[0] = (self.codes[0] << 5) + Operands.index("+/-rel") 
+                    self.codes[0] = (self.codes[0] << 5) + Operands.INDex("REL") 
                     offset = (0x10000 + self.dSymbols[s[1:]] - self.addr) & 0xFFFF
                     self.codes.append(offset)
                     return
             else:
                 if self.dSymbols.has_key(s):
-                    self.codes[0] = (self.codes[0] << 5) + Operands.index("ind")  
+                    self.codes[0] = (self.codes[0] << 5) + Operands.INDex("IND")  
                     self.codes.append(self.dSymbols[s])
                     return
             if not self.ispass2 and re.match(r"[#\+\-a-z0-9_]+", s):

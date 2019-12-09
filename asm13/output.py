@@ -26,68 +26,103 @@ import pprint
 import __init__ as pdp13
 from instructions import *
 
-def table_opcode():
+def table1():
     lOut = []
-    row = [" 1,2 "]
-    for offs, opnd in enumerate(Operands):
-        if opnd in DST:
-            row.append("%4s" % opnd)
-    lOut.append(row)
-    for idx, opc in enumerate(Opcodes):
-        if opc.split(":")[1] not in ["-", "CNST"]:
-            row = ["%-5s" % opc.split(":")[0]]
-            for offs, opnd in enumerate(Operands):
-                if opnd in DST:
-                    key = opc.split(":")[1]
-                    if opnd in globals()[key]:
-                        row.append("%5X" % ((idx << 10) + (offs << 5)))
-                    else:
-                        row.append("  --")
-        else:
-            continue
-        lOut.append(row)
-
-    for idx, row in enumerate(lOut):
-        print("|" + "|".join(["%-6s" % item for item in row]) + "|")
-        if idx == 0:
-            print("|" + "|".join(["------" for item in row]) + "|")
-    ####################################################   
-
-    print
     for idx, item in enumerate(Opcodes):
-        opc = item.split(":")[0]
-        if opc == "out":
-            print("|  2      |      |")
-            print("|---------|------|")
-            for opnd in ["#0", "#1", "#imm"]:
-                offs = Operands.index(opnd)
-                opc = (idx << 10) + (offs << 5)
-                print("|out %4s |%5X |" % (opnd, opc))
-    ####################################################   
+        opc, addr_mode1, addr_mode2 = item.split(":")
+        if addr_mode1 == "-" and addr_mode2 == "-":
+            lOut.append([" %-4s   " % opc, " --     ", " --     ", " %04x                 " % (idx << 10)])
+        if addr_mode1 != "-" and addr_mode2 == "-":
+            lOut.append([" %-4s   " % opc, " %-6s " % addr_mode1, " --     ", " %04x + Opnd1         " % (idx << 10)])
+        if addr_mode1 == "-" and addr_mode2 != "-":
+            lOut.append([" %-4s   " % opc, " --     ", " %-6s " % addr_mode2, " %04x + Opnd2         " % (idx << 10)])
+        if addr_mode1 != "-" and addr_mode2 != "-":
+            lOut.append([" %-4s   " % opc, " %-6s " % addr_mode1, " %-6s " % addr_mode2, " %04x + Opnd1 + Opnd2 " % (idx << 10)])
 
-    print
-    lOut = [[" 0,1 ", "  --"]]
-    for idx, opc in enumerate(Opcodes):
-        if opc.split(":")[1] == "-":
-            row = ["%-5s" % opc.split(":")[0]]
-            row.append("%5X" % (idx << 10))
-            lOut.append(row)
- 
-    for idx, row in enumerate(lOut):
-        print("|" + "|".join(["%-6s" % item for item in row]) + "|")
-        if idx == 0:
-            print("|" + "|".join(["------" for item in row]) + "|")
-    ####################################################   
+    print("# PDP-13 (VM13) V1.0")
 
-    print
-    l = ["%4s" % item for item in Operands[:12]]
-    print("|" + "|".join(["%-6s" % item for item in l]) + "|")
-    print("|" + "|".join(["------" for item in Operands[:12]]) + "|")
-    print("|" + "|".join(["%4X  " % idx for idx in range(0, len(Operands[:12]))]) + "|")
-    print
-    l = ["%4s" % item for item in Operands[12:]]
-    print("|" + "|".join(["%-6s" % item for item in l]) + "|")
-    print("|" + "|".join(["------" for item in Operands[12:]]) + "|")
-    print("|" + "|".join(["%4X  " % (idx + 12) for idx in range(0, len(Operands[12:]))]) + "|")
+    print("### Instruction Set")
+    print("")
+    print("| Instr. | Opnd 1 | Opnd 2 | Opcode               |")
+    print("|--------|--------|--------|----------------------|")
+    for item in lOut:
+        print("|" + "|".join(item) + "|")
+    print("")
+    
 
-table_opcode()
+def table2():
+    print("")
+    print("### Addressing Modes")
+    print("")
+    print("- REG = %s" % (", ".join(REG)))
+    print("- MEM = %s" % (", ".join(MEM)))
+    print("- ADR = %s" % (", ".join(ADR)))
+    print("- CNST = %s" % (", ".join(CNST)))
+    print("- DST = %s" % (", ".join(DST)))
+    print("- SRC = %s" % (", ".join(SRC)))
+    print("")
+    
+
+def table3():
+    print("")
+    print("### Opcodes")
+    print("")
+    
+    def output(tbl1, tbl3):
+        tbl2 = ["------"] * len(tbl1) 
+        print("|" + "|".join(tbl1) + "|")
+        print("|" + "|".join(tbl2) + "|")
+        print("|" + "|".join(tbl3) + "|")
+        print
+
+    lOut1 = []
+    lOut2 = []
+    for idx, item in enumerate(Opcodes):
+        opc, addr_mode1, addr_mode2 = item.split(":")
+        lOut1.append(" %-4s " % opc)
+        lOut2.append(" %04X " % (idx << 10))
+
+    print("#### Instructions")
+    print("")
+    output(lOut1[0:8], lOut2[0:8])
+    output(lOut1[8:16], lOut2[8:16])
+    output(lOut1[16:24], lOut2[16:24])
+    output(lOut1[24:32], lOut2[24:32])
+         
+    lOut1 = []
+    lOut2 = []
+    for idx, item in enumerate(Operands):
+        if item == "[SP+n]":
+            lOut1.append("%-4s" % item)
+        else:
+            lOut1.append(" %-4s " % item)
+        lOut2.append(" %04X " % (idx << 5))
+
+    print("#### Operand 1 (Opnd1)")
+    print("")
+    output(lOut1[0:8], lOut2[0:8])
+    output(lOut1[8:16], lOut2[8:16])
+    output(lOut1[16:24], lOut2[16:24])
+          
+    lOut1 = []
+    lOut2 = []
+    for idx, item in enumerate(Operands):
+        if item == "[SP+n]":
+            lOut1.append("%-4s" % item)
+        else:
+            lOut1.append(" %-4s " % item)
+        lOut2.append(" %04X " % (idx))
+
+    print("#### Operand 2 (Opnd2)")
+    print("")
+    output(lOut1[0:8], lOut2[0:8])
+    output(lOut1[8:16], lOut2[8:16])
+    output(lOut1[16:24], lOut2[16:24])
+    print("")
+
+
+table1()
+table2()
+table3()
+
+

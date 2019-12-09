@@ -39,19 +39,19 @@ JumpInst = ["call", "jump", "bnze", "bze", "bpos", "bneg", "dbnz"]
 # Operands
 #
 Operands = [
-    "a", "b", "c", "d", "x", "y", "pc", "sp",
-    "[x]", "[y]", "[x]+", "[y]+", "#0", "#1", "-", "-", 
-    "#imm", "ind", "+/-rel", "[sp+n]",
+    "A", "B", "C", "D", "X", "Y", "PC", "SP",
+    "[X]", "[Y]", "[X]+", "[Y]+", "#0", "#1", "-", "-", 
+    "IMM", "IND", "REL", "[SP+n]",
 ]
 RegOperands = Operands[0:-4]
 
 #
 # Operand Groups
 #
-REG = ["a", "b", "c", "d", "x", "y", "pc", "sp"]
-MEM = ["[x]", "[y]", "[x]+", "[y]+", "ind", "[sp+n]"]
-ADR = ["#imm", "+/-rel", "[x]", "[y]"]
-CNST = ["#0", "#1", "#imm"]
+REG = ["A", "B", "C", "D", "X", "Y", "PC", "SP"]
+MEM = ["[X]", "[Y]", "[X]+", "[Y]+", "IND", "[SP+n]"]
+ADR = ["IMM", "REL"]
+CNST = ["#0", "#1", "IMM"]
 DST = REG + MEM
 SRC = DST + CNST 
 
