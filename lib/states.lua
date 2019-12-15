@@ -30,7 +30,7 @@ function pdp13.vm_create(owner, pos)
 	print("vm_create", owner)
 	local hash = minetest.hash_node_position(pos)
 	VMList[owner] = VMList[owner] or {}
-	VMList[owner][hash] = pdp13lib.create(RAM_SIZE)
+	VMList[owner][hash] = vm13.create(pos, RAM_SIZE)
 end	
 
 function pdp13.vm_get(owner, pos)
@@ -49,31 +49,23 @@ function pdp13.vm_destroy(owner, pos)
 	print("vm_destroy")
 	local hash = minetest.hash_node_position(pos)
 	if VMList[owner] and VMList[owner][hash] then
+		vm13.destroy(VMList[owner][hash], pos)
 		VMList[owner][hash] = nil
 	end
-	M(pos):set_string("vm", "")
 end	
 	
 function pdp13.vm_store(owner, pos)
 	print("vm_store")
 	local hash = minetest.hash_node_position(pos)
 	if VMList[owner] and VMList[owner][hash] then
-		local s = pdp13lib.get_vm(VMList[owner][hash])
-		print(#s, s)
-		M(pos):set_string("vm", s)
-		M(pos):mark_as_private("vm")
+		vm13.vm_store(VMList[owner][hash], pos)
 	end
 end
 
 function pdp13.vm_restore(owner, pos)
 	print("vm_restore")
-	local vm = pdp13lib.create(RAM_SIZE)
+	local vm = vm13.vm_restore(pos)
 	if vm then
-		local s = M(pos):get_string("vm")
-		if s ~= "" then
-			print(#s, s)
-			pdp13lib.set_vm(vm, s)
-		end
 		local hash = minetest.hash_node_position(pos)
 		VMList[owner] = VMList[owner] or {}
 		VMList[owner][hash] = vm

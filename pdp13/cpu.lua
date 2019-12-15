@@ -18,17 +18,7 @@ local M = minetest.get_meta
 local get_tbl = function(pos,key)      return minetest.deserialize(M(pos):get_string(key)) or {} end
 local set_tbl = function(pos,key,tbl)  M(pos):set_string(key, minetest.serialize(tbl)) end
 
-local VM13_OK       = 0  -- run to the end
-local VM13_DELAY    = 1  -- one cycle pause
-local VM13_IN       = 2  -- input command
-local VM13_OUT      = 3  -- output command
-local VM13_SYS      = 4  -- system call
-local VM13_HALT     = 5  -- CPU halt
-local VM13_ERROR    = 6  -- invalid call
-local VM13_STOP     = 7  -- speudo stopped state
-
 local UPD_COUNT  = 20
-local CREDIT     = 100
 
 local ActionHandlers = {}
 
@@ -70,13 +60,13 @@ end
 local function leds(address, data)
 	local lLed = {}
 	for i = 16,1,-1 do
-		if pdp13lib.testbit(address, 16-i) then
+		if vm13.testbit(address, 16-i) then
 			local xpos = -0.18 + i * 0.399
 			lLed[#lLed+1] = "image["..xpos..",1.6;0.4,0.4;pdp13_led_form.png]"
 		end
 	end
 	for i = 16,1,-1 do
-		if pdp13lib.testbit(data, 16-i) then
+		if vm13.testbit(data, 16-i) then
 			local xpos = -0.18 + i * 0.399
 			lLed[#lLed+1] = "image["..xpos..",3.0;0.4,0.4;pdp13_led_form.png]"
 		end
@@ -223,23 +213,9 @@ local function formspec2(pos)
 		"field_close_on_enter[address;false]"
 end
 
-local function action_handling(pos, vm, resp)
-	local own_num = M(pos):get_string("node_number")
-	local evt = pdp13lib.get_event(vm, resp)
-	local io_num = math.floor(evt.addr / 8) + 1
-	local offs = (evt.addr % 8)
-	local hash = io_hash(own_num, io_num, resp)
-	local item = ActionHandlers[hash]
-	if item then
-		pdp13lib.event_response(vm, resp, item.func(item.pos, offs, evt.data) or 0xFFFF)
-		return item.credit
-	end
-	return CREDIT
-end	
-
 local function update_formspec(pos, mem, vm, last)
 	if vm then
-		local cpu = pdp13lib.get_cpu_reg(vm)
+		local cpu = vm13.get_cpu_reg(vm)
 		if cpu then
 			M(pos):set_string("formspec", formspec1(mem, cpu, last))
 			return
@@ -248,17 +224,34 @@ local function update_formspec(pos, mem, vm, last)
 	M(pos):set_string("formspec", formspec1(mem))
 end	
 
-function pdp13.call_cpu(pos, vm, cycles)
-	local credit = CREDIT
-	local resp
-	while credit > 0 do
-		resp = pdp13lib.run(vm, cycles)
-		if resp > VM13_DELAY then
-			credit = credit - action_handling(pos, vm, resp)
-		else
-			credit = 0
-		end
+local function vm_input(vm, pos, addr)
+	local own_num = M(pos):get_string("node_number")
+	local io_num = math.floor(addr / 8) + 1
+	local offs = (addr % 8)
+	local hash = io_hash(own_num, io_num, vm13.IN)
+	local item = ActionHandlers[hash]
+	if item then
+		return item.func(item.pos, offs) or 0xFFFF)
 	end
+end	
+
+local function vm_output(vm, pos, addr, value)
+	local own_num = M(pos):get_string("node_number")
+	local io_num = math.floor(addr / 8) + 1
+	local offs = (addr % 8)
+	local hash = io_hash(own_num, io_num, vm13.OUT)
+	local item = ActionHandlers[hash]
+	if item then
+		return item.func(item.pos, offs, evt.data) or 0xFFFF)
+	end
+end	
+
+local function vm_system(vm, pos, addr, value)
+	return 0xFFFF, 100
+end
+
+function pdp13.call_cpu(pos, vm, cycles)
+	local resp = vm13.run(vm, pos, cycles, vm_input, vm_output, vm_system)
 	local mem = tubelib2.get_mem(pos)
 	if mem.upd_cnt then
 		mem.state = resp
@@ -271,10 +264,7 @@ function pdp13.call_cpu(pos, vm, cycles)
 end
 
 local function single_step(pos, vm)
-	local resp = pdp13lib.run(vm, 1)
-	if resp > VM13_DELAY then
-		action_handling(pos, vm, resp)
-	end
+	local resp = vm13.run(vm, pos, 1, action_handling, action_handling, vm_system)
 	local mem = tubelib2.get_mem(pos)
 	mem.upd_cnt = UPD_COUNT
 	mem.state = (resp > VM13_OK and resp) or VM13_STOP
@@ -339,14 +329,14 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 		end
 		if cmnd == "l" then 
 			mem.state = VM13_STOP
-			pdp13lib.loadaddr(vm, tonumber(val, 16))
+			vm13.loadaddr(vm, tonumber(val, 16))
 			update_formspec(pos, mem, vm, false)
 		elseif cmnd == "d" then
 			mem.state = VM13_STOP
-			pdp13lib.deposit(vm, tonumber(val, 16)) 
+			vm13.deposit(vm, tonumber(val, 16)) 
 			update_formspec(pos, mem, vm, true)
 		elseif cmnd == "r" then 
-			print(dump(pdp13lib.get_cpu_reg(vm)))
+			print(dump(vm13.get_cpu_reg(vm)))
 		end 
 	elseif fields.start and mem.state ~= VM13_HALT then
 		pdp13.vm_store(owner, pos)
@@ -357,13 +347,13 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 		update_formspec(pos, mem, vm)
 		swap_node(pos, "pdp13:cpu1_on")
 	elseif fields.examine then
-		pdp13lib.examine(vm)
+		vm13.examine(vm)
 		update_formspec(pos, mem, vm, true)
 	elseif fields.step and mem.state ~= VM13_HALT then
 		single_step(pos, vm)
 	elseif fields.reset then
 		mem.state = VM13_STOP
-		pdp13lib.loadaddr(vm, 0) 
+		vm13.loadaddr(vm, 0) 
 		update_formspec(pos, mem, vm, false)
 	end
 end
