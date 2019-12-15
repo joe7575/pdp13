@@ -10,4 +10,4 @@
 0002h: 4412h, FFFFh              ;         bze     A, +LOOP        ; No data => try again
 0004h: 500Dh                     ;         in      A, #1           ; read data from input #1
 0005h: 1140h                     ;         move    [X]+, A         ; move data to memory via X
-0006h: 1412h, FFFBh              ;         jump    +LOOP           ; repeat
+0006h: 1640h, FFFBh              ;         jump    +LOOP           ; repeat

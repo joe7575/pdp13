@@ -5,34 +5,34 @@
 |--------|--------|--------|----------------------|
 | nop    | --     | --     | 0000                 |
 | halt   | --     | --     | 0400                 |
-| call   | --     | ADR    | 0800 + Opnd2         |
-| ret    | --     | --     | 0c00                 |
+| call   | ADR    | --     | 0800 + Opnd1         |
+| ret    | --     | --     | 0C00                 |
 | move   | DST    | SRC    | 1000 + Opnd1 + Opnd2 |
-| jump   | --     | ADR    | 1400 + Opnd2         |
+| jump   | ADR    | --     | 1400 + Opnd1         |
 | inc    | DST    | --     | 1800 + Opnd1         |
-| dec    | DST    | --     | 1c00 + Opnd1         |
+| dec    | DST    | --     | 1C00 + Opnd1         |
 | add    | DST    | SRC    | 2000 + Opnd1 + Opnd2 |
 | sub    | DST    | SRC    | 2400 + Opnd1 + Opnd2 |
 | mul    | DST    | SRC    | 2800 + Opnd1 + Opnd2 |
-| div    | DST    | SRC    | 2c00 + Opnd1 + Opnd2 |
+| div    | DST    | SRC    | 2C00 + Opnd1 + Opnd2 |
 | and    | DST    | SRC    | 3000 + Opnd1 + Opnd2 |
 | or     | DST    | SRC    | 3400 + Opnd1 + Opnd2 |
 | xor    | DST    | SRC    | 3800 + Opnd1 + Opnd2 |
-| not    | DST    | SRC    | 3c00 + Opnd1 + Opnd2 |
-| bnze   | REG    | ADR    | 4000 + Opnd1 + Opnd2 |
-| bze    | REG    | ADR    | 4400 + Opnd1 + Opnd2 |
-| bpos   | REG    | ADR    | 4800 + Opnd1 + Opnd2 |
-| bneg   | REG    | ADR    | 4c00 + Opnd1 + Opnd2 |
+| not    | DST    | SRC    | 3C00 + Opnd1 + Opnd2 |
+| bnze   | DST    | ADR    | 4000 + Opnd1 + Opnd2 |
+| bze    | DST    | ADR    | 4400 + Opnd1 + Opnd2 |
+| bpos   | DST    | ADR    | 4800 + Opnd1 + Opnd2 |
+| bneg   | DST    | ADR    | 4C00 + Opnd1 + Opnd2 |
 | in     | DST    | CNST   | 5000 + Opnd1 + Opnd2 |
 | out    | CNST   | SRC    | 5400 + Opnd1 + Opnd2 |
 | push   | SRC    | --     | 5800 + Opnd1         |
-| pop    | DST    | --     | 5c00 + Opnd1         |
+| pop    | DST    | --     | 5C00 + Opnd1         |
 | swap   | DST    | --     | 6000 + Opnd1         |
-| dbnz   | REG    | ADR    | 6400 + Opnd1 + Opnd2 |
+| dbnz   | DST    | ADR    | 6400 + Opnd1 + Opnd2 |
 | shl    | DST    | SRC    | 6800 + Opnd1 + Opnd2 |
-| shr    | DST    | SRC    | 6c00 + Opnd1 + Opnd2 |
+| shr    | DST    | SRC    | 6C00 + Opnd1 + Opnd2 |
 | dly    | --     | --     | 7000                 |
-| sys    | --     | CNST   | 7400 + Opnd2         |
+| sys    | CNST   | --     | 7400 + Opnd1         |
 
 
 ### Addressing Modes

@@ -23,14 +23,14 @@
 # OP-codes
 #
 Opcodes = [
-    "nop:-:-", "halt:-:-", "call:-:ADR", "ret:-:-",
-    "move:DST:SRC", "jump:-:ADR", "inc:DST:-", "dec:DST:-",
+    "nop:-:-", "halt:-:-", "call:ADR:-", "ret:-:-",
+    "move:DST:SRC", "jump:ADR:-", "inc:DST:-", "dec:DST:-",
     "add:DST:SRC", "sub:DST:SRC", "mul:DST:SRC", "div:DST:SRC",
     "and:DST:SRC", "or:DST:SRC", "xor:DST:SRC", "not:DST:SRC",
-    "bnze:REG:ADR", "bze:REG:ADR", "bpos:REG:ADR", "bneg:REG:ADR",
+    "bnze:DST:ADR", "bze:DST:ADR", "bpos:DST:ADR", "bneg:DST:ADR",
     "in:DST:CNST", "out:CNST:SRC", "push:SRC:-", "pop:DST:-", 
-    "swap:DST:-", "dbnz:REG:ADR", "shl:DST:SRC", "shr:DST:SRC",
-    "dly:-:-", "sys:-:CNST"
+    "swap:DST:-", "dbnz:DST:ADR", "shl:DST:SRC", "shr:DST:SRC",
+    "dly:-:-", "sys:CNST:-"
 ]
 
 JumpInst = ["call", "jump", "bnze", "bze", "bpos", "bneg", "dbnz"]

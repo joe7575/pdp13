@@ -342,7 +342,7 @@ int vm13_run(cpu13_t *C, uint32_t num_cycles, uint32_t *ran) {
             }
             case CALL: {
                 // addr = opd(), push PC, PC = addr
-                uint16_t addr = getoprnd(C, addr_mode2);
+                uint16_t addr = getoprnd(C, addr_mode1);
                 C->sptr = VMA(C, C->sptr - 1);
                 *MEM_ADDR(C, C->sptr) = C->pcnt;
                 C->pcnt = addr;
@@ -361,7 +361,7 @@ int vm13_run(cpu13_t *C, uint32_t num_cycles, uint32_t *ran) {
                 *p_opd1 = opd2;
                 break;
             }
-            case JUMP: C->pcnt = getoprnd(C, addr_mode2); break;
+            case JUMP: C->pcnt = getoprnd(C, addr_mode1); break;
             case INC: {
                 uint16_t *p_opd1 = getaddr(C, addr_mode1);
                 (*p_opd1)++;
@@ -509,7 +509,7 @@ int vm13_run(cpu13_t *C, uint32_t num_cycles, uint32_t *ran) {
                 return VM13_DELAY;
             }
             case SYS: {
-                C->l_data = getoprnd(C, addr_mode2);
+                C->l_data = getoprnd(C, addr_mode1);
                 *ran = num_cycles - num;
                 return VM13_SYS;
             }

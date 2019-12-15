@@ -21,12 +21,13 @@ dofile(MP.."/lib/lib.lua")
 dofile(MP.."/lib/scheduler.lua")
 dofile(MP.."/lib/owner.lua")
 dofile(MP.."/lib/states.lua")
+dofile(MP.."/lib/disasm.lua")
 
 -- PDP-13
 dofile(MP.."/pdp13/cpu.lua")
 dofile(MP.."/pdp13/power.lua")
-dofile(MP.."/pdp13/tape.lua")
 
 -- I/O
 dofile(MP.."/io/7segment.lua")
 dofile(MP.."/io/telewriter.lua")
+dofile(MP.."/io/tape.lua")

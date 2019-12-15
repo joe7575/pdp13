@@ -261,7 +261,6 @@ static int event_response(lua_State *L) {
     lua_Integer type = luaL_checkinteger(L, 2);
     lua_Integer data = luaL_checkinteger(L, 3);
     if(C != NULL) {
-        lua_newtable(L); /* creates a table */
         switch(type) {
             case VM13_IN:
                 *C->p_in_dest = (uint16_t)data;

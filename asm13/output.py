@@ -31,13 +31,13 @@ def table1():
     for idx, item in enumerate(Opcodes):
         opc, addr_mode1, addr_mode2 = item.split(":")
         if addr_mode1 == "-" and addr_mode2 == "-":
-            lOut.append([" %-4s   " % opc, " --     ", " --     ", " %04x                 " % (idx << 10)])
+            lOut.append([" %-4s   " % opc, " --     ", " --     ", " %04X                 " % (idx << 10)])
         if addr_mode1 != "-" and addr_mode2 == "-":
-            lOut.append([" %-4s   " % opc, " %-6s " % addr_mode1, " --     ", " %04x + Opnd1         " % (idx << 10)])
+            lOut.append([" %-4s   " % opc, " %-6s " % addr_mode1, " --     ", " %04X + Opnd1         " % (idx << 10)])
         if addr_mode1 == "-" and addr_mode2 != "-":
-            lOut.append([" %-4s   " % opc, " --     ", " %-6s " % addr_mode2, " %04x + Opnd2         " % (idx << 10)])
+            lOut.append([" %-4s   " % opc, " --     ", " %-6s " % addr_mode2, " %04X + Opnd2         " % (idx << 10)])
         if addr_mode1 != "-" and addr_mode2 != "-":
-            lOut.append([" %-4s   " % opc, " %-6s " % addr_mode1, " %-6s " % addr_mode2, " %04x + Opnd1 + Opnd2 " % (idx << 10)])
+            lOut.append([" %-4s   " % opc, " %-6s " % addr_mode1, " %-6s " % addr_mode2, " %04X + Opnd1 + Opnd2 " % (idx << 10)])
 
     print("# PDP-13 (VM13) V1.0")
 

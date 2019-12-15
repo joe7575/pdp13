@@ -32,18 +32,22 @@ local CREDIT     = 100
 
 local ActionHandlers = {}
 
+local function io_hash(number, io_num, io_type)
+	return ((tonumber(number) or 0) * 256) + (io_num * 8) + (io_type)
+end
+
 -- Action (input/output):
 --   u16_resp = output(pos, u3_offs, u16_data) -- return 0/1
 --   u16_resp = input(pos, u3_offs)
-local function register_action(pos, io_num, io_type, io_pos, credit, func)
+local function register_action(own_num, io_num, io_type, io_pos, credit, func)
 	print("ActionHandlers: io_num, io_type, credit, func", io_num, io_type, credit, func)
-	local hash = minetest.hash_node_position(pos)
+	local hash = io_hash(own_num, io_num, io_type)
 	ActionHandlers[hash] = ActionHandlers[hash] or {}
-	ActionHandlers[hash][io_num] = ActionHandlers[hash][io_num] or {}
-	ActionHandlers[hash][io_num][io_type] = {pos = io_pos, func = func, credit = credit}
+	ActionHandlers[hash] = {pos = io_pos, func = func, credit = credit}
 end
 
 function pdp13.update_action_list(pos)
+	local own_num = M(pos):get_string("node_number")
 	print("update_action_list")
 	local addr_tbl = get_tbl(pos, "addr_tbl")
 	for io_num,number in ipairs(addr_tbl) do
@@ -51,11 +55,11 @@ function pdp13.update_action_list(pos)
 		if info then
 			local resp = techage.send_single(0, number, "pdp13_input")
 			if resp then
-				register_action(pos, io_num, VM13_IN, info.pos, resp.credit, resp.func)
+				register_action(own_num, io_num, VM13_IN, info.pos, resp.credit, resp.func)
 			end
 			resp = techage.send_single(0, number, "pdp13_output")
 			if resp then
-				register_action(pos, io_num, VM13_OUT, info.pos, resp.credit, resp.func)
+				register_action(own_num, io_num, VM13_OUT, info.pos, resp.credit, resp.func)
 			end
 		elseif number ~= "" then
 			print("pdp13.update_action_list: invalid node number", number)
@@ -176,30 +180,39 @@ local function formspec2(pos)
 	           "label[5.2,0;No]label[6.0,0;I/O Addr]label[7.4,0;Number]label[8.7,0;Info]"}
 	for i = 1,16 do
 		local ypos = 0.1 + i * 0.4
-		local addr1 = hex8(((i-1) * 16) + 0).." - "..hex8(((i-1) * 16 + 7) + 0)
-		local addr2 = hex8(((i-1) * 16) + 8).." - "..hex8(((i-1) * 16 + 7) + 8)
-		local num1 = tbl[(i-1)*2 + 1] or ""
-		local num2 = tbl[(i-1)*2 + 2] or ""
-		local info1, tooltip1 = info_cmnd(num1)
-		local info2, tooltip2 = info_cmnd(num2)
+		local addr = hex8((i-1) * 8).." - "..hex8((i-1) * 8 + 7)
+		local num = tbl[i] or ""
+		local info, tooltip = info_cmnd(num)
 		
 		-- label
-		t[#t+1] = "label[0.0,"..ypos..";"..((i-1)*2 + 1).."]"
-		t[#t+1] = "label[5.2,"..ypos..";"..((i-1)*2 + 2).."]"		
+		t[#t+1] = "label[0.0,"..ypos..";"..(i).."]"
 		-- I/O Addr
-		t[#t+1] = "label[0.8,"..ypos..";"..addr1.."]"
-		t[#t+1] = "label[6.0,"..ypos..";"..addr2.."]"
+		t[#t+1] = "label[0.8,"..ypos..";"..addr.."]"
 		-- node number
-		t[#t+1] = "label[2.2,"..ypos..";"..num1.."]"
-		t[#t+1] = "label[7.4,"..ypos..";"..num2.."]"
+		t[#t+1] = "label[2.2,"..ypos..";"..num.."]"
 		-- Info
-		t[#t+1] = "label[3.5,"..ypos..";"..info1.."]"		
-		t[#t+1] = "label[8.7,"..ypos..";"..info2.."]"		
+		t[#t+1] = "label[3.5,"..ypos..";"..info.."]"		
 		-- tooltip
-		t[#t+1] = "tooltip[3.5,"..ypos..";2,0.5;"..tooltip1.."]"
-		t[#t+1] = "tooltip[8.7,"..ypos..";2,0.5;"..tooltip2.."]"
+		t[#t+1] = "tooltip[3.5,"..ypos..";2,0.5;"..tooltip.."]"
 	end	
+	for i = 17,32 do
+		local ypos = 0.1 + (i-16) * 0.4
+		local addr = hex8((i-1) * 8).." - "..hex8((i-1) * 8 + 7)
+		local num = tbl[i] or ""
+		local info, tooltip = info_cmnd(num)
 		
+		-- label
+		t[#t+1] = "label[5.2,"..ypos..";"..(i).."]"		
+		-- I/O Addr
+		t[#t+1] = "label[6.0,"..ypos..";"..addr.."]"
+		-- node number
+		t[#t+1] = "label[7.4,"..ypos..";"..num.."]"
+		-- Info
+		t[#t+1] = "label[8.7,"..ypos..";"..info.."]"		
+		-- tooltip
+		t[#t+1] = "tooltip[8.7,"..ypos..";2,0.5;"..tooltip.."]"
+	end	
+	
 	return "size[10,7.7]"..
 		"tabheader[0,0;tab;CPU,I/O;2;;true]"..
 		"background[0.0,0.6;4.8,6.4;pdp13_form_mask_lila.png]"..
@@ -211,13 +224,14 @@ local function formspec2(pos)
 end
 
 local function action_handling(pos, vm, resp)
+	local own_num = M(pos):get_string("node_number")
 	local evt = pdp13lib.get_event(vm, resp)
-	local hash = minetest.hash_node_position(pos)
-	local num = math.floor(evt.addr / 8) + 1
+	local io_num = math.floor(evt.addr / 8) + 1
 	local offs = (evt.addr % 8)
-	local item = ActionHandlers[hash] and ActionHandlers[hash][num] and ActionHandlers[hash][num][resp]
+	local hash = io_hash(own_num, io_num, resp)
+	local item = ActionHandlers[hash]
 	if item then
-		pdp13lib.event_response(vm, resp, item.func(item.pos, offs, evt.data) or 0)
+		pdp13lib.event_response(vm, resp, item.func(item.pos, offs, evt.data) or 0xFFFF)
 		return item.credit
 	end
 	return CREDIT
@@ -301,6 +315,8 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 	local owner = M(pos):get_string("owner")
 	local vm = pdp13.vm_get(owner, pos)
 	
+	if not mem.power then return end
+	
 	if fields.tab == "2" then
 		M(pos):set_string("formspec", formspec2(pos))
 	elseif fields.tab == "1" then
@@ -360,6 +376,7 @@ local function pdp13_command(pos, cmnd)
 		pdp13.add_to_owner_list(owner, pos)
 		pdp13.update_action_list(pos)
 		mem.started = false
+		mem.power = true
 		mem.state = VM13_STOP
 	elseif cmnd == "off" then
 		local mem = tubelib2.get_mem(pos)
@@ -368,6 +385,7 @@ local function pdp13_command(pos, cmnd)
 			pdp13.vm_suspend(owner, pos)
 		end
 		mem.started = false
+		mem.power = false
 		mem.state = VM13_STOP
 		pdp13.remove_from_owner_list(owner, pos)
 		pdp13.vm_destroy(owner, pos)
@@ -390,6 +408,8 @@ minetest.register_node("pdp13:cpu1", {
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
 		local mem = tubelib2.init_mem(pos)
 		M(pos):set_string("owner", placer:get_player_name())
+		local own_num = techage.add_node(pos, "pdp13:cpu1")
+		M(pos):set_string("node_number", own_num)
 		update_formspec(pos, mem)
 	end,
 	on_receive_fields = on_receive_fields_stopped,
@@ -397,6 +417,8 @@ minetest.register_node("pdp13:cpu1", {
 	after_dig_node = function(pos, oldnode)
 		local owner = M(pos):get_string("owner")
 		pdp13.vm_destroy(owner, pos)
+		--techage.power.after_dig_node(pos, oldnode)
+		tubelib2.del_mem(pos)
 	end,
 	paramtype2 = "facedir",
 	groups = {cracky=2, crumbly=2, choppy=2},

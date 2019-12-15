@@ -8,7 +8,7 @@
 	GPL v3
 	See LICENSE.txt for more information
 	
-	PDP-13 Helper Fuinctions
+	PDP-13 Helper Functions
 
 ]]--
 
@@ -51,4 +51,11 @@ function pdp13.get_node_lvm(pos)
 		param2 = param2_data[idx]
 	}
 	return node
+end
+
+function pdp13.range(val, min, max)
+	val = tonumber(val)
+	if val < min then return min end
+	if val > max then return max end
+	return val
 end

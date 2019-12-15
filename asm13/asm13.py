@@ -50,7 +50,7 @@ class Assembler(object):
             
         self.dOperands = {}
         for idx,s in enumerate(RegOperands):
-            self.dOperands[s] = idx
+            self.dOperands[s.lower()] = idx
             
     def value(self, s):
         if s[0] == "$":
@@ -112,17 +112,17 @@ class Assembler(object):
         except:
             m = reCONST.match(s)
             if m:
-                self.codes[0] = (self.codes[0] << 5) + Operands.INDex("IMM") 
+                self.codes[0] = (self.codes[0] << 5) + Operands.index("IMM") 
                 self.codes.append(self.value(m.group(1)))
                 return
             m = reADDR.match(s)
             if m: 
-                self.codes[0] = (self.codes[0] << 5) + Operands.INDex("IND") 
+                self.codes[0] = (self.codes[0] << 5) + Operands.index("IND") 
                 self.codes.append(self.value(m.group(1)))
                 return
             m = reREL.match(s)
             if m: 
-                self.codes[0] = (self.codes[0] << 5) + Operands.INDex("REL") 
+                self.codes[0] = (self.codes[0] << 5) + Operands.index("REL") 
                 if m.groups(1) == "-": 
                     self.codes.append(-self.value(m.group(2)))
                 else:
@@ -130,23 +130,23 @@ class Assembler(object):
                 return
             m = reSTACK.match(s)
             if m: 
-                self.codes[0] = (self.codes[0] << 5) + Operands.INDex("[sp+n]") 
+                self.codes[0] = (self.codes[0] << 5) + Operands.index("[sp+n]") 
                 self.codes.append(self.value(m.group(1)))
                 return
             if s[0] == "#":
                 if self.dSymbols.has_key(s[1:]):
-                    self.codes[0] = (self.codes[0] << 5) + Operands.INDex("IMM")
+                    self.codes[0] = (self.codes[0] << 5) + Operands.index("IMM")
                     self.codes.append(self.dSymbols[s[1:]])
                     return
             elif s[0] in ["+", "-"]:
                 if self.dSymbols.has_key(s[1:]):
-                    self.codes[0] = (self.codes[0] << 5) + Operands.INDex("REL") 
+                    self.codes[0] = (self.codes[0] << 5) + Operands.index("REL") 
                     offset = (0x10000 + self.dSymbols[s[1:]] - self.addr) & 0xFFFF
                     self.codes.append(offset)
                     return
             else:
                 if self.dSymbols.has_key(s):
-                    self.codes[0] = (self.codes[0] << 5) + Operands.INDex("IND")  
+                    self.codes[0] = (self.codes[0] << 5) + Operands.index("IND")  
                     self.codes.append(self.dSymbols[s])
                     return
             if not self.ispass2 and re.match(r"[#\+\-a-z0-9_]+", s):
@@ -176,11 +176,11 @@ class Assembler(object):
         self.codes = []
         words = line.split()
         
-        # new memory segement
+        # new memory segment
         if self.segment(line):
             return False
         
-        # adress label
+        # address label
         if words[0][-1] == ":":
             self.dSymbols[words[0][:-1]] = self.addr
             words = words[1:]
@@ -202,18 +202,11 @@ class Assembler(object):
                 self.check_num_operands(0, num_opnds)
                 self.codes[0] = self.codes[0] << 10
             elif len(words) == 2: # one operand
-                if words[0] in ["call", "jump", "sys"]: # coded as DST
-                    num_opnds = self.opcode(words[0])
-                    self.check_num_operands(1, num_opnds)
-                    opnd = self.operand_correction(words[0], words[1])
-                    self.codes[0] = self.codes[0] << 5
-                    self.operand(opnd)
-                else:                           # # coded as SRC
-                    num_opnds = self.opcode(words[0])
-                    self.check_num_operands(1, num_opnds)
-                    opnd = self.operand_correction(words[0], words[1])
-                    self.operand(opnd)
-                    self.codes[0] = self.codes[0] << 5
+                num_opnds = self.opcode(words[0])
+                self.check_num_operands(1, num_opnds)
+                opnd = self.operand_correction(words[0], words[1])
+                self.operand(opnd)
+                self.codes[0] = self.codes[0] << 5
             elif len(words) == 3:
                 num_opnds = self.opcode(words[0])
                 self.check_num_operands(2, num_opnds)
