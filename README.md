@@ -10,7 +10,7 @@ Textures: CC BY-SA 3.0
 
 
 ### Dependencies  
-Required: default  
+Required: vm16,default  
 Optional: techage, mesecons  
 
 

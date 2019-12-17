@@ -52,9 +52,10 @@ minetest.register_globalstep(function(dtime)
 	RunningCPUs = 0
 	while item do
 		if item.pos and item.vm then
-			call_cpu(item.pos, item.vm, NUM_INSTR)
-			push(item)
-			RunningCPUs = RunningCPUs + 1
+			if call_cpu(item.pos, item.vm, NUM_INSTR) then
+				push(item)
+				RunningCPUs = RunningCPUs + 1
+			end
 		end
 		item = pop()
 	end

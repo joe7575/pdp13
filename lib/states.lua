@@ -17,7 +17,7 @@ local P2P = minetest.string_to_pos
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local M = minetest.get_meta
 
-local RAM_SIZE = 6 --12  -- 2^12 = 4096 words RAM
+local RAM_SIZE = 12  -- 2^12 = 4096 words RAM
 
 local VMList = {}
 
@@ -30,7 +30,7 @@ function pdp13.vm_create(owner, pos)
 	print("vm_create", owner)
 	local hash = minetest.hash_node_position(pos)
 	VMList[owner] = VMList[owner] or {}
-	VMList[owner][hash] = vm13.create(pos, RAM_SIZE)
+	VMList[owner][hash] = vm16.create(pos, RAM_SIZE)
 end	
 
 function pdp13.vm_get(owner, pos)
@@ -49,7 +49,7 @@ function pdp13.vm_destroy(owner, pos)
 	print("vm_destroy")
 	local hash = minetest.hash_node_position(pos)
 	if VMList[owner] and VMList[owner][hash] then
-		vm13.destroy(VMList[owner][hash], pos)
+		vm16.destroy(VMList[owner][hash], pos)
 		VMList[owner][hash] = nil
 	end
 end	
@@ -58,13 +58,13 @@ function pdp13.vm_store(owner, pos)
 	print("vm_store")
 	local hash = minetest.hash_node_position(pos)
 	if VMList[owner] and VMList[owner][hash] then
-		vm13.vm_store(VMList[owner][hash], pos)
+		vm16.vm_store(VMList[owner][hash], pos)
 	end
 end
 
 function pdp13.vm_restore(owner, pos)
 	print("vm_restore")
-	local vm = vm13.vm_restore(pos)
+	local vm = vm16.vm_restore(pos)
 	if vm then
 		local hash = minetest.hash_node_position(pos)
 		VMList[owner] = VMList[owner] or {}

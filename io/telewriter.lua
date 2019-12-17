@@ -14,8 +14,9 @@
 
 -- for lazy programmers
 local M = minetest.get_meta
-local get_tbl = function(pos,key)      return minetest.deserialize(M(pos):get_string(key)) or {} end
-local set_tbl = function(pos,key,tbl)  M(pos):set_string(key, minetest.serialize(tbl)) end
+local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
+local get_tbl = function(meta,key)      return minetest.deserialize(meta:get_string(key)) or {} end
+local set_tbl = function(meta,key,tbl)  meta:set_string(key, minetest.serialize(tbl)) end
 
 local Cache = {}
 
@@ -106,14 +107,26 @@ local function write_tape(pos, number)
 	local name = stack:get_name()
 	local count = stack:get_count()
 	if count == 1 and name == "pdp13:tape" then
-		stack = ItemStack("pdp13:tape_used")
-		local meta = stack:get_meta()
 		local codes = get_data(number).codes
-		local data = meta:to_table().fields
-		data.code = codes
-		stack:get_meta():from_table({ fields = data })
-		inv:set_stack("main", 1, stack)
-		return true
+		if codes and #codes > 0 then
+			stack = ItemStack("pdp13:tape_used")
+			local meta = stack:get_meta()
+			set_tbl(meta, "code", codes)
+			inv:set_stack("main", 1, stack)
+			return true
+		end
+	end
+end
+
+local function read_tape(pos, number)
+	local inv = M(pos):get_inventory()
+	if inv:is_empty("main") then return nil end
+	local stack = inv:get_stack("main", 1)
+	local name = stack:get_name()
+	local count = stack:get_count()
+	if count == 1 and name == "pdp13:tape_used" then
+		local meta = stack:get_meta()
+		return get_tbl(meta, "code")
 	end
 end
 
@@ -146,31 +159,27 @@ minetest.register_node("pdp13:telewriter", {
 		local own_num = techage.add_node(pos, "pdp13:telewriter")
 		M(pos):set_string("node_number", own_num)
 		M(pos):set_string("formspec", formspec1(own_num))
-	end,
-	on_rightclick = function(pos, node, clicker)
-		local number = M(pos):get_string("node_number")
-		M(pos):set_string("formspec", formspec1(number))
+		M(pos):set_string("infotext", "PDP-13 Telewriter "..own_num)
 	end,
 	on_receive_fields = function(pos, formname, fields, player)
 		if minetest.is_protected(pos, player:get_player_name()) then
 			return
 		end
-		print(dump(fields))
+		--print(dump(fields))
 		local number = M(pos):get_string("node_number")
 		local data = get_data(number)
-		local codes = {}
 		if fields.tab == "2" then
 			M(pos):set_string("formspec", formspec2(number))
 		elseif fields.tab == "1" then
 			M(pos):set_string("formspec", formspec1(number))
 		elseif fields.key_enter == "true" then
 			data.lines[#data.lines+1] = minetest.formspec_escape(fields.cmnd)
-			for val in ipairs(to_hexnumbers(fields.cmnd)) do
+			for _,val in ipairs(to_hexnumbers(fields.cmnd)) do
 				data.codes[#data.codes+1] = val
 			end
 			M(pos):set_string("formspec", formspec1(number))
 		elseif fields.punch then
-			print(data.punch, tape_type(pos))
+			--print(data.punch, tape_type(pos))
 			if data.punch and tape_type(pos) == "pdp13:tape" then
 				write_tape(pos, number)
 				data.punch = false
@@ -184,8 +193,11 @@ minetest.register_node("pdp13:telewriter", {
 		elseif fields.reader then
 			if data.reader then
 				data.reader = false
+				data.lines[#data.lines+1] = "Tape reader stopped"
 			elseif tape_type(pos) == "pdp13:tape_used" then
 				data.reader = true
+				data.lines[#data.lines+1] = "*** TELEWRITER V1.0 ***"
+				data.lines[#data.lines+1] = "Tape reader started"
 				if data.punch and data.reader then
 					data.punch = false
 				end
@@ -195,7 +207,6 @@ minetest.register_node("pdp13:telewriter", {
 	end,
 	after_dig_node = function(pos, oldnode)
 		--techage.power.after_dig_node(pos, oldnode)
-		tubelib2.del_mem(pos)
 	end,
 	paramtype = "light",
 	paramtype2 = "facedir",
@@ -205,34 +216,59 @@ minetest.register_node("pdp13:telewriter", {
 	sounds = default.node_sound_wood_defaults(),
 })
 
---local function code_loader(pos, offs)
---	local mem = tubelib2.get_mem(pos)
---	if offs == 0 and mem.sent < mem.prog_size then
---		return 1
---	else
---		return 0
---	elseif offs == 1 then
---		local words = get_tbl(pos, "code")
---		local res = words[mem.sent]
---		mem.sent = mem.sent + 1
---		if idx >= size: 
-		
---	end
+local function pdp13_output(pos, offs, value)
+	local number = M(pos):get_string("node_number")
+	local data = get_data(number)
+	
+	if offs == 0 and value == 1 then  -- trigger read
+		if data.reader then
+			data.fifo = read_tape(pos, number)
+			return 1
+		end
+	end
+	return 0
+end
 
+local function pdp13_input(pos, offs)
+	local number = M(pos):get_string("node_number")
+	local data = get_data(number)
+	
+	if offs == 0 and data.reader and data.fifo then
+		return 1
+	elseif offs == 1 and data.reader and data.fifo then
+		local v = table.remove(data.fifo, 1)
+		if #data.fifo == 0 then 
+			data.fifo = nil 
+			data.reader = false
+			data.lines[#data.lines+1] = "Tape reader stopped"
+			M(pos):set_string("formspec", formspec2(number))
+		end
+		return v
+	else
+		return 0
+	end
+end
 
---techage.register_node({"pdp13:telewriter"}, {
---	on_recv_message = function(pos, src, topic, payload)
---		if topic == "pdp13_info" then
---			return {
---				type = "I/O",
---				help = "IN: 0=state (0/1), 1=data; OUT: ?",
---			}
---		elseif topic == "pdp13_input" then -- from the pdp13 point of view
---			return {
---				credit = 10,
---				func = ,
---			}
---		end
---	end,
---})	
+techage.register_node({"pdp13:telewriter"}, {
+	on_recv_message = function(pos, src, topic, payload)
+		if topic == "pdp13_info" then
+			return {
+				type = "I/O",
+				help = "IN: 0=state (0/1), 1=data; OUT: ?",
+			}
+		elseif topic == "pdp13_input" then -- from the pdp13 point of view
+			return {
+				credit = 5,
+				func = pdp13_input,
+				pos = pos,
+			}
+		elseif topic == "pdp13_output" then -- from the pdp13 point of view
+			return {
+				credit = 5,
+				func = pdp13_output,
+				pos = pos,
+			}
+		end
+	end,
+})	
 
