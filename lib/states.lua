@@ -17,8 +17,6 @@ local P2P = minetest.string_to_pos
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local M = minetest.get_meta
 
-local RAM_SIZE = 12  -- 2^12 = 4096 words RAM
-
 local VMList = {}
 
 function pdp13.cpu_running(pos)
@@ -26,11 +24,21 @@ function pdp13.cpu_running(pos)
 	return mem.started
 end
 
-function pdp13.vm_create(owner, pos)
+function pdp13.vm_create(owner, pos, tExtensions)
 	print("vm_create", owner)
+	print(dump(tExtensions))
+	local ram_size = 1 + #tExtensions
 	local hash = minetest.hash_node_position(pos)
+	local vm = vm16.create(pos, ram_size)
+	for idx,item in ipairs(tExtensions) do
+		if item.type == "rom" then
+			vm16.mark_rom_bank(vm, idx)
+			vm16.write_mem(vm, item.addr, item.code)
+		end
+	end
+	vm16.init_mem_banks(vm)
 	VMList[owner] = VMList[owner] or {}
-	VMList[owner][hash] = vm16.create(pos, RAM_SIZE)
+	VMList[owner][hash] = vm
 end	
 
 function pdp13.vm_get(owner, pos)

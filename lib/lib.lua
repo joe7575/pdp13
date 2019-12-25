@@ -59,3 +59,20 @@ function pdp13.range(val, min, max)
 	if val > max then return max end
 	return val
 end
+
+function table.extract(t, first ,last)
+	local t2 = {}
+	for i = first, last do
+		t2[#t2+1] = t[i]
+	end
+	return t2
+end
+
+function pdp13.hex_dump(tbl)
+	local t2 = {}
+	for _,val in ipairs(tbl) do
+		t2[#t2+1] = string.format("%04X", val)
+	end
+	return table.concat(t2, " ")
+end
+

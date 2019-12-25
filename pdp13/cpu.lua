@@ -21,6 +21,7 @@ local set_tbl = function(pos,key,tbl)  M(pos):set_string(key, minetest.serialize
 local UPD_COUNT  = 20
 
 local ActionHandlers = {}
+local SystemHandlers = {}
 
 local function io_hash(number, io_num, io_type)
 	return ((tonumber(number) or 0) * 256) + (io_num * 8) + (io_type)
@@ -57,6 +58,12 @@ function pdp13.update_action_list(pos)
 	end
 end
 
+-- regA, regB, points = func(vm, pos, addr, regA, regB)
+function pdp13.register_system_handler(addr, regA, func)
+	SystemHandlers[addr] = SystemHandlers[addr] or {}
+	SystemHandlers[addr][regA] = func
+end
+	
 local function leds(address, data)
 	local lLed = {}
 	for i = 16,1,-1 do
@@ -95,6 +102,9 @@ end
 
 local function hex8(u8)
 	return string.format("%02X", u8)
+end
+local function hex16(u16)
+	return string.format("%04X", u16)
 end
 
 local function formspec1(mem, cpu, last)
@@ -163,6 +173,19 @@ local function info_cmnd(num)
 	return "", ""
 end
 	
+local function to_hexnumbers(s)
+	local codes = {}
+	for _,s in ipairs(string.split(s, " ")) do
+		s = s or ""
+		s = string.match(s:trim(), "^([0-9a-fA-F]+)$") or ""
+		local val = tonumber(s, 16)
+		if val then
+			codes[#codes+1] = val
+		end
+	end
+	return codes
+end
+
 local function formspec2(pos)
 	local tbl = get_tbl(pos, "addr_tbl")
 	print(dump(tbl))
@@ -224,6 +247,21 @@ local function update_formspec(pos, mem, vm, last)
 	M(pos):set_string("formspec", formspec1(mem))
 end	
 
+local function load_extensions(pos)
+	local pos2 = minetest.find_node_near(pos, 1, {"pdp13:chassis", "pdp13:chassis_top"})
+	if pos2 then
+		local ndef = minetest.registered_nodes[minetest.get_node(pos2).name]
+		if ndef and ndef.pdp13_get_extensions then
+			local tbl = ndef.pdp13_get_extensions(pos2)
+			for _,item in ipairs(tbl) do
+				print(hex16(item.addr), item.type)
+			end
+			return tbl
+		end
+	end
+	return {}
+end
+	
 local function vm_input(vm, pos, addr)
 	local own_num = M(pos):get_string("node_number")
 	local io_num = math.floor(addr / 8) + 1
@@ -248,12 +286,16 @@ local function vm_output(vm, pos, addr, value)
 	return 0xFFFF, 100
 end	
 
-local function vm_system(vm, pos, addr, value)
-	return 0xFFFF, 100
+local function vm_system(vm, pos, addr, regA, regB)
+	print("vm_system", addr, regA, regB)
+	if SystemHandlers[addr] and SystemHandlers[addr][regA] then
+		return SystemHandlers[addr][regA](vm, pos, addr, regA, regB)
+	end
+	return 0xFFFF, regB, 100
 end
 
 function pdp13.call_cpu(pos, vm, cycles)
-	local resp = vm16.run(vm, pos, cycles, vm_input, vm_output, vm_system)
+	local resp = vm16.call(vm, pos, cycles, vm_input, vm_output, vm_system)
 	local mem = tubelib2.get_mem(pos)
 	if resp >= vm16.HALT then
 		swap_node(pos, "pdp13:cpu1")
@@ -272,7 +314,7 @@ function pdp13.call_cpu(pos, vm, cycles)
 end
 
 local function single_step(pos, vm)
-	local resp = vm16.run(vm, pos, 1, vm_input, vm_output, vm_system)
+	local resp = vm16.call(vm, pos, 1, vm_input, vm_output, vm_system)
 	local mem = tubelib2.get_mem(pos)
 	mem.upd_cnt = UPD_COUNT
 	mem.state = (resp > vm16.OK and resp) or vm16.STOP
@@ -330,11 +372,18 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 			pdp13.update_action_list(pos)
 		end
 	elseif fields.key_enter_field == "command" and fields.key_enter == "true" then
-		local cmnd, val = string.match (fields.command, "^([rld]) +([0-9a-fA-F]+)$")
+		local cmnd, val = string.match (fields.command, "^([wrld]) +([0-9a-fA-F]+)$")
 		if cmnd and val then
 			mem.cmnd1 = mem.cmnd2
 			mem.cmnd2 = mem.cmnd3
 			mem.cmnd3 = fields.command
+		elseif string.sub(fields.command, 1, 1) == "w" then
+			local data = to_hexnumbers(string.sub(fields.command, 2))
+			local reg = vm16.get_cpu_reg(vm)
+			if data and reg then
+				print("write", reg.PC, #data)
+				vm16.write_mem(vm, reg.PC, data)
+			end			
 		end
 		if cmnd == "l" then 
 			mem.state = vm16.STOP
@@ -371,7 +420,7 @@ local function pdp13_command(pos, cmnd)
 	if cmnd == "on" then
 		local mem = tubelib2.get_mem(pos)
 		local owner = M(pos):get_string("owner")
-		pdp13.vm_create(owner, pos)
+		pdp13.vm_create(owner, pos, load_extensions(pos))
 		pdp13.add_to_owner_list(owner, pos)
 		pdp13.update_action_list(pos)
 		mem.started = false
@@ -455,4 +504,32 @@ minetest.register_node("pdp13:cpu1_on", {
 	is_ground_content = false,
 	sounds = default.node_sound_wood_defaults(),
 })
+
+-- read from TTY
+local function read_tty(vm, pos, addr, regA, regB)
+	local sts,_ = vm_input(vm, pos, 0)
+	local offs = 0
+	while sts ~= 0 and offs < 64 do
+		local data,_ = vm_input(vm, pos, 1)
+		print("write_mem", offs, data)
+		vm16.write_mem(vm, offs, {data})
+		sts,_ = vm_input(vm, pos, 0)
+		offs = offs + 1
+	end
+	print("vm_system", offs, 100)
+	return offs, regB, 100
+end
+
+-- write to TTY
+local function write_tty(vm, pos, addr, regA, regB)
+	print("write_tty", addr, regA, regB)
+	local num = math.min(vm16.peek(vm, 0x003f), 64)
+	local tbl = vm16.read_mem(vm, 0x0080, num)
+	print("write_tty2", num, dump(tbl))
+	local sts,_ = vm_output(vm, pos, 0, tbl)
+	return sts, regB, 100
+end
+
+pdp13.register_system_handler(0, 0, read_tty)
+pdp13.register_system_handler(0, 1, write_tty)
 
