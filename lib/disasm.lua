@@ -19,11 +19,11 @@ local Opcodes = {[0] =
     "nop:-:-", "halt:-:-", "call:ADR:-", "ret:-:-",
     "move:DST:SRC", "jump:ADR:-", "inc:DST:-", "dec:DST:-",
     "add:DST:SRC", "sub:DST:SRC", "mul:DST:SRC", "div:DST:SRC",
-    "and:DST:SRC", "or:DST:SRC", "xor:DST:SRC", "not:DST:SRC",
+    "and:DST:SRC", "or:DST:SRC", "xor:DST:SRC", "not:DST:-",
     "bnze:DST:ADR", "bze:DST:ADR", "bpos:DST:ADR", "bneg:DST:ADR",
     "in:DST:CNST", "out:CNST:SRC", "push:SRC:-", "pop:DST:-", 
-    "swap:DST:-", "dbnz:DST:ADR", "shl:DST:SRC", "shr:DST:SRC",
-    "dly:-:-", "sys:CNST:-"
+    "swap:DST:-", "xchg:DST:DST", "dbnz:DST:ADR", "mod:DST:SRC",
+	"shl:DST:SRC", "shr:DST:SRC", "dly:-:-", "sys:CNST:-"
 }
 
 --
@@ -44,18 +44,18 @@ local OperandNeeded = {
 
 local function operand(address_mode, value)
 	if address_mode == "IMM" then
-		return string.format("#%04X", value)
+		return string.format("#$%04X", value)
 	elseif address_mode == "IND" then
-		return string.format("%04X", value)
+		return string.format("$%04X", value)
 	elseif address_mode == "REL" then
 		if value >= 0x8000 then
 			value = math.abs(value - 0x10000)
-			return string.format("-%X", value)
+			return string.format("-%u", value)
 		else
-			return string.format("+%X", value)
+			return string.format("+%u", value)
 		end
 	elseif address_mode == "[SP+n]" then
-		return string.format("[SP+%X]", value)
+		return string.format("[SP+%u]", value)
 	else
 		return address_mode
 	end
@@ -77,10 +77,6 @@ local function operands(s2, s3, opcode2, opcode3)
 end
 
 local function lookup(opcode1, opcode2, opcode3)
-	opcode1 = opcode1 or 0
-	opcode2 = opcode2 or 0
-	opcode3 = opcode3 or 0
-	
 	local idx1 = math.floor(opcode1 / 1024)
 	local rest = opcode1 - (idx1 * 1024)
 	local idx2 = math.floor(rest / 32)
@@ -103,26 +99,26 @@ local function lookup(opcode1, opcode2, opcode3)
 		end
 		return 1, string.format("%s", s1)
 	end
-	return 1, string.format("%04X", opcode1)
+	return 1, string.format("%04X ???", opcode1)
 end
 
 -- addr is the start address
--- tOpcodes is the array of opcodes with two trailing 0x0000
--- blank is an alternative char for the standard ' '-sign
-function pdp13.disassemble(addr, tOpcodes)
-	local t = {}
-	local idx = 1
-	while tOpcodes[idx] do
-		local num, s = lookup(tOpcodes[idx], tOpcodes[idx+1], tOpcodes[idx+2])
-		if num == 1 then
-			t[#t+1] = string.format("%04X: %04X           ; %s", addr, tOpcodes[idx], s)
-		elseif num == 2 then
-			t[#t+1] = string.format("%04X: %04X %04X      ; %s", addr, tOpcodes[idx], tOpcodes[idx+1] or 0, s)
-		elseif num == 3 then
-			t[#t+1] = string.format("%04X: %04X %04X %04X ; %s", addr, tOpcodes[idx], tOpcodes[idx+1] or 0, tOpcodes[idx+2] or 0, s)
-		end
-		addr = addr + num
-		idx = idx + num
+function pdp13.disassemble(vm, addr)
+	local mem = vm16.read_mem(vm, addr, 3)
+	if mem then
+		local num, s = lookup(mem[1], mem[2], mem[3])
+		local tbl = {}
+		for i = 1,num do tbl[i] = mem[i] end
+		return num, tbl, s
 	end
-	return addr, t
+end
+
+function pdp13.disasm_command(vm, s)
+	local cmnd, val = string.match(s, "^([d]) +([0-9a-fA-F]+)$")
+	if cmnd == "d" and val then
+		local addr = tonumber(val) or 0
+		local num, tbl, str = pdp13.disassemble(vm, addr)
+		local s = string.format("%04X \\2%-15s \\3%s", addr, pdp13.hex_dump(tbl), str)
+		return addr+num, s
+	end
 end
