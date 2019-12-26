@@ -45,9 +45,8 @@ function pdp13.vm_get(owner, pos)
 	print("vm_get")
 	local hash = minetest.hash_node_position(pos)
 	if not VMList[owner] or not VMList[owner][hash] then
---		VMList[owner] = VMList[owner] or {}
---		VMList[owner][hash] = pdp13.vm_restore(owner, pos)
-		print("#################### Das hätte nicht passieren dürfen !!!")
+		print("#################### pdp13.vm_get failed !!!")
+		pdp13.turn_cpu_off(pos)
 		return
 	end
 	return VMList[owner][hash]
@@ -59,6 +58,8 @@ function pdp13.vm_destroy(owner, pos)
 	if VMList[owner] and VMList[owner][hash] then
 		vm16.destroy(VMList[owner][hash], pos)
 		VMList[owner][hash] = nil
+	else
+		print("#################### pdp13.vm_destroy failed !!!")
 	end
 end	
 	
@@ -67,6 +68,9 @@ function pdp13.vm_store(owner, pos)
 	local hash = minetest.hash_node_position(pos)
 	if VMList[owner] and VMList[owner][hash] then
 		vm16.vm_store(VMList[owner][hash], pos)
+	else
+		print("#################### pdp13.vm_store failed !!!")
+		pdp13.turn_cpu_off(pos)
 	end
 end
 
@@ -77,6 +81,11 @@ function pdp13.vm_restore(owner, pos)
 		local hash = minetest.hash_node_position(pos)
 		VMList[owner] = VMList[owner] or {}
 		VMList[owner][hash] = vm
+		local mem = tubelib2.get_mem(pos)
+		mem.power = true
+	else
+		print("#################### pdp13.vm_restore failed !!!")
+		pdp13.turn_cpu_off(pos)
 	end
 end
 
@@ -85,6 +94,9 @@ function pdp13.vm_resume(owner, pos)
 	local vm = pdp13.vm_get(owner, pos)
 	if pos and vm then
 		pdp13.add_to_scheduler(pos, vm)
+	else
+		print("#################### pdp13.vm_resume failed !!!")
+		pdp13.turn_cpu_off(pos)
 	end
 end
 	
@@ -93,6 +105,9 @@ function pdp13.vm_suspend(owner, pos)
 	local vm = pdp13.vm_get(owner, pos)
 	if pos and vm then
 		pdp13.remove_from_scheduler(pos, vm)
+	else
+		print("#################### pdp13.vm_suspend failed !!!")
+		pdp13.turn_cpu_off(pos)
 	end
 end
 	

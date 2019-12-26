@@ -56,9 +56,9 @@ local function lookup(memw1, memw2, memw3)
 			opc3 = operand(opc3, pdp13.VM13Operands[idx3], memw2)
 		end
 		if opc2 and opc3 then
-			return num, string.format("%-6s %s, %s", opc1, opc2, opc3)
+			return num, string.format("%-5s %s, %s", opc1, opc2, opc3)
 		elseif opc2 then
-			return num, string.format("%-6s %s", opc1, opc2)
+			return num, string.format("%-5s %s", opc1, opc2)
 		else
 			return num, string.format("%s", opc1)
 		end
@@ -81,9 +81,9 @@ end
 function pdp13.disasm_command(vm, s)
 	local cmnd, val = string.match(s, "^([d]) +([0-9a-fA-F]+)$")
 	if cmnd == "d" and val then
-		local addr = tonumber(val) or 0
+		local addr = tonumber(val, 16) or 0
 		local num, tbl, str = pdp13.disassemble(vm, addr)
-		local s = string.format("%04X \\2%-15s \\3%s", addr, pdp13.hex_dump(tbl), str)
+		local s = string.format("%04X: %-15s %s", addr, pdp13.hex_dump(tbl), str)
 		return addr+num, s
 	end
 end

@@ -19,6 +19,8 @@ local get_tbl = function(meta,key) return minetest.deserialize(meta:get_string(k
 
 local ValidExtensions= {
 	["pdp13:rom4k_burned"] = {type = "rom", size = 1},
+	["pdp13:boot_rom"] = {type = "rom", size = 1},
+	["pdp13:lamp_rom"] = {type = "rom", size = 1},
 	["pdp13:ram4k"] = {type = "ram", size = 1},
 	["pdp13:ram8k"] = {type = "ram", size = 2},
 	--[""] = true,
@@ -45,9 +47,15 @@ local function read_rom(pos, slot)
 	local stack = inv:get_stack("main", slot)
 	local name = stack:get_name()
 	local count = stack:get_count()
-	if count == 1 and name == "pdp13:rom4k_burned" then
+	if name == "pdp13:rom4k_burned" then
 		local meta = stack:get_meta()
 		return get_tbl(meta, "code")
+	end
+	if ValidExtensions[name] then
+		local ndef = minetest.registered_craftitems[name]
+		if ndef.pdp13_code then
+			return ndef.pdp13_code
+		end
 	end
 end
 
@@ -72,6 +80,10 @@ local function get_extensions(pos)
 		end
 	end	
 	return tbl
+end	
+
+local function set_running(pos, running)
+	M(pos):set_int("power", running and 1 or 0)
 end	
 
 local function allow_metadata_inventory_put(pos, listname, index, stack, player)
@@ -143,6 +155,7 @@ minetest.register_node("pdp13:chassis", {
 	allow_metadata_inventory_move = allow_metadata_inventory_move,
 	pdp13_read_rom = read_rom,
 	pdp13_get_extensions = get_extensions,
+	pdp13_set_running = set_running,
 	paramtype2 = "facedir",
 	groups = {cracky=2, crumbly=2, choppy=2},
 	on_rotate = screwdriver.disallow,
@@ -173,6 +186,7 @@ minetest.register_node("pdp13:chassis_top", {
 	allow_metadata_inventory_move = allow_metadata_inventory_move,
 	pdp13_read_rom = read_rom,
 	pdp13_get_extensions = get_extensions,
+	pdp13_set_running = set_running,
 	paramtype2 = "facedir",
 	groups = {cracky=2, crumbly=2, choppy=2},
 	on_rotate = screwdriver.disallow,

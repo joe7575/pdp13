@@ -41,16 +41,17 @@ function pdp13.update_action_list(pos)
 	local own_num = M(pos):get_string("node_number")
 	print("update_action_list")
 	local addr_tbl = get_tbl(pos, "addr_tbl")
-	for io_num,number in ipairs(addr_tbl) do
+	for io_num, number in pairs(addr_tbl) do
+		print("io_num, number", io_num, number)
 		local info = techage.get_node_info(number)
 		if info then
 			local resp = techage.send_single(0, number, "pdp13_input")
 			if resp then
-				register_action(own_num, io_num, vm16.IN, info.pos, resp.credit, resp.func)
+				register_action(own_num, io_num-1, vm16.IN, info.pos, resp.credit, resp.func)
 			end
 			resp = techage.send_single(0, number, "pdp13_output")
 			if resp then
-				register_action(own_num, io_num, vm16.OUT, info.pos, resp.credit, resp.func)
+				register_action(own_num, io_num-1, vm16.OUT, info.pos, resp.credit, resp.func)
 			end
 		elseif number ~= "" then
 			print("pdp13.update_action_list: invalid node number", number)
@@ -188,7 +189,6 @@ end
 
 local function formspec2(pos)
 	local tbl = get_tbl(pos, "addr_tbl")
-	print(dump(tbl))
 	local t = {"label[0.0,0;No]label[0.8,0;I/O Addr]label[2.2,0;Number]label[3.5,0;Info]",
 	           "label[5.2,0;No]label[6.0,0;I/O Addr]label[7.4,0;Number]label[8.7,0;Info]"}
 	for i = 1,16 do
@@ -198,7 +198,7 @@ local function formspec2(pos)
 		local info, tooltip = info_cmnd(num)
 		
 		-- label
-		t[#t+1] = "label[0.0,"..ypos..";"..(i).."]"
+		t[#t+1] = "label[0.0,"..ypos..";"..(i-1).."]"
 		-- I/O Addr
 		t[#t+1] = "label[0.8,"..ypos..";"..addr.."]"
 		-- node number
@@ -215,7 +215,7 @@ local function formspec2(pos)
 		local info, tooltip = info_cmnd(num)
 		
 		-- label
-		t[#t+1] = "label[5.2,"..ypos..";"..(i).."]"		
+		t[#t+1] = "label[5.2,"..ypos..";"..(i-1).."]"		
 		-- I/O Addr
 		t[#t+1] = "label[6.0,"..ypos..";"..addr.."]"
 		-- node number
@@ -261,22 +261,35 @@ local function load_extensions(pos)
 	end
 	return {}
 end
+
+local function chassis_set_running(pos, running)
+	local pos2 = minetest.find_node_near(pos, 1, {"pdp13:chassis", "pdp13:chassis_top"})
+	if pos2 then
+		local ndef = minetest.registered_nodes[minetest.get_node(pos2).name]
+		if ndef and ndef.pdp13_set_running then
+			ndef.pdp13_set_running(pos2, running)
+		end
+	end
+end
 	
 local function vm_input(vm, pos, addr)
+	print("vm_input", addr)
 	local own_num = M(pos):get_string("node_number")
-	local io_num = math.floor(addr / 8) + 1
+	local io_num = math.floor(addr / 8)
 	local offs = (addr % 8)
 	local hash = io_hash(own_num, io_num, vm16.IN)
 	local item = ActionHandlers[hash]
 	if item then
 		return item.func(item.pos, offs), item.credit
 	end
+	print("vm_input ups")
 	return 0xFFFF, 100
 end	
 
 local function vm_output(vm, pos, addr, value)
+	print("vm_output", addr, value)
 	local own_num = M(pos):get_string("node_number")
-	local io_num = math.floor(addr / 8) + 1
+	local io_num = math.floor(addr / 8)
 	local offs = (addr % 8)
 	local hash = io_hash(own_num, io_num, vm16.OUT)
 	local item = ActionHandlers[hash]
@@ -313,11 +326,39 @@ function pdp13.call_cpu(pos, vm, cycles)
 	return resp < vm16.HALT
 end
 
+-- In case of an error
+function pdp13.turn_cpu_off(pos)
+	if pos then
+		local mem = tubelib2.get_mem(pos)
+		local owner = M(pos):get_string("owner")
+		mem.started = false
+		mem.power = false
+		mem.state = vm16.STOP
+		if owner ~= "" then
+			pdp13.remove_from_owner_list(owner, pos)
+			pdp13.vm_destroy(owner, pos)
+		end
+		swap_node(pos, "pdp13:cpu1")
+		update_formspec(pos, mem)
+		chassis_set_running(pos, false)
+	end
+end	
+
+local function disassemble(vm, mem)
+	mem.cmnd1 = mem.cmnd2
+	mem.cmnd2 = mem.cmnd3
+	local reg = vm16.get_cpu_reg(vm)
+	local _,s = pdp13.disasm_command(vm, "d "..string.format("%04X", reg.PC))
+	s = string.gsub(s, " ", "\xE2\x80\x87")
+	mem.cmnd3 = minetest.formspec_escape(s)
+end
+
 local function single_step(pos, vm)
 	local resp = vm16.call(vm, pos, 1, vm_input, vm_output, vm_system)
 	local mem = tubelib2.get_mem(pos)
 	mem.upd_cnt = UPD_COUNT
 	mem.state = (resp > vm16.OK and resp) or vm16.STOP
+	disassemble(vm, mem)
 	update_formspec(pos, mem, vm, false)
 end
 
@@ -352,25 +393,42 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 	end
 	
 	local mem = tubelib2.get_mem(pos)
+	print(dump(mem))
 	local owner = M(pos):get_string("owner")
-	local vm = pdp13.vm_get(owner, pos)
 	
-	if not mem.power then return end
-	
+	-- I/O menu
 	if fields.tab == "2" then
 		M(pos):set_string("formspec", formspec2(pos))
-	elseif fields.tab == "1" then
-		update_formspec(pos, mem, vm, false)
-	elseif fields.key_enter_field == "address" and fields.key_enter == "true" then
-		local idx, num = string.match (fields.address, "^([0-9]+)=([0-9]*)$")
-		local owner = M(pos):get_string("owner")
+		return
+	elseif not mem.power and fields.key_enter_field == "address" and fields.key_enter == "true" then
+		local idx, num = string.match (fields.address, "^([0-9]+) *= *([0-9]*)$")
 		if idx and num and (num == "" or techage.not_protected(num, owner)) then
 			local t = get_tbl(pos, "addr_tbl")
-			t[tonumber(idx)] = num
-			set_tbl(pos, "addr_tbl", t)
-			M(pos):set_string("formspec", formspec2(pos))
-			pdp13.update_action_list(pos)
+			idx = tonumber(idx) + 1
+			if idx <= 32 then
+				t[tonumber(idx)] = num
+				set_tbl(pos, "addr_tbl", t)
+				M(pos):set_string("formspec", formspec2(pos))
+				pdp13.update_action_list(pos)
+			end
 		end
+		return
+	end
+	
+	-- passive CPU menu
+	if not mem.power then
+		if fields.tab == "1" then
+			update_formspec(pos, mem)
+		end
+		return
+	end
+	
+	local vm = pdp13.vm_get(owner, pos)
+	if not vm then return end
+	
+	-- active CPU menu
+	if fields.tab == "1" then
+		update_formspec(pos, mem, vm, false)
 	elseif fields.key_enter_field == "command" and fields.key_enter == "true" then
 		local cmnd, val = string.match (fields.command, "^([wrld]) +([0-9a-fA-F]+)$")
 		if cmnd and val then
@@ -388,6 +446,7 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 		if cmnd == "l" then 
 			mem.state = vm16.STOP
 			vm16.loadaddr(vm, tonumber(val, 16))
+			disassemble(vm, mem)
 			update_formspec(pos, mem, vm, false)
 		elseif cmnd == "d" then
 			mem.state = vm16.STOP
@@ -420,6 +479,7 @@ local function pdp13_command(pos, cmnd)
 	if cmnd == "on" then
 		local mem = tubelib2.get_mem(pos)
 		local owner = M(pos):get_string("owner")
+		chassis_set_running(pos, true)
 		pdp13.vm_create(owner, pos, load_extensions(pos))
 		pdp13.add_to_owner_list(owner, pos)
 		pdp13.update_action_list(pos)
@@ -435,6 +495,7 @@ local function pdp13_command(pos, cmnd)
 		mem.started = false
 		mem.power = false
 		mem.state = vm16.STOP
+		chassis_set_running(pos, false)
 		pdp13.remove_from_owner_list(owner, pos)
 		pdp13.vm_destroy(owner, pos)
 		swap_node(pos, "pdp13:cpu1")
