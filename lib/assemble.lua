@@ -56,7 +56,7 @@ local function decode(line)
 	local words = string.split(line, " ", false, 3)
 	opcode = tOpcodes[words[1]]
 	if not opcode then return end
-	if opcode < 4 then
+	if words[2] and opcode < 4 then
 		local num = value(words[2]) % 1024
 		opnd1 = math.floor(num / 32)
 		opnd2 = num % 32

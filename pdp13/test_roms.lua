@@ -13,7 +13,7 @@
 ]]--
 
 minetest.register_craftitem("pdp13:boot_rom", {
-	description = "PDP-13 Monitor ROM 1000",
+	description = "PDP-13 Boot ROM 1000",
 	inventory_image = "pdp13_rom4k.png",
 	stack_max = 1,
 	pdp13_code = {

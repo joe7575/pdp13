@@ -16,7 +16,7 @@
 -- OP-codes
 --
 pdp13.VM13Opcodes = {[0] =
-    "dly:NUM:-", "sys:NUM:-", "rst:NUM:-", "res:-:-",
+    "nop:-:-", "dly:-:-", "sys:NUM:-", "int:NUM:-",
 	"jump:ADR:-", "call:ADR:-", "ret:-:-", "halt:-:-",
     "move:DST:SRC", "xchg:DST:DST", "inc:DST:-", "dec:DST:-",
     "add:DST:SRC", "sub:DST:SRC", "mul:DST:SRC", "div:DST:SRC",
@@ -24,7 +24,8 @@ pdp13.VM13Opcodes = {[0] =
     "bnze:DST:ADR", "bze:DST:ADR", "bpos:DST:ADR", "bneg:DST:ADR",
     "in:DST:CNST", "out:CNST:SRC", "push:SRC:-", "pop:DST:-", 
     "swap:DST:-", "dbnz:DST:ADR", "mod:DST:SRC",
-	"shl:DST:SRC", "shr:DST:SRC", 
+	"shl:DST:SRC", "shr:DST:SRC", "addc:DST:SRC", "mulc:DST:SRC",
+    "skne:SRC:SRC", "skeq:SRC:SRC", "sklt:SRC:SRC", "skgt:SRC:SRC",
 }
 
 --

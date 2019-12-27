@@ -39,28 +39,28 @@ local function lookup(memw1, memw2, memw3)
 	local idx1 = math.floor(memw1 / 1024)
 	local opc1, opc2, opc3 = unpack(string.split(pdp13.VM13Opcodes[idx1], ":"))
 	if opc1 then
-		local rest = memw1 - (idx1 * 1024)
-		local idx2 = math.floor(rest / 32)
-		local idx3 = rest % 32
-		local num = 1 + (idx2 >= 16 and 1 or 0) + (idx3 >= 16 and 1 or 0)
+		if opc2 == "NUM" then
+			return 1, string.format("%-5s %u", opc1, memw1 % 1024)
+		else
+			local rest = memw1 - (idx1 * 1024)
+			local idx2 = math.floor(rest / 32)
+			local idx3 = rest % 32
+			local num = 1 + (idx2 >= 16 and 1 or 0) + (idx3 >= 16 and 1 or 0)
 		
-		if num == 3 then -- three words needed
-			opc2 = operand(opc2, pdp13.VM13Operands[idx2], memw2)
-			opc3 = operand(opc3, pdp13.VM13Operands[idx3], memw3)
-		elseif idx1 < 4 then -- special opcodes
-			opc2 =  string.format("%u", idx2 * 32 + idx3)
-			opc3 = nil
-			num = 1
-		else
-			opc2 = operand(opc2, pdp13.VM13Operands[idx2], memw2)
-			opc3 = operand(opc3, pdp13.VM13Operands[idx3], memw2)
-		end
-		if opc2 and opc3 then
-			return num, string.format("%-5s %s, %s", opc1, opc2, opc3)
-		elseif opc2 then
-			return num, string.format("%-5s %s", opc1, opc2)
-		else
-			return num, string.format("%s", opc1)
+			if num == 3 then -- three words needed
+				opc2 = operand(opc2, pdp13.VM13Operands[idx2], memw2)
+				opc3 = operand(opc3, pdp13.VM13Operands[idx3], memw3)
+			else
+				opc2 = operand(opc2, pdp13.VM13Operands[idx2], memw2)
+				opc3 = operand(opc3, pdp13.VM13Operands[idx3], memw2)
+			end
+			if opc2 and opc3 then
+				return num, string.format("%-5s %s, %s", opc1, opc2, opc3)
+			elseif opc2 then
+				return num, string.format("%-5s %s", opc1, opc2)
+			else
+				return num, string.format("%s", opc1)
+			end
 		end
 	end
 	
