@@ -98,23 +98,23 @@ local function formspec1(mem, cpu)
 		"label[6.5,0.4; halt]"..
 		"label[8.5,0.4; sys]"..
 		
-		"button[0,5.4;1.8,1;start;start]"..
-		"button[1.9,5.4;1.8,1;stop;stop]"..
+		"button[0,5.4;1.7,1;start;start]"..
+		"button[1.7,5.4;1.7,1;stop;stop]"..
 		
-		"button[0,6.3;1.8,1;step;step]"..
-		"button[1.9,6.3;1.8,1;reset;reset]"..
+		"button[0,6.3;1.7,1;step;step]"..
+		"button[1.7,6.3;1.7,1;reset;reset]"..
 		
-		"button[0,7.2;1.8,1;examine;examine]"..
-		"button[1.9,7.2;1.8,1;register;register]"..
+		"button[0,7.2;1.7,1;examine;examine]"..
+		"button[1.7,7.2;1.7,1;register;register]"..
 		
-		"background[3.8,5.6;6.1,1.2;pdp13_form_mask.png]"..
-		"label[3.8,5.5;"..cmnd1.."]"..
-		"label[3.8,5.9;"..cmnd2.."]"..
-		"label[3.8,6.3;"..cmnd3.."]"..
+		"background[3.5,5.6;6.4,1.2;pdp13_form_mask.png]"..
+		"label[3.5,5.5;"..cmnd1.."]"..
+		"label[3.5,5.9;"..cmnd2.."]"..
+		"label[3.5,6.3;"..cmnd3.."]"..
 		
-		"label[3.8,6.8;l <addr> (load)     d <val> (deposite)]"..
+		"label[3.5,6.8;l <addr> (load)     d <val> (deposite)]"..
 		
-		"field[4,7.6;6.3,0.8;command;;]"..
+		"field[3.7,7.6;6.6,0.8;command;;]"..
 		"field_close_on_enter[command;false]"
 end
 
@@ -238,7 +238,10 @@ local function disassemble(vm, mem)
 	mem.cmnd1 = mem.cmnd2
 	mem.cmnd2 = mem.cmnd3
 	local reg = vm16.get_cpu_reg(vm)
-	local _,s = pdp13.unasm_command(vm, "u "..hex16(reg.PC))
+	local tbl = vm16.read_mem(vm, reg.PC, 4)
+	local num,cmnd = pdp13.disassemble(tbl)
+	tbl = vm16.read_mem(vm, reg.PC, num)
+	s = string.format("%04X: %-15s %s", reg.PC, pdp13.hex_dump(tbl), cmnd)
 	s = string.gsub(s, " ", "\xE2\x80\x87")
 	mem.cmnd3 = minetest.formspec_escape(s)
 end
@@ -246,9 +249,8 @@ end
 local function mem_dump(vm, mem, cpu)
 	mem.cmnd1 = mem.cmnd2
 	mem.cmnd2 = mem.cmnd3
-	local _,s = pdp13.dump_command(vm, "d "..hex16(cpu.PC))
-	s = string.gsub(s, " ", "\xE2\x80\x87")
-	mem.cmnd3 = minetest.formspec_escape(s)
+	mem.cmnd3 = string.format("%04X:  %04X  %04X  %04X  %04X", 
+		cpu.PC, cpu.mem0, cpu.mem1, cpu.mem2, cpu.mem3)
 end
 
 local function CPU_register(vm, mem)

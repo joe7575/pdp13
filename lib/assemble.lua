@@ -48,12 +48,12 @@ local function operand(s)
 	return 0
 end
 
-local function decode(line)
+function pdp13.assemble(s)
 	local opcode, opnd1, opnd2, val1, val2
-	line = line:trim()
-	if line == "" then return end
-	line = string.gsub(line, ",", " ")
-	local words = string.split(line, " ", false, 3)
+	s = s:trim()
+	if s == "" then return end
+	s = string.gsub(s, ",", " ")
+	local words = string.split(s, " ", false, 3)
 	opcode = tOpcodes[words[1]]
 	if not opcode then return end
 	if words[2] and opcode < 4 then
@@ -68,27 +68,4 @@ local function decode(line)
 	if val1 then tbl[#tbl+1] = val1 end
 	if val2 then tbl[#tbl+1] = val2 end
 	return tbl
-end
-
--- addr is the start address
-function pdp13.assemble(vm, addr)
-	local mem = vm16.read_mem(vm, addr, 3)
-	if mem then
-		local num, s = lookup(mem[1], mem[2], mem[3])
-		local tbl = {}
-		for i = 1,num do tbl[i] = mem[i] end
-		return num, tbl, s
-	end
-end
-
-function pdp13.assemble_command(vm, s)
-	local cmnd, addr, str = string.match(s, "^([a]) +([0-9a-fA-F]+) +([0-9a-zA-Z #%[%]%+%-%,%$]+)$")
-	if cmnd == "a" then
-		local dump = decode(str)
-		if dump then
-			return addr, dump, str
-		else
-			return addr, {0}, "syntax error"
-		end
-	end
 end
