@@ -25,6 +25,7 @@ dofile(MP.."/lib/assemble.lua")
 dofile(MP.."/lib/disasm.lua")
 
 -- PDP-13
+dofile(MP.."/pdp13/io.lua")
 dofile(MP.."/pdp13/cpu.lua")
 dofile(MP.."/pdp13/power.lua")
 dofile(MP.."/pdp13/rom4k.lua")

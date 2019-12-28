@@ -78,12 +78,22 @@ function pdp13.disassemble(vm, addr)
 	end
 end
 
-function pdp13.disasm_command(vm, s)
-	local cmnd, val = string.match(s, "^([d]) +([0-9a-fA-F]+)$")
-	if cmnd == "d" and val then
+function pdp13.unasm_command(vm, s)
+	local cmnd, val = string.match(s, "^([u]) +([0-9a-fA-F]+)$")
+	if cmnd == "u" and val then
 		local addr = tonumber(val, 16) or 0
 		local num, tbl, str = pdp13.disassemble(vm, addr)
 		local s = string.format("%04X: %-15s %s", addr, pdp13.hex_dump(tbl), str)
 		return addr+num, s
+	end
+end
+
+function pdp13.dump_command(vm, s)
+	local cmnd, val = string.match(s, "^([d]) +([0-9a-fA-F]+)$")
+	if cmnd == "d" and val then
+		local addr = tonumber(val, 16) or 0
+		local tbl = vm16.read_mem(vm, addr, 4)
+		local s = string.format("%04X: %s", addr, pdp13.hex_dump(tbl))
+		return addr+4, s
 	end
 end

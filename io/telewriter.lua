@@ -277,7 +277,7 @@ local function pdp13_output(pos, offs, value)
 			data.outp = {}
 			data.update = true
 			data.running = true
-		else -- character based text output
+		elseif value then -- character based text output
 			data.outp = data.outp or {}
 			if data.punch and data.codes and #data.codes < 4096 then
 				data.codes[#data.codes+1] = value

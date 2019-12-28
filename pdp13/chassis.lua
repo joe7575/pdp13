@@ -21,6 +21,7 @@ local ValidExtensions= {
 	["pdp13:rom4k_burned"] = {type = "rom", size = 1},
 	["pdp13:boot_rom"] = {type = "rom", size = 1},
 	["pdp13:lamp_rom"] = {type = "rom", size = 1},
+	["pdp13:tty_outp"] = {type = "rom", size = 1},
 	["pdp13:ram4k"] = {type = "ram", size = 1},
 	["pdp13:ram8k"] = {type = "ram", size = 2},
 	--[""] = true,

@@ -18,65 +18,29 @@ local M = minetest.get_meta
 local get_tbl = function(pos,key)      return minetest.deserialize(M(pos):get_string(key)) or {} end
 local set_tbl = function(pos,key,tbl)  M(pos):set_string(key, minetest.serialize(tbl)) end
 
-local UPD_COUNT  = 20
+local vm_input  = pdp13.vm_input
+local vm_output = pdp13.vm_output
+local vm_system = pdp13.vm_system
 
-local ActionHandlers = {}
-local SystemHandlers = {}
 
-local function io_hash(number, io_num, io_type)
-	return ((tonumber(number) or 0) * 256) + (io_num * 8) + (io_type)
-end
-
--- Action (input/output):
---   u16_resp = output(pos, u3_offs, u16_data) -- return 0/1
---   u16_resp = input(pos, u3_offs)
-local function register_action(own_num, io_num, io_type, io_pos, credit, func)
-	print("ActionHandlers: io_num, io_type, credit", io_num, io_type, credit)
-	local hash = io_hash(own_num, io_num, io_type)
-	ActionHandlers[hash] = ActionHandlers[hash] or {}
-	ActionHandlers[hash] = {pos = io_pos, func = func, credit = credit}
-end
-
-function pdp13.update_action_list(pos)
-	local own_num = M(pos):get_string("node_number")
-	print("update_action_list")
-	local addr_tbl = get_tbl(pos, "addr_tbl")
-	for io_num, number in pairs(addr_tbl) do
-		print("io_num, number", io_num, number)
-		local info = techage.get_node_info(number)
-		if info then
-			local resp = techage.send_single(0, number, "pdp13_input")
-			if resp then
-				register_action(own_num, io_num-1, vm16.IN, info.pos, resp.credit, resp.func)
-			end
-			resp = techage.send_single(0, number, "pdp13_output")
-			if resp then
-				register_action(own_num, io_num-1, vm16.OUT, info.pos, resp.credit, resp.func)
-			end
-		elseif number ~= "" then
-			print("pdp13.update_action_list: invalid node number", number)
-		end
-	end
-end
-
--- regA, regB, points = func(vm, pos, addr, regA, regB)
-function pdp13.register_system_handler(addr, regA, func)
-	SystemHandlers[addr] = SystemHandlers[addr] or {}
-	SystemHandlers[addr][regA] = func
-end
-	
-local function leds(address, data)
+local function leds(address, data1, data2)
 	local lLed = {}
 	for i = 16,1,-1 do
 		if vm16.testbit(address, 16-i) then
 			local xpos = -0.18 + i * 0.399
-			lLed[#lLed+1] = "image["..xpos..",1.6;0.4,0.4;pdp13_led_form.png]"
+			lLed[#lLed+1] = "image["..xpos..",1.3;0.4,0.4;pdp13_led_form.png]"
 		end
 	end
 	for i = 16,1,-1 do
-		if vm16.testbit(data, 16-i) then
+		if vm16.testbit(data1, 16-i) then
 			local xpos = -0.18 + i * 0.399
-			lLed[#lLed+1] = "image["..xpos..",3.0;0.4,0.4;pdp13_led_form.png]"
+			lLed[#lLed+1] = "image["..xpos..",2.4;0.4,0.4;pdp13_led_form.png]"
+		end
+	end
+	for i = 16,1,-1 do
+		if vm16.testbit(data2, 16-i) then
+			local xpos = -0.18 + i * 0.399
+			lLed[#lLed+1] = "image["..xpos..",3.15;0.4,0.4;pdp13_led_form.png]"
 		end
 	end
 	return table.concat(lLed, "")
@@ -108,28 +72,26 @@ local function hex16(u16)
 	return string.format("%04X", u16)
 end
 
-local function formspec1(mem, cpu, last)
+local function formspec1(mem, cpu)
 	local sLED
-	if last == true then
-		sLED = leds(cpu.l_addr, cpu.l_data)
-	elseif last == false then
-		sLED = leds(cpu.PC, cpu.mem0)
+	if cpu then
+		sLED = leds(cpu.PC, cpu.mem0, cpu.mem1)
 	else
-		sLED = leds(0, 0)
+		sLED = leds(0, 0, 0)
 	end
 	mem.state = mem.state or vm16.STOP
 	local state = vm_state(mem)
-	local update = (mem.upd_cnt and mem.upd_cnt > 1 and mem.upd_cnt) or "update"
+	local img = mem.started and "pdp13_cpu_form_run.png" or "pdp13_cpu_form.png"
 	local cmnd1 = mem.cmnd1 or ""
 	local cmnd2 = mem.cmnd2 or ""
 	local cmnd3 = mem.cmnd3 or ""
 	return "size[10,7.7]"..
 		"tabheader[0,0;tab;CPU,I/O;1;;true]"..
-		"background[-0.1,-0.2;10.2,5.6;pdp13_cpu_form.png]"..
+		"background[-0.1,-0.2;10.2,5.6;"..img.."]"..
 		sLED..
 		state..
-		"label[5.1,0.82;ADDRESS]"..
-		"label[5.1,2.22;DATA]"..
+		"label[5.1,0.82;address]"..
+		"label[5.1,1.93;data]"..
 		
 		"label[2.5,0.4; run]"..
 		"label[4.5,0.4; i/o]"..
@@ -143,7 +105,7 @@ local function formspec1(mem, cpu, last)
 		"button[1.9,6.3;1.8,1;reset;reset]"..
 		
 		"button[0,7.2;1.8,1;examine;examine]"..
-		"button[1.9,7.2;1.8,1;update;"..update.."]"..
+		"button[1.9,7.2;1.8,1;register;register]"..
 		
 		"background[3.8,5.6;6.1,1.2;pdp13_form_mask.png]"..
 		"label[3.8,5.5;"..cmnd1.."]"..
@@ -236,11 +198,11 @@ local function formspec2(pos)
 		"field_close_on_enter[address;false]"
 end
 
-local function update_formspec(pos, mem, vm, last)
+local function update_formspec(pos, mem, vm, cpu)
 	if vm then
-		local cpu = vm16.get_cpu_reg(vm)
+		cpu = cpu or vm16.get_cpu_reg(vm)
 		if cpu then
-			M(pos):set_string("formspec", formspec1(mem, cpu, last))
+			M(pos):set_string("formspec", formspec1(mem, cpu))
 			return
 		end
 	end
@@ -272,56 +234,38 @@ local function chassis_set_running(pos, running)
 	end
 end
 	
-local function vm_input(vm, pos, addr)
-	print("vm_input", addr)
-	local own_num = M(pos):get_string("node_number")
-	local io_num = math.floor(addr / 8)
-	local offs = (addr % 8)
-	local hash = io_hash(own_num, io_num, vm16.IN)
-	local item = ActionHandlers[hash]
-	if item then
-		return item.func(item.pos, offs), item.credit
-	end
-	print("vm_input ups")
-	return 0xFFFF, 100
-end	
+local function disassemble(vm, mem)
+	mem.cmnd1 = mem.cmnd2
+	mem.cmnd2 = mem.cmnd3
+	local reg = vm16.get_cpu_reg(vm)
+	local _,s = pdp13.unasm_command(vm, "u "..hex16(reg.PC))
+	s = string.gsub(s, " ", "\xE2\x80\x87")
+	mem.cmnd3 = minetest.formspec_escape(s)
+end
 
-local function vm_output(vm, pos, addr, value)
-	print("vm_output", addr, value)
-	local own_num = M(pos):get_string("node_number")
-	local io_num = math.floor(addr / 8)
-	local offs = (addr % 8)
-	local hash = io_hash(own_num, io_num, vm16.OUT)
-	local item = ActionHandlers[hash]
-	if item then
-		return item.func(item.pos, offs, value), item.credit
-	end
-	return 0xFFFF, 100
-end	
+local function mem_dump(vm, mem, cpu)
+	mem.cmnd1 = mem.cmnd2
+	mem.cmnd2 = mem.cmnd3
+	local _,s = pdp13.dump_command(vm, "d "..hex16(cpu.PC))
+	s = string.gsub(s, " ", "\xE2\x80\x87")
+	mem.cmnd3 = minetest.formspec_escape(s)
+end
 
-local function vm_system(vm, pos, addr, regA, regB)
-	print("vm_system", addr, regA, regB)
-	if SystemHandlers[addr] and SystemHandlers[addr][regA] then
-		return SystemHandlers[addr][regA](vm, pos, addr, regA, regB)
-	end
-	return 0xFFFF, regB, 100
+local function CPU_register(vm, mem)
+	local reg = vm16.get_cpu_reg(vm)
+	mem.cmnd1 = mem.cmnd2
+	mem.cmnd2 = string.format("A:%04X  B:%04X    C:%04X     D:%04X", reg.A, reg.B, reg.C, reg.D)
+	mem.cmnd3 = string.format("X:%04X  Y:%04X  SP:%04X  PC:%04X", reg.X, reg.Y, reg.SP, reg.PC)
 end
 
 function pdp13.call_cpu(pos, vm, cycles)
 	local resp = vm16.call(vm, pos, cycles, vm_input, vm_output, vm_system)
-	local mem = tubelib2.get_mem(pos)
 	if resp >= vm16.HALT then
 		swap_node(pos, "pdp13:cpu1")
+		local mem = tubelib2.get_mem(pos)
 		mem.started = false		
-		mem.upd_cnt = 1
-	end
-	if mem.upd_cnt then
 		mem.state = resp
-		update_formspec(pos, mem, vm, false)
-		mem.upd_cnt = mem.upd_cnt - 1
-		if mem.upd_cnt < 0 then
-			mem.upd_cnt = nil
-		end
+		update_formspec(pos, mem, vm)
 	end
 	return resp < vm16.HALT
 end
@@ -334,6 +278,9 @@ function pdp13.turn_cpu_off(pos)
 		mem.started = false
 		mem.power = false
 		mem.state = vm16.STOP
+		mem.cmnd1 = ""
+		mem.cmnd2 = ""
+		mem.cmnd3 = ""
 		if owner ~= "" then
 			pdp13.remove_from_owner_list(owner, pos)
 			pdp13.vm_destroy(owner, pos)
@@ -344,22 +291,12 @@ function pdp13.turn_cpu_off(pos)
 	end
 end	
 
-local function disassemble(vm, mem)
-	mem.cmnd1 = mem.cmnd2
-	mem.cmnd2 = mem.cmnd3
-	local reg = vm16.get_cpu_reg(vm)
-	local _,s = pdp13.disasm_command(vm, "d "..string.format("%04X", reg.PC))
-	s = string.gsub(s, " ", "\xE2\x80\x87")
-	mem.cmnd3 = minetest.formspec_escape(s)
-end
-
 local function single_step(pos, vm)
 	local resp = vm16.call(vm, pos, 1, vm_input, vm_output, vm_system)
 	local mem = tubelib2.get_mem(pos)
-	mem.upd_cnt = UPD_COUNT
 	mem.state = (resp > vm16.OK and resp) or vm16.STOP
 	disassemble(vm, mem)
-	update_formspec(pos, mem, vm, false)
+	update_formspec(pos, mem, vm)
 end
 
 local function on_receive_fields_started(pos, formname, fields, player)
@@ -374,16 +311,16 @@ local function on_receive_fields_started(pos, formname, fields, player)
 	if fields.tab == "2" then
 		M(pos):set_string("formspec", formspec2(pos))
 	elseif fields.tab == "1" then
-		update_formspec(pos, mem, vm, false)
+		mem.cmnd1 = ""
+		mem.cmnd2 = ""
+		mem.cmnd3 = ""
+		update_formspec(pos, mem, vm)
 	elseif fields.stop then
 		pdp13.vm_suspend(owner, pos)
 		mem.state = vm16.STOP
 		mem.started = false
-		update_formspec(pos, mem, vm, false)
+		update_formspec(pos, mem, vm)
 		swap_node(pos, "pdp13:cpu1")
-	elseif fields.update then
-		mem.upd_cnt = UPD_COUNT
-		update_formspec(pos, mem, vm, false)
 	end
 end
 
@@ -418,6 +355,9 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 	-- passive CPU menu
 	if not mem.power then
 		if fields.tab == "1" then
+			mem.cmnd1 = ""
+			mem.cmnd2 = ""
+			mem.cmnd3 = ""
 			update_formspec(pos, mem)
 		end
 		return
@@ -428,7 +368,10 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 	
 	-- active CPU menu
 	if fields.tab == "1" then
-		update_formspec(pos, mem, vm, false)
+		mem.cmnd1 = ""
+		mem.cmnd2 = ""
+		mem.cmnd3 = ""
+		update_formspec(pos, mem, vm)
 	elseif fields.key_enter_field == "command" and fields.key_enter == "true" then
 		local cmnd, val = string.match (fields.command, "^([wrld]) +([0-9a-fA-F]+)$")
 		if cmnd and val then
@@ -447,11 +390,12 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 			mem.state = vm16.STOP
 			vm16.loadaddr(vm, tonumber(val, 16))
 			disassemble(vm, mem)
-			update_formspec(pos, mem, vm, false)
+			update_formspec(pos, mem, vm)
 		elseif cmnd == "d" then
+			local cpu = vm16.get_cpu_reg(vm)
 			mem.state = vm16.STOP
 			vm16.deposit(vm, tonumber(val, 16)) 
-			update_formspec(pos, mem, vm, true)
+			update_formspec(pos, mem, vm, cpu)
 		elseif cmnd == "r" then 
 			print(dump(vm16.get_cpu_reg(vm)))
 		end 
@@ -461,17 +405,22 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 		mem.started = true
 		mem.state = vm16.OK
 		mem.upd_cnt = UPD_COUNT
-		update_formspec(pos, mem, vm)
+		M(pos):set_string("formspec", formspec1(mem))
 		swap_node(pos, "pdp13:cpu1_on")
 	elseif fields.examine then
-		vm16.examine(vm)
-		update_formspec(pos, mem, vm, true)
-	elseif fields.step and mem.state ~= vm16.HALT then
+		local cpu = vm16.get_cpu_reg(vm)
+		mem_dump(vm, mem, cpu)
+		update_formspec(pos, mem, vm, cpu)
+		vm16.loadaddr(vm, cpu.PC + 4)
+	elseif fields.step then
 		single_step(pos, vm)
 	elseif fields.reset then
 		mem.state = vm16.STOP
 		vm16.loadaddr(vm, 0) 
-		update_formspec(pos, mem, vm, false)
+		update_formspec(pos, mem, vm)
+	elseif fields.register then
+		CPU_register(vm, mem)
+		update_formspec(pos, mem, vm)
 	end
 end
 
@@ -565,32 +514,4 @@ minetest.register_node("pdp13:cpu1_on", {
 	is_ground_content = false,
 	sounds = default.node_sound_wood_defaults(),
 })
-
--- read from TTY
-local function read_tty(vm, pos, addr, regA, regB)
-	local sts,_ = vm_input(vm, pos, 0)
-	local offs = 0
-	while sts ~= 0 and offs < 64 do
-		local data,_ = vm_input(vm, pos, 1)
-		print("write_mem", offs, data)
-		vm16.write_mem(vm, offs, {data})
-		sts,_ = vm_input(vm, pos, 0)
-		offs = offs + 1
-	end
-	print("vm_system", offs, 100)
-	return offs, regB, 100
-end
-
--- write to TTY
-local function write_tty(vm, pos, addr, regA, regB)
-	print("write_tty", addr, regA, regB)
-	local num = math.min(vm16.peek(vm, 0x003f), 64)
-	local tbl = vm16.read_mem(vm, 0x0080, num)
-	print("write_tty2", num, dump(tbl))
-	local sts,_ = vm_output(vm, pos, 0, tbl)
-	return sts, regB, 100
-end
-
-pdp13.register_system_handler(0, 0, read_tty)
-pdp13.register_system_handler(0, 1, write_tty)
 
