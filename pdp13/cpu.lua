@@ -72,7 +72,7 @@ local function hex16(u16)
 	return string.format("%04X", u16)
 end
 
-local function formspec1(mem, cpu)
+local function formspec1(pos, mem, cpu)
 	local sLED
 	if cpu then
 		sLED = leds(cpu.PC, cpu.mem0, cpu.mem1)
@@ -85,11 +85,14 @@ local function formspec1(mem, cpu)
 	local cmnd1 = mem.cmnd1 or ""
 	local cmnd2 = mem.cmnd2 or ""
 	local cmnd3 = mem.cmnd3 or ""
+	local redraw = (M(pos):get_int("redraw") or 0) + 1
+	M(pos):set_int("redraw", redraw)
 	return "size[10,7.7]"..
 		"tabheader[0,0;tab;CPU,I/O;1;;true]"..
 		"background[-0.1,-0.2;10.2,5.6;"..img.."]"..
 		sLED..
 		state..
+		"label[-2,-2;"..redraw.."]"..
 		"label[5.1,0.82;address]"..
 		"label[5.1,1.93;data]"..
 		
@@ -187,9 +190,12 @@ local function formspec2(pos)
 		-- tooltip
 		t[#t+1] = "tooltip[8.7,"..ypos..";2,0.5;"..tooltip.."]"
 	end	
+	local redraw = (M(pos):get_int("redraw") or 0) + 1
+	M(pos):set_int("redraw", redraw)
 	
 	return "size[10,7.7]"..
 		"tabheader[0,0;tab;CPU,I/O;2;;true]"..
+		"label[-2,-2;"..redraw.."]"..
 		"background[0.0,0.6;4.8,6.4;pdp13_form_mask_lila.png]"..
 		"background[5.2,0.6;4.8,6.4;pdp13_form_mask_lila.png]"..
 		table.concat(t, "")..
@@ -202,11 +208,11 @@ local function update_formspec(pos, mem, vm, cpu)
 	if vm then
 		cpu = cpu or vm16.get_cpu_reg(vm)
 		if cpu then
-			M(pos):set_string("formspec", formspec1(mem, cpu))
+			M(pos):set_string("formspec", formspec1(pos, mem, cpu))
 			return
 		end
 	end
-	M(pos):set_string("formspec", formspec1(mem))
+	M(pos):set_string("formspec", formspec1(pos, mem))
 end	
 
 local function load_extensions(pos)
@@ -255,7 +261,7 @@ end
 
 local function CPU_register(vm, mem)
 	local reg = vm16.get_cpu_reg(vm)
-	mem.cmnd1 = mem.cmnd2
+	mem.cmnd1 = mem.cmnd3
 	mem.cmnd2 = string.format("A:%04X  B:%04X    C:%04X     D:%04X", reg.A, reg.B, reg.C, reg.D)
 	mem.cmnd3 = string.format("X:%04X  Y:%04X  SP:%04X  PC:%04X", reg.X, reg.Y, reg.SP, reg.PC)
 end
@@ -386,6 +392,7 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 			if data and reg then
 				print("write", reg.PC, #data)
 				vm16.write_mem(vm, reg.PC, data)
+				update_formspec(pos, mem, vm)
 			end			
 		end
 		if cmnd == "l" then 
@@ -407,7 +414,7 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 		mem.started = true
 		mem.state = vm16.OK
 		mem.upd_cnt = UPD_COUNT
-		M(pos):set_string("formspec", formspec1(mem))
+		M(pos):set_string("formspec", formspec1(pos, mem))
 		swap_node(pos, "pdp13:cpu1_on")
 	elseif fields.examine then
 		local cpu = vm16.get_cpu_reg(vm)

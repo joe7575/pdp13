@@ -9,6 +9,14 @@
 	See LICENSE.txt for more information
 	
 	PDP-13 Telewriter
+	
+	I/O Addresses:
+	
+	offs dir description
+	---- --- ------------------
+	0x00 OUT output to the printer or tape
+	0x01 IN  status (number of characters to read)
+	0x02 IN  input  (next character from keyboard or tape)	
 
 ]]--
 
@@ -20,6 +28,9 @@ local set_tbl = function(meta,key,tbl)  meta:set_string(key, minetest.serialize(
 
 local Cache = {}
 
+local IO_OUTP = 0
+local IO_STS  = 1
+local IO_INP  = 2
 
 local function get_data(number)
 	if Cache[number] then return Cache[number] end
@@ -71,10 +82,13 @@ local function button(name, label, on, x, y)
 		"container_end[]"
 end
 
-local function formspec1(number)
+local function formspec1(pos, number)
 	local data = get_data(number)
+	local redraw = (M(pos):get_int("redraw") or 0) + 1
+	M(pos):set_int("redraw", redraw)
 	return "size[10,8.5]" ..
 		"tabheader[0,0;tab;main,tape;1;;true]"..
+		"label[-2,-2;"..redraw.."]"..
 		"background[0,0;10,7.2;pdp13_paper_form.png]"..
 		"container[0.5,-0.3]"..
 		format_text(data)..
@@ -140,6 +154,33 @@ local function printline(data, text)
 	end
 end
 
+local function node_timer(pos, elapsed)
+	local number = M(pos):get_string("node_number")
+	local data = get_data(number)
+	data.countdown = (data.countdown or 2) - 1
+	if data.countdown > 0 then
+		minetest.sound_play("pdp13_telewriter", {
+			pos = pos, 
+			gain = 1,
+			max_hear_distance = 5})
+	elseif data.countdown == 0 then
+		M(pos):set_string("formspec", formspec1(pos, number))
+	end
+	return data.countdown > 0
+end
+
+-- ticks is 1 for a printer output
+-- or more for tape punch/reader actions
+local function start_timer(pos, data, ticks)
+	if not minetest.get_node_timer(pos):is_started() then
+		data.countdown = ticks + 1
+		minetest.get_node_timer(pos):start(1)	
+		node_timer(pos, 0)
+--	else
+--		data.countdown = ticks + 1
+	end
+end	
+	
 minetest.register_node("pdp13:telewriter", {
 	description = "PDP-13 Telewriter",
 	tiles = {
@@ -168,9 +209,8 @@ minetest.register_node("pdp13:telewriter", {
 		M(pos):set_string("owner", placer:get_player_name())
 		local own_num = techage.add_node(pos, "pdp13:telewriter")
 		M(pos):set_string("node_number", own_num)
-		M(pos):set_string("formspec", formspec1(own_num))
+		M(pos):set_string("formspec", formspec1(pos, own_num))
 		M(pos):set_string("infotext", "PDP-13 Telewriter "..own_num)
-		minetest.get_node_timer(pos):start(1)
 	end,
 	on_receive_fields = function(pos, formname, fields, player)
 		if minetest.is_protected(pos, player:get_player_name()) then
@@ -182,7 +222,7 @@ minetest.register_node("pdp13:telewriter", {
 		if fields.tab == "2" then
 			M(pos):set_string("formspec", formspec2(number))
 		elseif fields.tab == "1" then
-			M(pos):set_string("formspec", formspec1(number))
+			M(pos):set_string("formspec", formspec1(pos, number))
 		elseif fields.key_enter == "true" then
 			if data.punch then -- punch to tape
 				fields.cmnd = string.gsub(fields.cmnd, "\\t", "\t")
@@ -190,7 +230,7 @@ minetest.register_node("pdp13:telewriter", {
 				for _,val in ipairs(to_hexnumbers(fields.cmnd)) do
 					data.codes[#data.codes+1] = val
 				end
-				M(pos):set_string("formspec", formspec1(number))
+				M(pos):set_string("formspec", formspec1(pos, number))
 				minetest.sound_play("pdp13_telewriter", {
 					pos = pos, 
 					gain = 1,
@@ -211,7 +251,6 @@ minetest.register_node("pdp13:telewriter", {
 			elseif tape_type(pos) == "pdp13:tape" then
 				data.punch = true
 				data.codes = {}
-				minetest.get_node_timer(pos):start(1)
 				if data.punch and data.reader then
 					data.reader = false
 				end
@@ -226,7 +265,6 @@ minetest.register_node("pdp13:telewriter", {
 				printline(data, "*** TELEWRITER V1.0 ***")
 				printline(data, "Tape reader started")
 				data.fifo = read_tape(pos, number)
-				minetest.get_node_timer(pos):start(1)
 				if data.punch and data.reader then
 					data.punch = false
 				end
@@ -234,22 +272,7 @@ minetest.register_node("pdp13:telewriter", {
 			M(pos):set_string("formspec", formspec2(number))
 		end
 	end,
-	on_timer = function(pos, elapsed)
-		local number = M(pos):get_string("node_number")
-		local data = get_data(number)
-		if data.running then
-			data.running = false
-			minetest.sound_play("pdp13_telewriter", {
-				pos = pos, 
-				gain = 1,
-				max_hear_distance = 5})
-		end
-		if data.update then
-			data.update = false
-			M(pos):set_string("formspec", formspec1(number))
-		end
-		return true
-	end,
+	on_timer = node_timer,
 	after_dig_node = function(pos, oldnode)
 		--techage.power.after_dig_node(pos, oldnode)
 	end,
@@ -264,7 +287,7 @@ minetest.register_node("pdp13:telewriter", {
 local function pdp13_output(pos, offs, value)
 	local number = M(pos):get_string("node_number")
 	local data = get_data(number)
-	if offs == 0 then  -- output text
+	if offs == IO_OUTP then  -- output text
 		if type(value) == "table" then -- the lean variant of text output
 			for i,c in ipairs(value) do 
 				if c >= 128 then 
@@ -275,8 +298,7 @@ local function pdp13_output(pos, offs, value)
 			end
 			printline(data, table.concat(value, ""))
 			data.outp = {}
-			data.update = true
-			data.running = true
+			start_timer(pos, data, 1)
 		elseif value then -- character based text output
 			data.outp = data.outp or {}
 			if data.punch and data.codes and #data.codes < 4096 then
@@ -287,17 +309,15 @@ local function pdp13_output(pos, offs, value)
 			elseif value == 10 then  -- LF
 				printline(data, table.concat(data.outp, ""))
 				data.outp = {}
-				data.update = true
 			elseif value >= 32 and value < 128 then  -- ASCII
 				data.outp[#data.outp+1] = string.char(value)
 			else
 				data.outp[#data.outp+1] = "."
 			end
-			data.running = true
+			start_timer(pos, data, 1)
 			if #data.outp > 64 then
 				printline(data, table.concat(data.outp, ""))
 				data.outp = {}
-				data.update = true
 			end
 		end
 	end
@@ -308,26 +328,24 @@ local function pdp13_input(pos, offs)
 	local number = M(pos):get_string("node_number")
 	local data = get_data(number)
 	
-	if offs == 0 and (data.reader or data.keyboard) and data.fifo then
-		return 1
-	elseif offs == 1 and data.reader and data.fifo then
+	if offs == IO_STS and (data.reader or data.keyboard) and data.fifo then
+		return #data.fifo
+	elseif offs == IO_INP and data.reader and data.fifo then
 		local v = table.remove(data.fifo, 1)
 		if #data.fifo == 0 then 
 			data.fifo = nil 
 			data.reader = false
 			printline(data, "Tape reader stopped")
-			M(pos):set_string("formspec", formspec2(number))
+			M(pos):set_string("formspec", formspec1(pos, number))
 		else
-			data.running = true
+			start_timer(pos, data, 1)
 		end
 		return v
-	elseif offs == 1 and data.keyboard and data.fifo then
+	elseif offs == 2 and data.keyboard and data.fifo then
 		local v = table.remove(data.fifo, 1)
 		if #data.fifo == 0 then 
 			data.fifo = nil 
 			data.keyboard = false
-		else
-			data.running = true
 		end
 		return v
 	else

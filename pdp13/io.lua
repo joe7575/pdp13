@@ -18,6 +18,15 @@ local M = minetest.get_meta
 local get_tbl = function(pos,key)      return minetest.deserialize(M(pos):get_string(key)) or {} end
 local set_tbl = function(pos,key,tbl)  M(pos):set_string(key, minetest.serialize(tbl)) end
 
+local TTY_INP_CNTR = 0x003E
+local TTY_OUT_CNTR = 0x003F
+local TTY_INP_BUFF = 0x0040
+local TTY_OUT_BUFF = 0x0080
+local TTY_BUF_SIZE = 64
+local IO_OUTP = 0
+local IO_STS  = 1
+local IO_INP  = 2
+
 local ActionHandlers = {}
 local SystemHandlers = {}
 
@@ -94,29 +103,31 @@ function pdp13.vm_system(vm, pos, addr, regA, regB)
 	return 0xFFFF, regB, 100
 end
 
--- read from TTY
+-- read from TTY (addr=0, regA=0, regB=unused)
 local function read_tty(vm, pos, addr, regA, regB)
-	local sts,_ = pdp13.vm_input(vm, pos, regB)
-	local offs = 0
-	while sts ~= 0 and offs < 64 do
-		local data,_ = pdp13.vm_input(vm, pos, regB + 1)
-		print("write_mem", offs, data)
-		vm16.write_mem(vm, offs, {data})
-		sts,_ = pdp13.vm_input(vm, pos, regB)
+	local sts,_ = pdp13.vm_input(vm, pos, IO_STS)
+	local offs = TTY_INP_BUFF
+	while sts ~= 0 and offs < (TTY_INP_BUFF + TTY_BUF_SIZE) do
+		local data,_ = pdp13.vm_input(vm, pos, IO_INP)
+		print("vm16.poke", offs, data)
+		vm16.poke(vm, offs, data)
+		sts,_ = pdp13.vm_input(vm, pos, IO_STS)
 		offs = offs + 1
 	end
+	vm16.poke(vm, TTY_INP_CNTR, offs - TTY_BUF_SIZE)
 	print("vm_system", offs, 100)
-	return offs, regB, 100
+	return offs - TTY_BUF_SIZE, regB, 100
 end
 
 -- write to TTY
 local function write_tty(vm, pos, addr, regA, regB)
-	local num = math.min(vm16.peek(vm, 0x003f), 64) or 0
+	local num = math.min(vm16.peek(vm, TTY_OUT_CNTR), TTY_BUF_SIZE) or 0
 	print("write_tty", addr, regA, regB, num)
 	if num > 0 then
-		local tbl = vm16.read_mem(vm, 0x0080, num)
+		local tbl = vm16.read_mem(vm, TTY_OUT_BUFF, num)
 		print("write_tty2", num, dump(tbl))
 		local sts,_ = pdp13.vm_output(vm, pos, regB, tbl)
+		vm16.poke(vm, TTY_OUT_CNTR, 0)
 		return sts, regB, 100
 	end
 	return 0xffff, regB, 100

@@ -18,10 +18,6 @@ local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local get_tbl = function(meta,key) return minetest.deserialize(meta:get_string(key)) or {} end
 
 local ValidExtensions= {
-	["pdp13:rom4k_burned"] = {type = "rom", size = 1},
-	["pdp13:boot_rom"] = {type = "rom", size = 1},
-	["pdp13:lamp_rom"] = {type = "rom", size = 1},
-	["pdp13:tty_outp"] = {type = "rom", size = 1},
 	["pdp13:ram4k"] = {type = "ram", size = 1},
 	["pdp13:ram8k"] = {type = "ram", size = 2},
 	--[""] = true,
@@ -42,6 +38,15 @@ local function formspec()
 		"listring[current_player;main]"
 end
 
+local function valid_extension(name)
+	if ValidExtensions[name] then
+		return ValidExtensions[name]
+	elseif minetest.get_item_group(name, "pdp13_rom") then
+		local size = minetest.get_item_group(name, "pdp13_rom")
+		return {type = "rom", size = size}
+	end
+end
+
 local function read_rom(pos, slot)
 	local inv = M(pos):get_inventory()
 	if inv:is_empty("main") then return nil end
@@ -52,7 +57,7 @@ local function read_rom(pos, slot)
 		local meta = stack:get_meta()
 		return get_tbl(meta, "code")
 	end
-	if ValidExtensions[name] then
+	if valid_extension(name) then
 		local ndef = minetest.registered_craftitems[name]
 		if ndef.pdp13_code then
 			return ndef.pdp13_code
@@ -68,11 +73,11 @@ local function get_extensions(pos)
 	for slot = 1,16 do
 		local stack = inv:get_stack("main", slot)
 		local name = stack:get_name()
-		if ValidExtensions[name] then
-			for i = 1, ValidExtensions[name].size do
-				tbl[#tbl+1] = table.copy(ValidExtensions[name])
+		if valid_extension(name) then
+			for i = 1, valid_extension(name).size do
+				tbl[#tbl+1] = table.copy(valid_extension(name))
 				tbl[#tbl].addr = addr
-				if ValidExtensions[name].type == "rom" then
+				if valid_extension(name).type == "rom" then
 					tbl[#tbl].code = read_rom(pos, slot)
 				end
 				addr = addr + 4096
@@ -96,7 +101,7 @@ local function allow_metadata_inventory_put(pos, listname, index, stack, player)
 	end
 	local name = stack:get_name()
 	local count = stack:get_count()
-	if not ValidExtensions[name] or count ~= 1 then
+	if not valid_extension(name) or count ~= 1 then
 		return 0
 	end
 	

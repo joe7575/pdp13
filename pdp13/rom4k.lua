@@ -54,14 +54,14 @@ end)
 minetest.register_craftitem("pdp13:rom4k", {
 	description = "PDP-13 EPROM 4K",
 	inventory_image = "pdp13_rom4k.png",
-	groups = {book = 1},
+	groups = {pdp13_rom = 1},
 	on_use = on_use,
 })
 
 minetest.register_craftitem("pdp13:rom4k_burned", {
 	description = "PDP-13 EPROM 4K burned",
 	inventory_image = "pdp13_rom4k.png",
-	groups = {book = 1, not_in_creative_inventory = 1},
+	groups = {pdp13_rom = 1, not_in_creative_inventory = 1},
 	stack_max = 1,
 	on_use = function(itemstack, user)
 		local meta = itemstack:get_meta()
