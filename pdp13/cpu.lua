@@ -269,6 +269,8 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 			if vm16.on_power_on(pos, 1) then
 				fs_power_on(pos, mem)
 			end
+			local number = M(pos):get_string("node_number")
+			pdp13.io_store(pos, number)
 			return true
 		elseif data == "off" then
 			minetest.get_node_timer(pos):stop()
@@ -280,13 +282,12 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 			return true
 		end
 	elseif cmnd == "reg_io" then
-		if not vm16.is_loaded(pos) then
-			print("reg_io")
-			local mem = tubelib2.get_mem(pos)
-			mem.num_ioracks = (mem.num_ioracks or 0) + 1
-			return mem.num_ioracks - 1
-		end
+		print("reg_io")
+		local mem = tubelib2.get_mem(pos)
+		mem.num_ioracks = (mem.num_ioracks or 0) + 1
+		return mem.num_ioracks - 1
 	elseif cmnd == "cpu_num" then
+		print("CPU cpu_num", M(pos):get_string("node_number"))
 		return M(pos):get_string("node_number")
 	end
 end
@@ -301,7 +302,7 @@ end
 
 -- store all data when CPU gets unloaded
 local function on_unload(pos)
-	pdp13.io_store(pos)
+	--pdp13.io_store(pos) geht so nicht
 end
 
 vm16.register_callbacks(nil, nil, nil, on_update, on_unload)
@@ -367,9 +368,11 @@ minetest.register_node("pdp13:cpu1", {
 	},
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
 		local mem = tubelib2.init_mem(pos)
-		M(pos):set_string("owner", placer:get_player_name())
+		local meta = M(pos)
+		meta:set_string("owner", placer:get_player_name())
 		local own_num = techage.add_node(pos, "pdp13:cpu1")
-		M(pos):set_string("node_number", own_num)
+		meta:set_string("node_number", own_num)
+		meta:set_string("infotext", "PDP-13 CPU "..own_num)
 		update_formspec(pos, mem)
 	end,
 	on_receive_fields = on_receive_fields_stopped,
@@ -436,12 +439,15 @@ minetest.register_node("pdp13:cpu1_on", {
 	sounds = default.node_sound_wood_defaults(),
 })
 
-techage.register_node({"pdp13:cpu1_on"}, {
+techage.register_node({"pdp13:cpu1", "pdp13:cpu1_on"}, {
 	on_recv_message = function(pos, src, topic, payload)
+		print("CPU on_recv_message", src, topic, payload)
 		if topic == "on" then
-			pdp13.on_cmnd_input(pos, src, 1)
+			local number = M(pos):get_string("node_number")
+			pdp13.on_cmnd_input(number, src, 1)
 		elseif topic == "off" then
-			pdp13.on_cmnd_input(pos, src, 0)
+			local number = M(pos):get_string("node_number")
+			pdp13.on_cmnd_input(number, src, 0)
 		else
 			return "unsupported"
 		end
@@ -455,7 +461,8 @@ minetest.register_lbm({
     run_at_every_load = true,
     action = function(pos, node)
 		local mem = tubelib2.get_mem(pos)
-		pdp13.io_restore(pos)
+		local number = M(pos):get_string("node_number")
+		pdp13.io_restore(pos, number)
 		if vm16.on_load(pos) then
 			if node.name == "pdp13:cpu1" then
 				fs_power_on(pos, mem)
