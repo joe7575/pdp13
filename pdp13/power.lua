@@ -3,9 +3,9 @@
 	PDP-13
 	======
 
-	Copyright (C) 2019 Joachim Stolberg
+	Copyright (C) 2019-2020 Joachim Stolberg
 
-	GPL v3
+	AGPL v3
 	See LICENSE.txt for more information
 	
 	PDP-13 Power module
@@ -15,15 +15,12 @@
 -- for lazy programmers
 local M = minetest.get_meta
 
-local function cpu_command(pos, cmnd)
-	local pos2 = {x=pos.x, y=pos.y+1, z=pos.z}
-	local node = minetest.get_node(pos2)
-	if node.name == "pdp13:cpu1" or node.name == "pdp13:cpu1_on" then
-		local ndef = minetest.registered_nodes[node.name]
-		if ndef and ndef.pdp13_command then
-			ndef.pdp13_command(pos2, cmnd)
-		end
-	end
+local function register_command(pos)
+	pdp13.publish(pos, pdp13.AllNodes, "register")
+end
+
+local function power_command(pos, data)
+	pdp13.publish(pos, pdp13.AllNodes, "power", data)
 end
 	
 local function formspec(pos, on)
@@ -54,12 +51,13 @@ local function on_receive_fields(pos, formname, fields, player)
 	end
 	if fields.button == "on" then
 		swap_node(pos, "pdp13:power1_on")
-		cpu_command(pos, "on")
+		register_command(pos)
+		power_command(pos, "on")
 		M(pos):set_string("formspec", formspec(pos, true))
 	end
 	if fields.button == "off" then
 		swap_node(pos, "pdp13:power1")
-		cpu_command(pos, "off")
+		power_command(pos, "off")
 		M(pos):set_string("formspec", formspec(pos, false))
 	end
 end
@@ -72,13 +70,15 @@ minetest.register_node("pdp13:power1", {
 		"pdp13_side.png",
 		"pdp13_side.png",
 		"pdp13_side.png",
-		"pdp13_side.png",
+		"pdp13_power_back.png",
 		"pdp13_power.png^pdp13_frame.png",
 	},
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
 		M(pos):set_string("formspec", formspec(pos, false))
 	end,
 	on_receive_fields = on_receive_fields,
+	pdp13_on_receive = pdp13_on_receive,
+	
 	paramtype2 = "facedir",
 	groups = {cracky=2, crumbly=2, choppy=2},
 	on_rotate = screwdriver.disallow,
@@ -95,10 +95,12 @@ minetest.register_node("pdp13:power1_on", {
 		"pdp13_side.png",
 		"pdp13_side.png",
 		"pdp13_side.png",
-		"pdp13_side.png",
-		"pdp13_power.png^pdp13_frame.png",
+		"pdp13_power_back.png",
+		"pdp13_power_on.png^pdp13_frame.png",
 	},
 	on_receive_fields = on_receive_fields,
+	pdp13_on_receive = pdp13_on_receive,
+	
 	paramtype2 = "facedir",
 	diggable = false,
 	groups = {not_in_creative_inventory=1},

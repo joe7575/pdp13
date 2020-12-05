@@ -5,7 +5,7 @@
 
 	Copyright (C) 2019 Joachim Stolberg
 
-	GPL v3
+	AGPL v3
 	See LICENSE.txt for more information
 	
 	PDP-13 Disassembler
@@ -33,11 +33,21 @@ local function operand(addr_type, addr_mode, value)
 	end
 end
 
+-- Returns the number of operands (0,1) based on the given opcode
+function pdp13.num_operands(opcode)
+	local idx1 = math.floor(opcode / 1024)
+	local rest = opcode - (idx1 * 1024)
+	local idx2 = math.floor(rest / 32)
+	local idx3 = rest % 32
+	return math.min((idx2 >= 16 and 1 or 0) + (idx3 >= 16 and 1 or 0), 1)
+end
+
+
 -- table with up to 3 words for one instruction
 -- Returns the number of words and the instruction string
 function pdp13.disassemble(mem)
 	local idx1 = math.floor(mem[1] / 1024)
-	local opc1, opc2, opc3 = unpack(string.split(pdp13.VM13Opcodes[idx1], ":"))
+	local opc1, opc2, opc3 = unpack(string.split(pdp13.VM13Opcodes[idx1] or "", ":"))
 	if opc1 then
 		if opc2 == "NUM" then
 			return 1, string.format("%-4s %u", opc1, mem[1] % 1024)
