@@ -25,18 +25,38 @@ local Commands = [[   PDP13 Techage I/O Commands
 ---------------------------------------
    0 - off           0 - off
    1 - on            1 - on
-   2 - state         2 - running
-   3 - fuel          3 - standby
-   4 - load          4 - unloaded
- 110 - depth       230 - off
-   0 - action      999 - off
+   2 - color         2 - 
 ]]
-
 Commands = Commands:gsub("\n", ",")
+
+pdp13.register_CommandTopic("techage", "off", 0)
+pdp13.register_CommandTopic("techage", "on", 1)
+pdp13.register_CommandTopic("techage", "color", 2)
+pdp13.register_ResponseTopic("techage", "off", 0)
+pdp13.register_ResponseTopic("techage", "on", 1)
 
 local inp = pdp13.get_input
 local out = pdp13.get_output
 
+local NodeNames = {}
+
+local function node_names(num) 
+	if NodeNames[num] then
+		return NodeNames[num]
+	end
+	-- determine node name
+	NodeNames[num] = "unknown"
+	local info = techage.get_node_info(tostring(num))
+	if info and info.pos then
+		print("node_names", dump(info))
+		local node = tubelib2.get_node_lvm(info.pos)
+		local ndef = minetest.registered_nodes[node.name]
+		if ndef and ndef.description then
+			NodeNames[num] = ndef.description
+		end
+	end
+	return NodeNames[num]
+end
 
 -- Retrieve CPU node number and rack number to determine the I/O address offset
 local function register_at_cpu(pos)
@@ -67,6 +87,16 @@ local function register_rack_data(pos)
 end
 
 local function formspec_power_on(pos)
+	local nn = function(lbl, num)
+		if lbl and lbl ~= "" and lbl ~= "-" then
+			return lbl
+		end
+		if num then
+			return node_names(num)
+		end
+		return "-"
+	end
+	
 	local numbers = S2T(M(pos):get_string("numbers"))
 	local labels  = S2T(M(pos):get_string("labels"))
 	local offset  = M(pos):get_int("offset")
@@ -78,7 +108,7 @@ local function formspec_power_on(pos)
 		lines[#lines+1] = "label[2.0,"..y..";"..S(numbers[i]).."]"
 		lines[#lines+1] = "label[5.0,"..y..";"..S(out(cpu_num, i+offset)).."]"
 		lines[#lines+1] = "label[6.7,"..y..";"..S(inp(cpu_num, i+offset)).."]"
-		lines[#lines+1] = "label[8.4,"..y..";"..S(labels[i]).."]"
+		lines[#lines+1] = "label[8.4,"..y..";"..nn(labels[i], numbers[i]).."]"
 	end
 	return "size[13,10]"..
 		"real_coordinates[true]"..
@@ -245,9 +275,4 @@ minetest.register_node("pdp13:io_rack_top", {
 	is_ground_content = false,
 	sounds = default.node_sound_wood_defaults(),
 })
-
-pdp13.register_CommandTopic("techage", "off", 0)
-pdp13.register_CommandTopic("techage", "on", 1)
-pdp13.register_ResponseTopic("techage", "off", 0)
-pdp13.register_ResponseTopic("techage", "on", 1)
 

@@ -29,6 +29,7 @@ dofile(MP.."/pdp13/power.lua")
 dofile(MP.."/pdp13/io_rack.lua")
 
 -- I/O
+dofile(MP.."/io/lamp.lua")
 --dofile(MP.."/io/7segment.lua")
 --dofile(MP.."/io/telewriter.lua")
 --dofile(MP.."/io/tape.lua")

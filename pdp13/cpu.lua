@@ -122,8 +122,8 @@ local function formspec_help()
 		"table[0.25,0.25;9.5,7.2;help;"..s..";1]"
 end
 	
-local function update_formspec(pos, mem)
-	local cpu = vm16.get_cpu_reg(pos)
+local function update_formspec(pos, mem, cpu)
+	cpu = cpu or vm16.get_cpu_reg(pos)
 	M(pos):set_string("formspec", formspec(pos, mem, cpu))
 end	
 
@@ -134,6 +134,7 @@ local function fs_mem_dump(pos, mem, s)
 	mem.cmnd1 = string.format("%04X: %04X %04X %04X %04X", addr+4, dump[5], dump[6], dump[7], dump[8])
 	mem.cmnd2 = string.format("%04X: %04X %04X %04X %04X", addr+8, dump[9], dump[10], dump[11], dump[12])
 	mem.cmnd3 = string.format("%04X: %04X %04X %04X %04X", addr+12, dump[13], dump[14], dump[15], dump[16])
+	update_formspec(pos, mem)
 end
 
 local function fs_mem_data(pos, mem, s)
@@ -161,6 +162,7 @@ local function fs_mem_data(pos, mem, s)
 		mem.addr = (mem.addr + 1) % 0x10000
 	end
 	vm16.set_pc(pos, mem.addr) 
+	update_formspec(pos, mem)
 end
 
 local function mem_address(pos, mem, s)
@@ -170,6 +172,7 @@ local function mem_address(pos, mem, s)
 	mem.cmnd2 = ""
 	mem.cmnd3 = string.format("%04X:", mem.addr)
 	vm16.set_pc(pos, mem.addr) 
+	update_formspec(pos, mem)
 end
 
 local function fs_single_step(pos, mem)
@@ -193,6 +196,7 @@ local function fs_single_step(pos, mem)
 		mem.cmnd3 = string.format(">%04X: %04X %s", cpu.PC, cpu.mem0, operand)
 		mem.inp_mode = "step"
 	end
+	update_formspec(pos, mem, cpu)
 end
 
 local function fs_cpu_stopped(pos, mem, cpu)
@@ -211,7 +215,7 @@ local function fs_cpu_stopped(pos, mem, cpu)
 			mem.cmnd1 = " "
 			mem.cmnd2 = " "
 			mem.cmnd3 = string.format(">%04X: %04X %s", cpu.PC, cpu.mem0, operand)
-			update_formspec(pos, mem)
+			update_formspec(pos, mem, cpu)
 		end
 	end
 end
@@ -314,6 +318,7 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 	
 	local mem = tubelib2.get_mem(pos)
 	local meta = minetest.get_meta(pos)
+	print(vm16.is_loaded(pos), mem.inp_mode, dump(fields))
 	
 	if fields.tab == "2" then
 		meta:set_string("storeformspec", meta:get_string("formspec"))
@@ -427,8 +432,15 @@ minetest.register_node("pdp13:cpu1_on", {
 		},
 	},
 	on_timer = function(pos, elapsed)
-		return vm16.run(pos, 10000) ~= vm16.HALT
+		return vm16.run(pos) < vm16.HALT
 	end,
+--	on_timer = function(pos, elapsed)
+--		local t = minetest.get_us_time()
+--		local res = vm16.run(pos)
+--		t = minetest.get_us_time() - t
+--		print("on_timer", t)
+--		return res < vm16.HALT
+--	end,
 	on_receive_fields = on_receive_fields_started,
 	pdp13_on_receive = pdp13_on_receive,
 	paramtype2 = "facedir",

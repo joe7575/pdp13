@@ -3,6 +3,11 @@
 A 16-bit minicomputer simulation inspired by DEC, IBM, and other Vintage Computers from the 60s and 70s.
 
 
+T H I S   M O D   I S   W O R K   I N   P R O G R E S S!
+
+It is likely that the functionality will change completely again!!!
+
+
 ### License
 Copyright (C) 2019-2020 Joe (iauit@gmx.de)  
 Code: Licensed under the GNU AGPL version 3 or later. See LICENSE.txt
