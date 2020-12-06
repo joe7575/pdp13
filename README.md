@@ -3,6 +3,9 @@
 A 16-bit minicomputer simulation inspired by DEC, IBM, and other Vintage Computers from the 60s and 70s.
 
 
+![screenshot](https://github.com/joe7575/pdp13/blob/main/screenshot.png)
+
+
 ### THIS MOD IS WORK IN PROGRESS!
 
 It is likely that the functionality will change completely again!!!
