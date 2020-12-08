@@ -115,7 +115,7 @@ local function formspec(pos, mem, cpu)
 end
 
 local function formspec_help()
-	local s = vm16.AsmHelp
+	local s = vm16.AsmHelp..","..pdp13.SysDesc
 	return "size[10,7.7]"..
 		"tabheader[0,0;tab;CPU,help;2;;true]"..
 		"style_type[table;font=mono]"..
@@ -128,13 +128,14 @@ local function update_formspec(pos, mem, cpu)
 end	
 
 local function fs_mem_dump(pos, mem, s)
-	local addr = vm16.hex2number(s)
-	local dump = vm16.read_mem(pos, addr, 16)
-	mem.regABXY = string.format("%04X: %04X %04X %04X %04X", addr+0, dump[1], dump[2], dump[3], dump[4])
-	mem.cmnd1 = string.format("%04X: %04X %04X %04X %04X", addr+4, dump[5], dump[6], dump[7], dump[8])
-	mem.cmnd2 = string.format("%04X: %04X %04X %04X %04X", addr+8, dump[9], dump[10], dump[11], dump[12])
-	mem.cmnd3 = string.format("%04X: %04X %04X %04X %04X", addr+12, dump[13], dump[14], dump[15], dump[16])
+	mem.addr = mem.addr or 0
+	local dump = vm16.read_mem(pos, mem.addr, 16)
+	mem.regABXY = string.format("%04X: %04X %04X %04X %04X", mem.addr+0, dump[1], dump[2], dump[3], dump[4])
+	mem.cmnd1 = string.format("%04X: %04X %04X %04X %04X", mem.addr+4, dump[5], dump[6], dump[7], dump[8])
+	mem.cmnd2 = string.format("%04X: %04X %04X %04X %04X", mem.addr+8, dump[9], dump[10], dump[11], dump[12])
+	mem.cmnd3 = string.format("%04X: %04X %04X %04X %04X", mem.addr+12, dump[13], dump[14], dump[15], dump[16])
 	update_formspec(pos, mem)
+	mem.addr = mem.addr + 16
 end
 
 local function fs_mem_data(pos, mem, s)
@@ -269,7 +270,7 @@ end
 local function pdp13_on_receive(pos, src_pos, cmnd, data)
 	if cmnd == "power" then
 		if data == "on" then
-			local mem = tubelib2.get_mem(pos)
+			local mem = techage.get_nvm(pos)
 			if vm16.on_power_on(pos, 1) then
 				fs_power_on(pos, mem)
 			end
@@ -278,7 +279,7 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 			return true
 		elseif data == "off" then
 			minetest.get_node_timer(pos):stop()
-			local mem = tubelib2.get_mem(pos)
+			local mem = techage.get_nvm(pos)
 			if vm16.on_power_off(pos) then
 				swap_node(pos, "pdp13:cpu1")
 				fs_power_off(pos, mem)
@@ -287,9 +288,12 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 		end
 	elseif cmnd == "reg_io" then
 		print("reg_io")
-		local mem = tubelib2.get_mem(pos)
+		local mem = techage.get_nvm(pos)
 		mem.num_ioracks = (mem.num_ioracks or 0) + 1
 		return mem.num_ioracks - 1
+	elseif cmnd == "reg_tele" then
+		M(pos):set_string("telewriter_number", data)
+		return M(pos):get_string("node_number")
 	elseif cmnd == "cpu_num" then
 		print("CPU cpu_num", M(pos):get_string("node_number"))
 		return M(pos):get_string("node_number")
@@ -299,7 +303,7 @@ end
 -- update CPU formspec
 local function on_update(pos, resp, cpu)
 	print("on_update")
-	local mem = tubelib2.get_mem(pos)
+	local mem = techage.get_nvm(pos)
 	mem.state = resp
 	fs_cpu_stopped(pos, mem, cpu)
 end
@@ -316,7 +320,7 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 		return
 	end
 	
-	local mem = tubelib2.get_mem(pos)
+	local mem = techage.get_nvm(pos)
 	local meta = minetest.get_meta(pos)
 	print(vm16.is_loaded(pos), mem.inp_mode, dump(fields))
 	
@@ -336,7 +340,7 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 			fs_help(pos, mem, "Enter address:")
 		elseif fields.dump then
 			mem.inp_mode = "dump"
-			fs_help(pos, mem, "Enter address:")
+			fs_mem_dump(pos, mem, fields.command)
 		elseif fields.start then
 			minetest.get_node_timer(pos):start(0.1)
 			swap_node(pos, "pdp13:cpu1_on")
@@ -350,8 +354,6 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 		elseif fields.key_enter_field or fields.enter then
 			if mem.inp_mode == "address" then
 				mem_address(pos, mem, fields.command)
-			elseif mem.inp_mode == "dump" then
-				fs_mem_dump(pos, mem, fields.command)
 			else
 				fs_mem_data(pos, mem, fields.command)
 			end
@@ -362,6 +364,14 @@ end
 
 minetest.register_node("pdp13:cpu1", {
 	description = "PDP-13 CPU",
+	drawtype = "nodebox",
+	paramtype = "light",
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{-0.5, -0.5, -0.4, 0.5, 0.5, 0.4},
+		},
+	},
 	tiles = {
 		-- up, down, right, left, back, front
 		"pdp13_side.png",
@@ -372,7 +382,7 @@ minetest.register_node("pdp13:cpu1", {
 		"pdp13_cpu.png^pdp13_frame.png^pdp13_frame_top.png",
 	},
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
-		local mem = tubelib2.init_mem(pos)
+		local mem = techage.get_nvm(pos)
 		local meta = M(pos)
 		meta:set_string("owner", placer:get_player_name())
 		local own_num = techage.add_node(pos, "pdp13:cpu1")
@@ -389,7 +399,7 @@ minetest.register_node("pdp13:cpu1", {
 	
 	after_dig_node = function(pos, oldnode, oldmetadata)
 		techage.remove_node(pos, oldnode, oldmetadata)
-		tubelib2.del_mem(pos)
+		techage.del_mem(pos)
 	end,
 	paramtype2 = "facedir",
 	groups = {cracky=2, crumbly=2, choppy=2},
@@ -405,7 +415,7 @@ local function on_receive_fields_started(pos, formname, fields, player)
 	
 	if fields.stop then
 		minetest.get_node_timer(pos):stop()
-		local mem = tubelib2.get_mem(pos)
+		local mem = techage.get_nvm(pos)
 		swap_node(pos, "pdp13:cpu1")
 		fs_cpu_stopped(pos, mem)
 	end
@@ -413,6 +423,14 @@ end
 
 minetest.register_node("pdp13:cpu1_on", {
 	description = "PDP-13 CPU",
+	drawtype = "nodebox",
+	paramtype = "light",
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{-0.5, -0.5, -0.4, 0.5, 0.5, 0.4},
+		},
+	},
 	tiles = {
 		-- up, down, right, left, back, front
 		"pdp13_side.png",
@@ -472,7 +490,7 @@ minetest.register_lbm({
     nodenames = {"pdp13:cpu1", "pdp13:cpu1_on"},
     run_at_every_load = true,
     action = function(pos, node)
-		local mem = tubelib2.get_mem(pos)
+		local mem = techage.get_nvm(pos)
 		local number = M(pos):get_string("node_number")
 		pdp13.io_restore(pos, number)
 		if vm16.on_load(pos) then

@@ -29,7 +29,6 @@ local Outputs = {}  -- volatile: t[own_num][addr] = value
 -- Register function
 --
 function pdp13.register_OutputNumber(own_num, addr, rmt_num)
-	print("OutputNumbers", own_num, addr, rmt_num)
 	OutputNumbers[own_num] = OutputNumbers[own_num] or {}
 	OutputNumbers[own_num][addr]= rmt_num
 	InputAdresses[own_num] = InputAdresses[own_num] or {}
@@ -37,19 +36,16 @@ function pdp13.register_OutputNumber(own_num, addr, rmt_num)
 end
 
 function pdp13.register_AddressType(own_num, addr, type_)
-	print("AddressTypes", own_num, addr, type_)
 	AddressTypes[own_num] = AddressTypes[own_num] or {}
 	AddressTypes[own_num][addr]= type_
 end
 
 function pdp13.register_CommandTopic(type_, topic_str, cmnd)
-	print("CommandTopics",type_, cmnd, topic_str)
 	CommandTopics[type_] = CommandTopics[type_] or {}
 	CommandTopics[type_][cmnd] = topic_str
 end
 
 function pdp13.register_ResponseTopic(type_, topic_str, cmnd)
-	print("ResponseTopics",type_, cmnd, topic_str)
 	ResponseTopics[type_] = ResponseTopics[type_] or {}
 	ResponseTopics[type_][topic_str] = cmnd
 end
@@ -75,6 +71,8 @@ local function on_output(pos, addr, val1, val2)
 	own_num = tonumber(own_num) or 0
 	Outputs[own_num] = Outputs[own_num] or {}
 	Inputs[own_num] = Inputs[own_num] or {}
+		
+	print("on_output1", own_num, addr, val1, val2)
 	
 	-- value changed?
 	if Outputs[own_num][addr] ~= (val2 or val1) then 
@@ -82,7 +80,7 @@ local function on_output(pos, addr, val1, val2)
 		local type_ = (AddressTypes[own_num] or {})[addr] or "techage"
 		local topic = (CommandTopics[type_] or {})[val1]
 	
-		--print("on_output", own_num, addr, val1, val2, num, type_, topic)
+		print("on_output2", num, type_, topic)
 		if num and topic then
 			Outputs[own_num][addr] = val2 or val1
 			-- TODO: allow other mods for communication

@@ -24,12 +24,13 @@ dofile(MP.."/lib/disasm.lua")
 --dofile(MP.."/lib/editor.lua")
 
 -- PDP-13
+dofile(MP.."/pdp13/system.lua")
 dofile(MP.."/pdp13/cpu.lua")
 dofile(MP.."/pdp13/power.lua")
 dofile(MP.."/pdp13/io_rack.lua")
 
 -- I/O
 dofile(MP.."/io/lamp.lua")
---dofile(MP.."/io/7segment.lua")
---dofile(MP.."/io/telewriter.lua")
+dofile(MP.."/io/7segment.lua")
+dofile(MP.."/io/telewriter.lua")
 --dofile(MP.."/io/tape.lua")

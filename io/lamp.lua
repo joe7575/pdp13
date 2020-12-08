@@ -37,6 +37,9 @@ minetest.register_node("pdp13:lamp_off", {
 		logic.after_place_node(pos, placer, "pdp13:lamp_off", "PDP13 Color Lamp")
 		logic.infotext(M(pos), "PDP13 Color Lamp")
 	end,
+	after_dig_node = function(pos, oldnode, oldmetadata)
+		techage.remove_node(pos)
+	end,
 	
 	on_rightclick = switch_on,
 

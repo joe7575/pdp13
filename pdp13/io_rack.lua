@@ -26,12 +26,14 @@ local Commands = [[   PDP13 Techage I/O Commands
    0 - off           0 - off
    1 - on            1 - on
    2 - color         2 - 
+   3 - 7segment   
 ]]
 Commands = Commands:gsub("\n", ",")
 
 pdp13.register_CommandTopic("techage", "off", 0)
 pdp13.register_CommandTopic("techage", "on", 1)
 pdp13.register_CommandTopic("techage", "color", 2)
+pdp13.register_CommandTopic("techage", "pdp7seg", 3)
 pdp13.register_ResponseTopic("techage", "off", 0)
 pdp13.register_ResponseTopic("techage", "on", 1)
 
@@ -230,6 +232,14 @@ end
 
 minetest.register_node("pdp13:io_rack", {
 	description = "PDP-13 I/O Rack",
+	drawtype = "nodebox",
+	paramtype = "light",
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{-0.5, -0.5, -0.4, 0.5, 0.5, 0.4},
+		},
+	},
 	tiles = {
 		-- up, down, right, left, back, front
 		"pdp13_side.png",
@@ -254,6 +264,14 @@ minetest.register_node("pdp13:io_rack", {
 
 minetest.register_node("pdp13:io_rack_top", {
 	description = "PDP-13 I/O Rack",
+	drawtype = "nodebox",
+	paramtype = "light",
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{-0.5, -0.5, -0.4, 0.5, 0.5, 0.4},
+		},
+	},
 	tiles = {
 		-- up, down, right, left, back, front
 		"pdp13_side.png",

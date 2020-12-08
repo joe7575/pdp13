@@ -64,6 +64,14 @@ end
 
 minetest.register_node("pdp13:power1", {
 	description = "PDP-13 Power Module",
+	drawtype = "nodebox",
+	paramtype = "light",
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{-0.5, -0.5, -0.4, 0.5, 0.5, 0.4},
+		},
+	},
 	tiles = {
 		-- up, down, right, left, back, front
 		"pdp13_side.png",
@@ -77,7 +85,6 @@ minetest.register_node("pdp13:power1", {
 		M(pos):set_string("formspec", formspec(pos, false))
 	end,
 	on_receive_fields = on_receive_fields,
-	pdp13_on_receive = pdp13_on_receive,
 	
 	paramtype2 = "facedir",
 	groups = {cracky=2, crumbly=2, choppy=2},
@@ -89,6 +96,14 @@ minetest.register_node("pdp13:power1", {
 
 minetest.register_node("pdp13:power1_on", {
 	description = "PDP-13 Power Module",
+	drawtype = "nodebox",
+	paramtype = "light",
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{-0.5, -0.5, -0.4, 0.5, 0.5, 0.4},
+		},
+	},
 	tiles = {
 		-- up, down, right, left, back, front
 		"pdp13_side.png",
@@ -99,7 +114,6 @@ minetest.register_node("pdp13:power1_on", {
 		"pdp13_power_on.png^pdp13_frame.png",
 	},
 	on_receive_fields = on_receive_fields,
-	pdp13_on_receive = pdp13_on_receive,
 	
 	paramtype2 = "facedir",
 	diggable = false,
