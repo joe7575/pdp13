@@ -471,13 +471,17 @@ minetest.register_node("pdp13:cpu1_on", {
 
 techage.register_node({"pdp13:cpu1", "pdp13:cpu1_on"}, {
 	on_recv_message = function(pos, src, topic, payload)
-		print("CPU on_recv_message", src, topic, payload)
+		--print("CPU on_recv_message", src, topic, payload)
 		if topic == "on" then
 			local number = M(pos):get_string("node_number")
 			pdp13.on_cmnd_input(number, src, 1)
 		elseif topic == "off" then
 			local number = M(pos):get_string("node_number")
 			pdp13.on_cmnd_input(number, src, 0)
+		elseif topic == "write_h16" then
+			return vm16.write_h16(pos, payload)
+		elseif topic == "read_h16" then
+			return vm16.read_h16(pos)
 		else
 			return "unsupported"
 		end
