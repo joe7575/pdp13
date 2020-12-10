@@ -61,6 +61,6 @@ end)
 minetest.register_craftitem("pdp13:tape", {
 	description = "PDP-13 Tape",
 	inventory_image = "pdp13_punched_tape.png",
-	groups = {book = 1, flammable = 3},
+	groups = {book = 1, flammable = 3, pdp13_tape = 1},
 	on_use = on_use,
 })

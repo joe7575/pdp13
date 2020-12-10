@@ -101,7 +101,8 @@ local function has_tape(pos)
 	local inv = M(pos):get_inventory()
 	if inv:is_empty("main") then return nil end
 	local stack = inv:get_stack("main", 1)
-	return stack:get_name() == "pdp13:tape"
+	local name = stack:get_name()
+	return minetest.get_item_group(name, "pdp13_tape") == 1
 end
 
 
@@ -109,7 +110,14 @@ local function get_tape_code(pos)
 	local inv = M(pos):get_inventory()
 	if inv:is_empty("main") then return nil end
 	local stack = inv:get_stack("main", 1)
-	if stack then
+	local name = stack:get_name()
+	if minetest.get_item_group(name, "pdp13_tape") == 1 then
+		-- test if demo tape
+		local idef = minetest.registered_craftitems[name] or {}
+		if idef.code then
+			return idef.code
+		end
+		-- test if real tape
 		local meta = stack:get_meta()
 		if meta then
 			local data = meta:to_table().fields
@@ -124,13 +132,15 @@ local function write_tape_code(pos, code)
 	local inv = M(pos):get_inventory()
 	if inv:is_empty("main") then return nil end
 	local stack = inv:get_stack("main", 1)
-	if stack then
+	local name = stack:get_name()
+	if name == "pdp13:tape" then
 		local meta = stack:get_meta()
 		if meta then
 			local data = meta:to_table().fields or {}
 			data.code = code
 			meta:from_table({ fields = data })
 			inv:set_stack("main", 1, stack)
+			return true
 		end
 	end
 end
@@ -159,8 +169,11 @@ local function read_code_from_cpu(pos)
 	local code = send_to_cpu(pos, "read_h16")
 	local mem = techage.get_nvm(pos)
 	if code then
-		local res = write_tape_code(pos, code)
-		add_line(pos, mem, "PDP13 to tape..ok")
+		if write_tape_code(pos, code) then
+			add_line(pos, mem, "PDP13 to tape..ok")
+		else
+			add_line(pos, mem, "PDP13 to tape..error")
+		end
 	else
 		add_line(pos, mem, "PDP13 to tape..error")
 	end

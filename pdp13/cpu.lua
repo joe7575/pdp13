@@ -479,9 +479,15 @@ techage.register_node({"pdp13:cpu1", "pdp13:cpu1_on"}, {
 			local number = M(pos):get_string("node_number")
 			pdp13.on_cmnd_input(number, src, 0)
 		elseif topic == "write_h16" then
-			return vm16.write_h16(pos, payload)
+			local node = minetest.get_node(pos)
+			if node.name == "pdp13:cpu1" then
+				return vm16.write_h16(pos, payload)
+			end
 		elseif topic == "read_h16" then
-			return vm16.read_h16(pos)
+			local node = minetest.get_node(pos)
+			if node.name == "pdp13:cpu1" then
+				return vm16.read_h16(pos)
+			end
 		else
 			return "unsupported"
 		end
