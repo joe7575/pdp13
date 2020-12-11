@@ -138,18 +138,18 @@ end
 
 function pdp13.reset_output_buffer(cpu_num)
 	cpu_num = tonumber(cpu_num) or 0
-	print("reset_output_buffer", cpu_num)
+	--print("reset_output_buffer", cpu_num)
 	Outputs[cpu_num] = nil
 end
 
 function pdp13.get_input(cpu_num, addr)
 	cpu_num = tonumber(cpu_num) or 0
-	print("get_input", cpu_num, addr)
+	--print("get_input", cpu_num, addr)
 	return (Inputs[cpu_num] or {})[addr]
 end
 
 function pdp13.get_output(cpu_num, addr)
 	cpu_num = tonumber(cpu_num) or 0
-	print("get_output", cpu_num, addr)
+	--print("get_output", cpu_num, addr)
 	return (Outputs[cpu_num] or {})[addr]
 end

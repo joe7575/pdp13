@@ -1,7 +1,7 @@
 ; Color lamp demo v1.0
 ; PDP13 Color Lamp on port #0
 
-    move A, #2      ; color command
+    move A, #$80    ; color command
     move B, #00     ; color start value
 
 loop:

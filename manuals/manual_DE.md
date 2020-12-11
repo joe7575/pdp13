@@ -47,6 +47,8 @@ Das I/O-Rack verbindet die CPU mit der Welt, also anderen Blöcken und Maschinen
 
 Der CPU Block ist der Rechenkern der Anlage. Der Block besitzt ein Menü, das echten Minicomputern nachempfunden ist. Über die Schalterreihe mussten bei echten Rechnern die Maschinenbefehle eingegeben werden, über die Lampenreihen wurden Speicherinhalte ausgegeben.
 
+Die CPU ist in der Lage, bis zu 100.000 Befehle pro Sekunde (0.1 MIPS) auszuführen. Dies gilt, solange nur interne CPU-Befehle ausgeführt werden. Bei den Befehlen `sys` und `out` wird die Ausführung für 100 ms unterbrochen, da hier externe Aktionen in der Spielewelt durchgeführt werden. Dies gilt auch für den Befehl `nop` der für Pausen von 100 ms genutzt werden kann. Ansonsten läuft die CPU "full speed", aber nur solange der Bereich der Welt geladen ist. Damit ist die CPU fast so schnell wie eines ihrer großen Vorbilder, bspw. die DEC PDP-11/70 (0.4 MIPS). 
+
 Hier werden Kommandos aber über die 6 Tasten links und Maschinenbefehle über das Eingabefeld unten eingegeben. Der obere Bereich dient nur zur Ausgabe.
 
 - Über die Taste "start" wird die CPU gestartet. Sie startet dabei immer an der aktuellen Adresse des Program Counters (PC), welche bspw. auch oben über die Lampenreihe angezeigt wird.
@@ -108,7 +110,7 @@ Dieser Lampenblock kann in verschiedenen Farben leuchten. Dazu müssen Werte von
 Hier ein konkretes Beispiel, das den Umgang mit der Mod zeigt. Ziel ist es, die TechAge Signallampe (nicht die PDP13 Color Lamp!) einzuschalten. Dazu muss man den Wert 1 über ein `out` Befehl an dem Port ausgeben, wo die Lampe "angeschlossen" ist. Das Assembler-Programm dazu sieht aus wie folgt:
 
 ```assembly
-mov A, #1	; Lade das A-Register mit den Wert 1
+mov A, #1   ; Lade das A-Register mit den Wert 1
 out #0, A   ; Gebe den Wert aus dem A-Register auf I/O-Adresse 0 aus
 halt        ; Stoppe die CPU nach der Ausgabe
 ```

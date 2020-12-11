@@ -33,8 +33,8 @@ Commands = Commands:gsub("\n", ",")
 
 pdp13.register_CommandTopic("techage", "off", 0)
 pdp13.register_CommandTopic("techage", "on", 1)
-pdp13.register_CommandTopic("techage", "color", 2)
-pdp13.register_CommandTopic("techage", "pdp7seg", 3)
+pdp13.register_CommandTopic("techage", "color", 0x80)
+pdp13.register_CommandTopic("techage", "pdp7seg", 0x81)
 pdp13.register_ResponseTopic("techage", "off", 0)
 pdp13.register_ResponseTopic("techage", "on", 1)
 
@@ -51,7 +51,7 @@ local function node_names(num)
 	NodeNames[num] = "unknown"
 	local info = techage.get_node_info(tostring(num))
 	if info and info.pos then
-		print("node_names", dump(info))
+		--print("node_names", dump(info))
 		local node = tubelib2.get_node_lvm(info.pos)
 		local ndef = minetest.registered_nodes[node.name]
 		if ndef and ndef.description then
@@ -65,12 +65,12 @@ end
 local function register_at_cpu(pos)
 	local names = {"pdp13:cpu1", "pdp13:cpu1_on"}
 	local cpu_num = pdp13.send(pos, names, "cpu_num")
-	print("register_at_cpu", cpu_num)
+	--print("register_at_cpu", cpu_num)
 	M(pos):set_int("cpu_num", cpu_num)
 	
 	local data = {"pdp13:io_rack", "pdp13:io_rack_top"}
 	local num = pdp13.send(pos, names, "reg_io", data)
-	print("register_at_cpu reg_io", num)
+	--print("register_at_cpu reg_io", num)
 	if num then
 		M(pos):set_int("offset", num * 8)
 		return num * 8

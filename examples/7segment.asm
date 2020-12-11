@@ -1,7 +1,7 @@
 ; 7 segment demo v1.0
 ; PDP13 7-Segment on port #0
 
-    move A, #3      ; 7seg command
+    move A, #$81    ; 7seg command
     move B, #00     ; hex value
 
 loop:

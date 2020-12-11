@@ -289,7 +289,7 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 			return true
 		end
 	elseif cmnd == "reg_io" then
-		print("reg_io")
+		--print("reg_io")
 		local mem = techage.get_nvm(pos)
 		mem.num_ioracks = (mem.num_ioracks or 0) + 1
 		return mem.num_ioracks - 1
@@ -297,14 +297,14 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 		M(pos):set_string("telewriter_number", data)
 		return M(pos):get_string("node_number")
 	elseif cmnd == "cpu_num" then
-		print("CPU cpu_num", M(pos):get_string("node_number"))
+		--print("CPU cpu_num", M(pos):get_string("node_number"))
 		return M(pos):get_string("node_number")
 	end
 end
 
 -- update CPU formspec
 local function on_update(pos, resp, cpu)
-	print("on_update")
+	--print("on_update")
 	local mem = techage.get_nvm(pos)
 	mem.state = resp
 	minetest.get_node_timer(pos):stop()
@@ -326,7 +326,7 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 	
 	local mem = techage.get_nvm(pos)
 	local meta = minetest.get_meta(pos)
-	print(vm16.is_loaded(pos), mem.inp_mode, dump(fields))
+	--print(vm16.is_loaded(pos), mem.inp_mode, dump(fields))
 	
 	if fields.tab == "2" then
 		meta:set_string("storeformspec", meta:get_string("formspec"))
