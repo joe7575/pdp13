@@ -177,6 +177,8 @@ local function mem_address(pos, mem, s)
 end
 
 local function fs_single_step(pos, mem)
+	local number = M(pos):get_string("node_number")
+	pdp13.reset_output_buffer(number)
 	local resp = vm16.run(pos, 1)
 	local cpu = vm16.get_cpu_reg(pos)
 	mem.state = (resp > vm16.OK and resp) or vm16.STOP
@@ -305,6 +307,8 @@ local function on_update(pos, resp, cpu)
 	print("on_update")
 	local mem = techage.get_nvm(pos)
 	mem.state = resp
+	minetest.get_node_timer(pos):stop()
+	swap_node(pos, "pdp13:cpu1")
 	fs_cpu_stopped(pos, mem, cpu)
 end
 
@@ -342,6 +346,8 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 			mem.inp_mode = "dump"
 			fs_mem_dump(pos, mem, fields.command)
 		elseif fields.start then
+			local number = M(pos):get_string("node_number")
+			pdp13.reset_output_buffer(number)
 			minetest.get_node_timer(pos):start(0.1)
 			swap_node(pos, "pdp13:cpu1_on")
 			fs_cpu_running(pos, mem)

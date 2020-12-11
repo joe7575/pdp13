@@ -212,7 +212,11 @@ minetest.register_node("pdp13:telewriter", {
 		local cpu_num = pdp13.send(pos, {"pdp13:cpu1", "pdp13:cpu1_on"}, "reg_tele", own_num)
 		meta:set_string("cpu_number", cpu_num)
 		meta:set_string("formspec", formspec1(mem))
-		meta:set_string("infotext", "PDP-13 Telewriter "..own_num)
+		if cpu_num then
+			meta:set_string("infotext", "PDP-13 Telewriter: Connected")
+		else
+			meta:set_string("infotext", "PDP-13 Telewriter: Not connected!")
+		end
 	end,
 	on_receive_fields = function(pos, formname, fields, player)
 		if minetest.is_protected(pos, player:get_player_name()) then
@@ -259,7 +263,8 @@ minetest.register_node("pdp13:telewriter", {
 			end
 		end
 	end,
-	after_dig_node = function(pos, oldnode)
+	after_dig_node = function(pos, oldnode, oldmetadata)
+		techage.remove_node(pos, oldnode, oldmetadata)
 		techage.remove_node(pos)
 	end,
 	paramtype = "light",

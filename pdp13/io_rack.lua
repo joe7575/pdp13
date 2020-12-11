@@ -21,12 +21,13 @@ local S   = function(s) return tostring(s or "-") end
 
 local Commands = [[   PDP13 Techage I/O Commands
 
-     OUT               IN
+  OUT (hex)         IN (hex)
 ---------------------------------------
-   0 - off           0 - off
-   1 - on            1 - on
-   2 - color         2 - 
-   3 - 7segment   
+  00 - off          00 - off
+  01 - on           01 - on
+  
+  80 - cmd color (color in B)
+  81 - cmd 7segment (val in B)
 ]]
 Commands = Commands:gsub("\n", ",")
 

@@ -35,3 +35,15 @@ dofile(MP.."/io/7segment.lua")
 dofile(MP.."/io/telewriter.lua")
 dofile(MP.."/io/tape.lua")
 dofile(MP.."/io/demotape.lua")
+
+dofile(MP.."/manuals/manual_DE.lua")
+dofile(MP.."/manuals/manual_EN.lua")
+
+techage.add_manual_items({
+		pdp13_cpu = "pdp13:cpu1",
+		pdp13_iorack = "pdp13:io_rack",
+		pdp13_telewriter = "pdp13:telewriter",
+		pdp13_tape = "pdp13:tape",
+		pdp13_7segment = "pdp13:7segment10",
+		pdp13_lamp = "pdp13:lamp_off",
+})

@@ -25,6 +25,17 @@ local ResponseTopics = {}  -- on startup generated: t[type_][resp] = topic
 local Inputs  = {}  -- volatile: t[own_num][addr] = value
 local Outputs = {}  -- volatile: t[own_num][addr] = value
 
+
+local function value_changed(outputs, addr, val1, val2)
+	if outputs[addr] ~= val1 then 
+		outputs[addr] = val1
+		return true
+	elseif val1 >= 128 and outputs[addr] ~= val2 then 
+		outputs[addr] = val2
+		return true
+	end
+end
+	
 --
 -- Register function
 --
@@ -72,17 +83,14 @@ local function on_output(pos, addr, val1, val2)
 	Outputs[own_num] = Outputs[own_num] or {}
 	Inputs[own_num] = Inputs[own_num] or {}
 		
-	print("on_output1", own_num, addr, val1, val2)
-	
-	-- value changed?
-	if Outputs[own_num][addr] ~= (val2 or val1) then 
+	--print("on_output1", own_num, addr, val1, val2, Outputs[own_num][addr])
+	if value_changed(Outputs[own_num], addr, val1, val2) then 
 		local num = (OutputNumbers[own_num] or {})[addr]
 		local type_ = (AddressTypes[own_num] or {})[addr] or "techage"
 		local topic = (CommandTopics[type_] or {})[val1]
 	
-		print("on_output2", num, type_, topic)
+		--print("on_output2", num, type_, topic)
 		if num and topic then
-			Outputs[own_num][addr] = val2 or val1
 			-- TODO: allow other mods for communication
 			local resp = techage.send_single(own_num, num, topic, val2)
 			if resp then
@@ -128,12 +136,20 @@ function pdp13.io_store(pos, number)
 	set_tbl(pos, "AddressTypes", AddressTypes[number])
 end
 
+function pdp13.reset_output_buffer(cpu_num)
+	cpu_num = tonumber(cpu_num) or 0
+	print("reset_output_buffer", cpu_num)
+	Outputs[cpu_num] = nil
+end
+
 function pdp13.get_input(cpu_num, addr)
+	cpu_num = tonumber(cpu_num) or 0
 	print("get_input", cpu_num, addr)
 	return (Inputs[cpu_num] or {})[addr]
 end
 
 function pdp13.get_output(cpu_num, addr)
+	cpu_num = tonumber(cpu_num) or 0
 	print("get_output", cpu_num, addr)
 	return (Outputs[cpu_num] or {})[addr]
 end

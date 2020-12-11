@@ -38,7 +38,7 @@ minetest.register_node("pdp13:lamp_off", {
 		logic.infotext(M(pos), "PDP13 Color Lamp")
 	end,
 	after_dig_node = function(pos, oldnode, oldmetadata)
-		techage.remove_node(pos)
+		techage.remove_node(pos, oldnode, oldmetadata)
 	end,
 	
 	on_rightclick = switch_on,
@@ -49,6 +49,7 @@ minetest.register_node("pdp13:lamp_off", {
 	sunlight_propagates = true,
 	diggable = true,
 	light_source = 0,	
+	drop = "pdp13:lamp_off",
 	is_ground_content = false,
 	groups = {snappy = 2, choppy = 2, oddly_breakable_by_hand = 3},
 	sounds = default.node_sound_defaults(),

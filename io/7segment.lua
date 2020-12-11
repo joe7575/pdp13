@@ -62,7 +62,7 @@ for i = 0,16 do
 			logic.infotext(M(pos), "PDP13 7-Segment")
 		end,
 		after_dig_node = function(pos, oldnode, oldmetadata)
-			techage.remove_node(pos)
+			techage.remove_node(pos, oldnode, oldmetadata)
 		end,
 		paramtype2 = "facedir",
 		groups = table.copy(groups),
