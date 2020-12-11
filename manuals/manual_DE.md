@@ -47,8 +47,6 @@ Das I/O-Rack verbindet die CPU mit der Welt, also anderen Blöcken und Maschinen
 
 Der CPU Block ist der Rechenkern der Anlage. Der Block besitzt ein Menü, das echten Minicomputern nachempfunden ist. Über die Schalterreihe mussten bei echten Rechnern die Maschinenbefehle eingegeben werden, über die Lampenreihen wurden Speicherinhalte ausgegeben.
 
-Die CPU ist in der Lage, bis zu 100.000 Befehle pro Sekunde (0.1 MIPS) auszuführen. Dies gilt, solange nur interne CPU-Befehle ausgeführt werden. Bei den Befehlen `sys` und `out` wird die Ausführung für 100 ms unterbrochen, da hier externe Aktionen in der Spielewelt durchgeführt werden. Dies gilt auch für den Befehl `nop` der für Pausen von 100 ms genutzt werden kann. Ansonsten läuft die CPU "full speed", aber nur solange der Bereich der Welt geladen ist. Damit ist die CPU fast so schnell wie eines ihrer großen Vorbilder, bspw. die DEC PDP-11/70 (0.4 MIPS). 
-
 Hier werden Kommandos aber über die 6 Tasten links und Maschinenbefehle über das Eingabefeld unten eingegeben. Der obere Bereich dient nur zur Ausgabe.
 
 - Über die Taste "start" wird die CPU gestartet. Sie startet dabei immer an der aktuellen Adresse des Program Counters (PC), welche bspw. auch oben über die Lampenreihe angezeigt wird.
@@ -61,6 +59,16 @@ Hier werden Kommandos aber über die 6 Tasten links und Maschinenbefehle über d
 Das "help" Register zeigt die wichtgsten Assemblerbefehle und jeweils den Maschinencode dazu. Mit diesem Subset an Befehlen kann man bereits arbeiten. Weitere Informationen zum Befehlssatz findest du [hier](https://github.com/joe7575/vm16/blob/master/doc/introduction.md) und [hier](https://github.com/joe7575/vm16/blob/master/doc/opcodes.md).
 
 Am Ende der Tabelle werden die System Kommandos aufgeführt. Dies sind quasi Betriebssystemsaufrufe, welche zusätzliche Befehle ausführen, die sonst nicht möglich wären, wie bspw. einen Text auf dem Telewriter ausgeben. 
+
+### Performance
+
+Die CPU ist in der Lage, bis zu 100.000 Befehle pro Sekunde (0.1 MIPS) auszuführen. Dies gilt, solange nur interne CPU-Befehle ausgeführt werden. Dabei gibt es folgende Ausnahmen:
+
+- Der `sys` und der `in` Befehl "kosten" pauschal 1000 Zyklen, da hier externer Code ausgeführt wird. 
+- Der `out` Befehl unterbricht die Ausführung für 100 ms, sofern sich der Wert am Ausgang ändert und eine externe Aktionen in der Spielewelt durchgeführt werden muss. Anderenfalls sind es auch nur die 1000 Zyklen.
+- Der `nop` Befehl, der für Pausen genutzt werden kann, unterbricht die Ausführung auch für 100 ms.
+
+Ansonsten läuft die CPU "full speed", aber nur solange der Bereich der Welt geladen ist. Damit ist die CPU fast so schnell wie ihr großen Vorbild, die DEC PDP-11/70 (0.4 MIPS). 
 
 TODO:
 

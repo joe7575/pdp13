@@ -25,7 +25,7 @@ end
 
 local function switch_off(pos, node)
 	node.name = "pdp13:lamp_off"
-	node.param2 = 0
+	node.param2 = 50
 	minetest.swap_node(pos, node)
 end	
 
@@ -36,6 +36,9 @@ minetest.register_node("pdp13:lamp_off", {
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
 		logic.after_place_node(pos, placer, "pdp13:lamp_off", "PDP13 Color Lamp")
 		logic.infotext(M(pos), "PDP13 Color Lamp")
+		local node = minetest.get_node(pos)
+		node.param2 = 50
+		minetest.swap_node(pos, node)
 	end,
 	after_dig_node = function(pos, oldnode, oldmetadata)
 		techage.remove_node(pos, oldnode, oldmetadata)
