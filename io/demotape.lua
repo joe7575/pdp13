@@ -93,3 +93,51 @@ TEXT:
 ]], [[:80000002010000408001C0000480065006C006C
 :8000800006F00200057006F0072006C00640000
 :00000FF]])
+
+register_tape("pdp13:tapetelecolor", "Telewriter Color Demo", [[
+; Input number demo v1.0
+; PDP13 Color Lamp on port #0
+
+Start:
+0000: 2010, 001A       move    A, #TEXT1 ; output text1
+0002: 0800             sys     #0
+
+0003: 0802             sys   #2        ; read number from telewriter
+0004: 5C12, FFFD       bneg  A, -3     ; val >= $8000: branch to loop
+
+0006: 2020             move  B, A      ; number to B
+0007: 2010, 0080       move  A, #$80   ; value command to A
+0009: 6600, 0000       out   #00, A    ; send value to color lamp
+
+000B: 2010, 000B       move A, #11     ; 1.1s delay
+000D: 0000             nop
+000E: 7412, FFFD       dbnz A, -3
+
+0010: 2010, 002E       move    A, #TEXT2 ; output text2
+0012: 0800             sys     #0
+
+0013: 2010, 000B       move A, #11		; 1.1s delay
+0015: 0000             nop
+0016: 7412, FFFD       dbnz A, -3
+
+0018: 1200, 0000       jump  Start
+
+    .text
+TEXT1:
+    "Enter "
+001A: 0045, 006E, 0074, 0065, 0072, 0020
+    "color "
+0020: 0063, 006F, 006C, 006F, 0072, 0020
+    "(1..64)\0"
+0026: 0028, 0031, 002E, 002E, 0036, 0034, 0029, 0000
+TEXT2:
+    "Color set\0"
+002E: 0043, 006F, 006C, 006F, 0072, 0020, 0073, 0065, 0074, 0000
+]], [[:80000002010001A080008025C12FFFD20202010
+:80008000080660000002010000B00007412FFFD
+:80010002010002E08002010000B00007412FFFD
+:8001800120000000045006E0074006500720020
+:80020000063006F006C006F0072002000280031
+:8002800002E002E00360034002900000043006F
+:8003000006C006F007200200073006500740000
+:00000FF]])

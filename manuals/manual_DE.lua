@@ -85,6 +85,20 @@ techage.add_to_manual('DE', {
   "\n"..
   "Eigene Programme können so auch auf Tape gespeichert und später wieder wieder eingelesen und abgearbeitet werden. \n"..
   "\n"..
+  "Der Telewriter kann über folgende 'sys' Befehle angesprochen werden:\n"..
+  "\n"..
+  "    \\; Ausgabe Text\n"..
+  "    move    A\\, #100     \\; Lade A mit der Adresse des Textes\n"..
+  "    sys     #0          \\; Ausgabe Text auf dem Telewriter\n"..
+  "    \n"..
+  "    \\; Einlesen Text\n"..
+  "    move    A\\, #100     \\; Lade A mit der Zieladresse\\, wo der Text hin soll (32 Zeichen max.)\n"..
+  "    sys     #1          \\; Einlesen Text vom Telewriter (In A wird die Anzahl der Zeichen zurück geliefert\\, oder 65535)\n"..
+  "    \n"..
+  "    \\; Einlesen Zahl\n"..
+  "    sys     #2          \\; Einlesen Zahl vom Telewriter\\, das Ergebnis steht in A \n"..
+  "                        \\; (65535 = kein Wert eingelesen)\n"..
+  "\n"..
   "\n"..
   "\n",
   "Neben den Demo Tapes mit festen\\, kleinen Programmen gibt es ach die beschreibbaren und editierbaren Tapes. Diese können (im Gegensatz zum Original) mehrfach geschrieben/geändert werden.\n"..

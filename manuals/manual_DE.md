@@ -87,6 +87,24 @@ Es gibt bereits mehrere Demo Tapes, die über das "tape" Menü-Register in den T
 
 Eigene Programme können so auch auf Tape gespeichert und später wieder wieder eingelesen und abgearbeitet werden. 
 
+Der Telewriter kann über folgende `sys` Befehle angesprochen werden:
+
+```assembly
+; Ausgabe Text
+move    A, #100     ; Lade A mit der Adresse des Textes
+sys     #0          ; Ausgabe Text auf dem Telewriter
+
+; Einlesen Text
+move    A, #100     ; Lade A mit der Zieladresse, wo der Text hin soll (32 Zeichen max.)
+sys     #1          ; Einlesen Text vom Telewriter (In A wird die Anzahl der Zeichen zurück geliefert, oder 65535)
+
+; Einlesen Zahl
+sys     #2          ; Einlesen Zahl vom Telewriter, das Ergebnis steht in A 
+                    ; (65535 = kein Wert eingelesen)
+```
+
+
+
 [pdp13_telewriter|image]
 
 ## PDP13 Tape

@@ -54,8 +54,9 @@ local function formspec1(mem)
 		format_text(mem)..
 		"]"..
 		"container_end[]"..
-		"field[1,8;8,1;cmnd;;]"..
-		"field_close_on_enter[cmnd;false]"
+		"field[1,8;6,0.8;command;;]"..
+		"button[7,7.6;1.7,1;enter;enter]"..
+		"field_close_on_enter[command;false]"
 end
 
 local function formspec2(mem)
@@ -228,26 +229,11 @@ minetest.register_node("pdp13:telewriter", {
 			M(pos):set_string("formspec", formspec2(mem))
 		elseif fields.tab == "1" then
 			M(pos):set_string("formspec", formspec1(mem))
---		elseif fields.key_enter == "true" then
---			if mem.punch then -- punch to tape
---				fields.cmnd = string.gsub(fields.cmnd, "\\t", "\t")
---				--printline(mem, fields.cmnd)
---				for _,val in ipairs(to_hexnumbers(fields.cmnd)) do
---					mem.codes[#mem.codes+1] = val
---				end
---				M(pos):set_string("formspec", formspec1(mem))
---				minetest.sound_play("pdp13_telewriter", {
---					pos = pos, 
---					gain = 1,
---					max_hear_distance = 5})
---			else -- send to CPU
---				mem.fifo = {}
---				for i = 1,#fields.cmnd do
---					mem.fifo[i] = string.byte(fields.cmnd, i)
---				end
---				mem.keyboard = true
---				print("send to CPU")
---			end
+		elseif fields.key_enter_field or fields.enter then
+			play_sound(pos)
+			mem.blocked = true
+			minetest.after(1, print_line, pos, mem, fields.command or "")
+			mem.input = fields.command or ""
 		elseif fields.writer and not mem.reader then
 			local code = get_tape_code(pos)
 			if code then
@@ -277,7 +263,7 @@ minetest.register_node("pdp13:telewriter", {
 
 techage.register_node({"pdp13:telewriter"}, {
 	on_recv_message = function(pos, src, topic, payload)
-		if topic == "pdptext" then
+		if topic == "output" then
 			payload = tostring(payload) or ""
 			local mem = techage.get_nvm(pos)
 			if not mem.blocked then
@@ -287,6 +273,13 @@ techage.register_node({"pdp13:telewriter"}, {
 				return 1
 			end
 			return 0
+		elseif topic == "input" then
+			local mem = techage.get_nvm(pos)
+			if mem.input then
+				local s = mem.input
+				mem.input = nil
+				return s
+			end
 		end
 	end,
 })	
@@ -300,6 +293,7 @@ minetest.register_lbm({
 		local mem = techage.get_nvm(pos)
 		mem.blocked = false
 		mem.reader = false
-		mem.writr = false
+		mem.writer = false
+		mem.input = nil
 	end
 })

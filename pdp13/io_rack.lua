@@ -64,7 +64,7 @@ local function register_at_cpu(pos)
 	local names = {"pdp13:cpu1", "pdp13:cpu1_on"}
 	local cpu_num = pdp13.send(pos, names, "cpu_num")
 	--print("register_at_cpu", cpu_num)
-	M(pos):set_int("cpu_num", cpu_num)
+	M(pos):set_int("cpu_num", cpu_num or 0)
 	
 	local data = {"pdp13:io_rack", "pdp13:io_rack_top"}
 	local num = pdp13.send(pos, names, "reg_io", data)
