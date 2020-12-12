@@ -55,7 +55,7 @@ for i = 0,16 do
 			"pdp13_7segment_side.png",
 			"pdp13_7segment_side.png",
 			"pdp13_7segment_side.png",
-			"pdp13_7segment_"..c..".png",
+			"pdp13_7segment_"..c..".png^pdp13_7segment_mask.png",
 		},
 		after_place_node = function(pos, placer)
 			logic.after_place_node(pos, placer, "pdp13:7segment"..c, "PDP13 7-Segment")
@@ -84,3 +84,12 @@ for i = 0,16 do
 		end,
 	})		
 end
+
+minetest.register_craft({
+	output = "pdp13:7segment10",
+	recipe = {
+		{"wool:black", "", ""},
+		{"techage:vacuum_tube", "", ""},
+		{"pdp13:ic1", "", ""},
+	},
+})

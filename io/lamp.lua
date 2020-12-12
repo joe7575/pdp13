@@ -92,3 +92,11 @@ techage.register_node({"pdp13:lamp_off", "pdp13:lamp_on"}, {
 	end,
 })	
 
+minetest.register_craft({
+	output = "pdp13:lamp_off",
+	recipe = {
+		{"wool:white", "", ""},
+		{"default:mese_post_light", "", ""},
+		{"pdp13:ic1", "", ""},
+	},
+})

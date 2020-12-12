@@ -297,3 +297,12 @@ minetest.register_lbm({
 		mem.input = nil
 	end
 })
+
+minetest.register_craft({
+	output = "pdp13:telewriter",
+	recipe = {
+		{"default:paper", "default:paper", "default:paper"},
+		{"default:steel_ingot", "dye:black", "default:steel_ingot"},
+		{"pdp13:ic1", "", "pdp13:ic1"},
+	},
+})

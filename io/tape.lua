@@ -64,3 +64,12 @@ minetest.register_craftitem("pdp13:tape", {
 	groups = {book = 1, flammable = 3, pdp13_tape = 1},
 	on_use = on_use,
 })
+
+minetest.register_craft({
+	output = "pdp13:tape",
+	recipe = {
+		{"", "default:paper", "default:paper"},
+		{"", "dye:yellow", "default:paper"},
+		{"default:paper", "default:paper", "default:paper"},
+	},
+})

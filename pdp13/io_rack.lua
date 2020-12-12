@@ -293,3 +293,35 @@ minetest.register_node("pdp13:io_rack_top", {
 	sounds = default.node_sound_wood_defaults(),
 })
 
+
+minetest.register_craftitem("pdp13:chassis", {
+	description = "PDP-13 Chassis Rack",
+	inventory_image = "pdp13_chassis.png^pdp13_frame.png",
+})
+
+minetest.register_craft({
+	output = "pdp13:chassis",
+	recipe = {
+		{"default:steel_ingot", "default:wood", "default:steel_ingot"},
+		{"dye:black", "wool:white", "dye:black"},
+		{"techage:iron_ingot", "default:wood", "techage:iron_ingot"},
+	},
+})
+
+minetest.register_craft({
+	output = "pdp13:io_rack",
+	recipe = {
+		{"pdp13:chassis", "", ""},
+		{"pdp13:ic1", "pdp13:ic1", ""},
+		{"pdp13:ic1", "pdp13:ic1", ""},
+	},
+})
+
+minetest.register_craft({
+	output = "pdp13:io_rack_top",
+	recipe = {
+		{"pdp13:chassis", "dye:magenta", ""},
+		{"pdp13:ic1", "pdp13:ic1", ""},
+		{"pdp13:ic1", "pdp13:ic1", ""},
+	},
+})

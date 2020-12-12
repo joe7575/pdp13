@@ -520,3 +520,12 @@ minetest.register_lbm({
 		end
 	end
 })
+
+minetest.register_craft({
+	output = "pdp13:cpu1",
+	recipe = {
+		{"pdp13:chassis", "dye:magenta", ""},
+		{"pdp13:ram4k", "pdp13:ic2", ""},
+		{"pdp13:ic1", "pdp13:ic1", ""},
+	},
+})

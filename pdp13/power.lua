@@ -122,3 +122,12 @@ minetest.register_node("pdp13:power1_on", {
 	is_ground_content = false,
 	sounds = default.node_sound_wood_defaults(),
 })
+
+minetest.register_craft({
+	output = "pdp13:power1",
+	recipe = {
+		{"pdp13:chassis", "pdp13:ic1", ""},
+		{"basic_materials:copper_wire", "basic_materials:copper_wire", ""},
+		{"", "", ""},
+	},
+})

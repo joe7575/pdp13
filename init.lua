@@ -35,6 +35,7 @@ dofile(MP.."/io/7segment.lua")
 dofile(MP.."/io/telewriter.lua")
 dofile(MP.."/io/tape.lua")
 dofile(MP.."/io/demotape.lua")
+dofile(MP.."/io/chips.lua")
 
 dofile(MP.."/manuals/manual_DE.lua")
 dofile(MP.."/manuals/manual_EN.lua")
