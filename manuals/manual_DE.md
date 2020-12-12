@@ -103,13 +103,33 @@ Die Tapes besitzen ein Menü so dass diese uch von Hand beschrieben werden könn
 
 ## PDP13 7-Segment
 
-Über diesen Block kann eine HEX-Ziffer, also 0-9 und A-F ausgegeben werden, indem Werte von 0 bis 15 an den Block gesendet werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. Werte größer 15 löschen die Ausgabe.
+Über diesen Block kann eine HEX-Ziffer, also 0-9 und A-F ausgegeben werden, indem Werte von 0 bis 15 über das Kommando `value` an den Block gesendet werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. Werte größer 15 löschen die Ausgabe.
+
+Lua: `$send_cmnd(num, "value", 0..16)`
+
+Asm:
+
+```assembly
+move A, #$80    ; 'value' command
+move B, #8      ; value 0..16 in B
+out #00, A      ; output on port #0
+```
 
 [pdp13_7segment|image]
 
 ## PDP13 Color Lamp
 
-Dieser Lampenblock kann in verschiedenen Farben leuchten. Dazu müssen Werte von 1-64 an den Block gesendet werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. Der Werte 0 schaltet die Lampe aus.
+Dieser Lampenblock kann in verschiedenen Farben leuchten. Dazu müssen Werte von 1-64 über das Kommando `value`an den Block gesendet werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. Der Werte 0 schaltet die Lampe aus.
+
+Lua: `$send_cmnd(num, "value", 0..64)`
+
+Asm:
+
+```assembly
+move A, #$80    ; 'value' command
+move B, #8      ; value 0..64 in B
+out #00, A      ; output on port #0
+```
 
 [pdp13_lamp|image]
 

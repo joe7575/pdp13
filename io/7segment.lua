@@ -75,7 +75,7 @@ for i = 0,16 do
 
 	techage.register_node({"pdp13:7segment"..c}, {
 		on_recv_message = function(pos, src, topic, payload)
-			if topic == "pdp7seg" then
+			if topic == "value" then
 				payload = tonumber(payload) or 0
 				swap_node(pos, payload)
 			else

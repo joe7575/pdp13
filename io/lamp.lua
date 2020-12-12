@@ -78,7 +78,7 @@ minetest.register_node("pdp13:lamp_on", {
 
 techage.register_node({"pdp13:lamp_off", "pdp13:lamp_on"}, {
 	on_recv_message = function(pos, src, topic, payload)
-		if topic == "color" then
+		if topic == "value" then
 			payload = tonumber(payload)
 			local node = techage.get_node_lvm(pos)
 			if payload and payload > 0 then

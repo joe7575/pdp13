@@ -26,15 +26,13 @@ local Commands = [[   PDP13 Techage I/O Commands
   00 - off          00 - off
   01 - on           01 - on
   
-  80 - cmd color (color in B)
-  81 - cmd 7segment (val in B)
+  80 - cmd value (val in B)
 ]]
 Commands = Commands:gsub("\n", ",")
 
 pdp13.register_CommandTopic("techage", "off", 0)
 pdp13.register_CommandTopic("techage", "on", 1)
-pdp13.register_CommandTopic("techage", "color", 0x80)
-pdp13.register_CommandTopic("techage", "pdp7seg", 0x81)
+pdp13.register_CommandTopic("techage", "value", 0x80)
 pdp13.register_ResponseTopic("techage", "off", 0)
 pdp13.register_ResponseTopic("techage", "on", 1)
 

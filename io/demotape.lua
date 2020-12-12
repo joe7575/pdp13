@@ -46,7 +46,7 @@ register_tape("pdp13:tape7seg", "7-Segment Demo", [[
 ; 7 segment demo v1.0
 ; PDP13 7-Segment on port #0
 
-0000: 2010, 0081       move A, #$81    ; 7seg command
+0000: 2010, 0081       move A, #$80    ; value command
 0002: 2030, 0000       move B, #00     ; hex value
 
 loop:
@@ -56,7 +56,7 @@ loop:
 0009: 0000             nop
 000A: 0000             nop
 000B: 1200, 0004       jump loop
-]], [[:80000002010008120300000303000014030000F
+]], [[:80000002010008020300000303000014030000F
 :500080065800000000012000004
 :00000FF]])
 
@@ -64,7 +64,7 @@ register_tape("pdp13:tapecolor", "Color Lamp Demo", [[
 ; Color lamp demo v1.0
 ; PDP13 Color Lamp on port #0
 
-0000: 2010, 0002       move A, #$80    ; color command
+0000: 2010, 0002       move A, #$80    ; value command
 0002: 2030, 0000       move B, #00     ; color start value
 
                    loop:

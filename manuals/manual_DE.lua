@@ -3,6 +3,7 @@ techage.add_to_manual('DE', {
   "2,Anleitung",
   "2,I/O Rack",
   "2,PDP-13 CPU",
+  "3,Performance",
   "2,PDP-13 Telewriter",
   "2,PDP13 Tape",
   "2,PDP13 7-Segment",
@@ -48,8 +49,6 @@ techage.add_to_manual('DE', {
   "\n",
   "Der CPU Block ist der Rechenkern der Anlage. Der Block besitzt ein Menü\\, das echten Minicomputern nachempfunden ist. Über die Schalterreihe mussten bei echten Rechnern die Maschinenbefehle eingegeben werden\\, über die Lampenreihen wurden Speicherinhalte ausgegeben.\n"..
   "\n"..
-  "Die CPU ist in der Lage\\, bis zu 100.000 Befehle pro Sekunde (0.1 MIPS) auszuführen. Dies gilt\\, solange nur interne CPU-Befehle ausgeführt werden. Bei den Befehlen 'sys' und 'out' wird die Ausführung für 100 ms unterbrochen\\, da hier externe Aktionen in der Spielewelt durchgeführt werden. Dies gilt auch für den Befehl 'nop' der für Pausen von 100 ms genutzt werden kann. Ansonsten läuft die CPU \"full speed\"\\, aber nur solange der Bereich der Welt geladen ist. Damit ist die CPU fast so schnell wie eines ihrer großen Vorbilder\\, bspw. die DEC PDP-11/70 (0.4 MIPS). \n"..
-  "\n"..
   "Hier werden Kommandos aber über die 6 Tasten links und Maschinenbefehle über das Eingabefeld unten eingegeben. Der obere Bereich dient nur zur Ausgabe.\n"..
   "\n"..
   "  - Über die Taste \"start\" wird die CPU gestartet. Sie startet dabei immer an der aktuellen Adresse des Program Counters (PC)\\, welche bspw. auch oben über die Lampenreihe angezeigt wird.\n"..
@@ -62,6 +61,14 @@ techage.add_to_manual('DE', {
   "Das \"help\" Register zeigt die wichtgsten Assemblerbefehle und jeweils den Maschinencode dazu. Mit diesem Subset an Befehlen kann man bereits arbeiten. Weitere Informationen zum Befehlssatz findest du  und .\n"..
   "\n"..
   "Am Ende der Tabelle werden die System Kommandos aufgeführt. Dies sind quasi Betriebssystemsaufrufe\\, welche zusätzliche Befehle ausführen\\, die sonst nicht möglich wären\\, wie bspw. einen Text auf dem Telewriter ausgeben. \n"..
+  "\n",
+  "Die CPU ist in der Lage\\, bis zu 100.000 Befehle pro Sekunde (0.1 MIPS) auszuführen. Dies gilt\\, solange nur interne CPU-Befehle ausgeführt werden. Dabei gibt es folgende Ausnahmen:\n"..
+  "\n"..
+  "  - Der 'sys' und der 'in' Befehl \"kosten\" pauschal 1000 Zyklen\\, da hier externer Code ausgeführt wird.\n"..
+  "  - Der 'out' Befehl unterbricht die Ausführung für 100 ms\\, sofern sich der Wert am Ausgang ändert und eine externe Aktionen in der Spielewelt durchgeführt werden muss. Anderenfalls sind es auch nur die 1000 Zyklen.\n"..
+  "  - Der 'nop' Befehl\\, der für Pausen genutzt werden kann\\, unterbricht die Ausführung auch für 100 ms.\n"..
+  "\n"..
+  "Ansonsten läuft die CPU \"full speed\"\\, aber nur solange der Bereich der Welt geladen ist. Damit ist die CPU fast so schnell wie ihr großen Vorbild\\, die DEC PDP-11/70 (0.4 MIPS). \n"..
   "\n"..
   "TODO:\n"..
   "\n"..
@@ -90,11 +97,27 @@ techage.add_to_manual('DE', {
   "\n"..
   "\n"..
   "\n",
-  "Über diesen Block kann eine HEX-Ziffer\\, also 0-9 und A-F ausgegeben werden\\, indem Werte von 0 bis 15 an den Block gesendet werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. Werte größer 15 löschen die Ausgabe.\n"..
+  "Über diesen Block kann eine HEX-Ziffer\\, also 0-9 und A-F ausgegeben werden\\, indem Werte von 0 bis 15 über das Kommando 'value' an den Block gesendet werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. Werte größer 15 löschen die Ausgabe.\n"..
+  "\n"..
+  "Lua: '$send_cmnd(num\\, \"value\"\\, 0..16)'\n"..
+  "\n"..
+  "Asm:\n"..
+  "\n"..
+  "    move A\\, #$80    \\; 'value' command\n"..
+  "    move B\\, #8      \\; value 0..16 in B\n"..
+  "    out #00\\, A      \\; output on port #0\n"..
   "\n"..
   "\n"..
   "\n",
-  "Dieser Lampenblock kann in verschiedenen Farben leuchten. Dazu müssen Werte von 1-64 an den Block gesendet werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. Der Werte 0 schaltet die Lampe aus.\n"..
+  "Dieser Lampenblock kann in verschiedenen Farben leuchten. Dazu müssen Werte von 1-64 über das Kommando 'value'an den Block gesendet werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. Der Werte 0 schaltet die Lampe aus.\n"..
+  "\n"..
+  "Lua: '$send_cmnd(num\\, \"value\"\\, 0..64)'\n"..
+  "\n"..
+  "Asm:\n"..
+  "\n"..
+  "    move A\\, #$80    \\; 'value' command\n"..
+  "    move B\\, #8      \\; value 0..64 in B\n"..
+  "    out #00\\, A      \\; output on port #0\n"..
   "\n"..
   "\n"..
   "\n",
@@ -132,6 +155,7 @@ techage.add_to_manual('DE', {
   "pdp13_cpu",
   "pdp13_cpu",
   "pdp13_iorack",
+  "",
   "pdp13_cpu",
   "pdp13_telewriter",
   "pdp13_tape",
@@ -139,6 +163,7 @@ techage.add_to_manual('DE', {
   "pdp13_lamp",
   "pdp13_cpu",
 }, {
+  "",
   "",
   "",
   "",
