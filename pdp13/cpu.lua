@@ -41,10 +41,11 @@ end
 
 local function vm_state(mem)
 	if mem.started            then return "image[2.2,0.4;0.4,0.4;pdp13_led_form.png]" end
+	if mem.monitor            then return "image[3.7,0.4;0.4,0.4;pdp13_led_form.png]" end
 	if mem.state == vm16.STOP then return "" end
-	if mem.state == vm16.IN   then return "image[4.2,0.4;0.4,0.4;pdp13_led_form.png]" end
-	if mem.state == vm16.OUT  then return "image[4.2,0.4;0.4,0.4;pdp13_led_form.png]" end
-	if mem.state == vm16.HALT then return "image[6.2,0.4;0.4,0.4;pdp13_led_form.png]" end
+	if mem.state == vm16.IN   then return "image[5.2,0.4;0.4,0.4;pdp13_led_form.png]" end
+	if mem.state == vm16.OUT  then return "image[5.2,0.4;0.4,0.4;pdp13_led_form.png]" end
+	if mem.state == vm16.HALT then return "image[6.7,0.4;0.4,0.4;pdp13_led_form.png]" end
 	if mem.state == vm16.SYS  then return "image[8.2,0.4;0.4,0.4;pdp13_led_form.png]" end
 	return ""
 end
@@ -89,8 +90,9 @@ local function formspec(pos, mem, cpu)
 		"label[5.1,2.73;operand]"..
 		
 		"label[2.5,0.4; run]"..
-		"label[4.5,0.4; i/o]"..
-		"label[6.5,0.4; halt]"..
+		"label[4.0,0.4; mon]"..
+		"label[5.5,0.4; i/o]"..
+		"label[7.0,0.4; halt]"..
 		"label[8.5,0.4; sys]"..
 		
 		"button[0,5.4;1.7,1;start;start]"..

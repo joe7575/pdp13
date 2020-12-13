@@ -3,7 +3,7 @@
 	PDP-13
 	======
 
-	Copyright (C) 2019 Joachim Stolberg
+	Copyright (C) 2019-2020 Joachim Stolberg
 
 	AGPL v3
 	See LICENSE.txt for more information
@@ -24,11 +24,19 @@ for idx,s in pairs(pdp13.VM13Operands) do
 	tOperands[s] = idx
 end
 
-local function value(s)
-	if string.sub(s, 1, 1) == "$" then
+local function const_val(s)
+	if s and string.sub(s, 1, 1) == "#" then
 		return tonumber(string.sub(s, 2, -1), 16) or 0
 	else
-		return tonumber(s, 10) or 0	
+		return 0	
+	end
+end
+
+local function value(s)
+	if s then 
+		return tonumber(s, 16) or 0
+	else
+		return 0	
 	end
 end
 
@@ -57,7 +65,7 @@ function pdp13.assemble(s)
 	opcode = tOpcodes[words[1]]
 	if not opcode then return end
 	if words[2] and opcode < 4 then
-		local num = value(words[2]) % 1024
+		local num = const_val(s)(words[2]) % 1024
 		opnd1 = math.floor(num / 32)
 		opnd2 = num % 32
 	else
@@ -65,7 +73,11 @@ function pdp13.assemble(s)
 		opnd2, val2 = operand(words[3])
 	end
 	local tbl = {(opcode * 1024) + (opnd1 * 32) + opnd2}
+	if val1 and val2 then return end
 	if val1 then tbl[#tbl+1] = val1 end
 	if val2 then tbl[#tbl+1] = val2 end
 	return tbl
 end
+
+-- pdp13.string_to_number(s): returns number  -- suports dec and hex $...
+pdp13.string_to_number = value
