@@ -25,7 +25,7 @@ minetest.register_craftitem("pdp13:ram8k", {
 	inventory_image = "pdp13_ram8k.png",
 })
 
-minetest.register_craftitem("pdp13:rom", {
+minetest.register_craftitem("pdp13:mon_rom", {
 	description = "PDP-13 Monitor ROM",
 	inventory_image = "pdp13_rom.png",
 })
@@ -41,7 +41,7 @@ minetest.register_craftitem("pdp13:ic2", {
 })
 
 techage.recipes.add("ta3_electronic_fab", {
-	output = "pdp13:ic1",
+	output = "pdp13:ic1 1",
 	input = {
 		"basic_materials:ic 2", 
 		"basic_materials:silicon", "techage:usmium_nuggets 1"
@@ -49,7 +49,7 @@ techage.recipes.add("ta3_electronic_fab", {
 })
 
 techage.recipes.add("ta3_electronic_fab", {
-	output = "pdp13:ram4k",
+	output = "pdp13:ram4k 1",
 	input = {
 		"basic_materials:ic 2", 
 		"basic_materials:plastic_sheet 1", "techage:usmium_nuggets 1"
@@ -57,15 +57,23 @@ techage.recipes.add("ta3_electronic_fab", {
 })
 
 techage.recipes.add("ta3_electronic_fab", {
-	output = "pdp13:ic2",
+	output = "pdp13:ic2 1",
 	input = {
 		"pdp13:ic1 8", 
 	}
 })
 
 techage.recipes.add("ta3_electronic_fab", {
-	output = "pdp13:ram8k",
+	output = "pdp13:ram8k 1",
 	input = {
 		"pdp13:ram4k 2", 
+	}
+})
+
+techage.recipes.add("ta3_electronic_fab", {
+	output = "pdp13:mon_rom 1",
+	input = {
+		"pdp13:ic1 8", 
+		"pdp13:tapemonitor 1",
 	}
 })

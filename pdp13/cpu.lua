@@ -289,11 +289,14 @@ local function fs_in_monitor(pos, mem)
 	end
 end	
 
+-- For Rack communication
 local function pdp13_on_receive(pos, src_pos, cmnd, data)
 	if cmnd == "power" then
 		if data == "on" then
 			local mem = techage.get_nvm(pos)
-			if vm16.on_power_on(pos, 1) then
+			local ram_size = M(pos):get_int("ram_size")
+			if ram_size == 0 then ram_size = 4 end
+			if vm16.on_power_on(pos, ram_size/4) then
 				fs_power_on(pos, mem)
 			end
 			local number = M(pos):get_string("node_number")
@@ -322,6 +325,11 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 	elseif cmnd == "cpu_num" then
 		--print("CPU cpu_num", M(pos):get_string("node_number"))
 		return M(pos):get_string("node_number")
+	elseif cmnd == "memory" then
+		M(pos):set_int("ram_size", data.ram or 4)
+		M(pos):set_int("rom_size", data.rom or 0)
+	else
+		print(cmnd, dump(data))
 	end
 end
 
@@ -425,9 +433,13 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 			fs_single_step(pos, mem, resp)
 		elseif fields.key_enter_field or fields.enter then
 			if fields.command == "mon" then
-				mem.monitor = true
-				programmer_cmnd(pos, "monitor", true)
-				fs_in_monitor(pos, mem)
+				if M(pos):get_int("rom_size") > 0 then
+					mem.monitor = true
+					programmer_cmnd(pos, "monitor", true)
+					fs_in_monitor(pos, mem)
+				else
+					fs_cpu_stopped(pos, mem)
+				end
 			elseif mem.inp_mode == "address" then
 				mem_address(pos, mem, fields.command)
 			else

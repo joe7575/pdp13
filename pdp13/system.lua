@@ -43,7 +43,7 @@ local function telewriter_input_string(pos, address, val1, val2)
 	local number = M(pos):get_string("telewriter_number")
 	local s = send_cmnd(pos, number, "input")
 	if s and vm16.write_ascii(pos, val1, s) then
-		print("telewriter_input_string", val1, s)
+		--print("telewriter_input_string", val1, s)
 		return #s
 	end
 	return 65535
@@ -52,7 +52,7 @@ end
 local function telewriter_input_number(pos, address, val1, val2)
 	local number = M(pos):get_string("telewriter_number")
 	local s = send_cmnd(pos, number, "input")
-	print("telewriter_input_number", s, tonumber(s) or 65535)
+	--print("telewriter_input_number", s, tonumber(s) or 65535)
 	return tonumber(s) or 65535
 end
 

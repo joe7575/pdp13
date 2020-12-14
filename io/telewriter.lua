@@ -19,6 +19,12 @@ local S2P = minetest.string_to_pos
 
 local DELAY = 0.5	-- time for one line
 
+local DemoTapes = {}
+
+function pdp13.register_demotape(name, desc)
+	DemoTapes[#DemoTapes+1] = {name = name, desc = desc}
+end
+
 local function format_text(mem)
 	local t = {}
 	mem.lines = mem.lines or {}
@@ -68,12 +74,19 @@ local function formspec1(pos, mem)
 end
 
 local function formspec2(mem)
+	local tbl = {}
+	for _,item in ipairs(DemoTapes) do
+		tbl[#tbl+1] = item.desc
+	end
+	local items = table.concat(tbl, ",")
 	return "size[10,8.5]" ..
 		"tabheader[0,0;tab;main,tape;2;;true]"..
 		"list[context;main;2.5,1;1,1;]"..
 		"image[2.5,1;1,1;pdp13_punched_tape.png]"..
 		button("writer", "tape -> PDP13", mem.writer, 5, 0.4)..
 		button("reader", "PDP13 -> tape", mem.reader, 5, 1.6)..
+		"dropdown[1,3.2;6.2;demotape;"..items..";1;]"..
+		"button[7,3.15;2,1;punch;punch]"..
 		"list[current_player;main;1,4.5;8,4;]"
 end
 
@@ -117,6 +130,7 @@ local function add_line_to_fifo(pos, mem, text)
 	if text and #mem.OutFifo < 16 then
 		table.insert(mem.OutFifo, text)
 		minetest.get_node_timer(pos):start(DELAY)
+		play_sound(pos)
 	end
 end
 
@@ -180,6 +194,32 @@ local function write_tape_code(pos, code)
 end
 
 local function write_code_to_cpu(pos, code)
+	minetest.after(1, function(pos)
+		local mem = techage.get_nvm(pos)
+		mem.writer = false
+		M(pos):set_string("formspec", formspec2(mem))
+	end, pos)
+	local cpu_num = M(pos):get_string("cpu_number")
+	local res = send_to_cpu(pos, "write_h16", code)
+	local mem = techage.get_nvm(pos)
+	add_line_to_fifo(pos, mem, "Tape to PDP13.."..(res and "ok" or "error"))
+end
+
+local function gen_demotape(pos, demotape)
+	for _,item in ipairs(DemoTapes) do
+		if item.desc == demotape then
+			minetest.after(DELAY, function(pos, name)
+				local inv = M(pos):get_inventory()
+				inv:set_stack("main", 1, ItemStack(name))
+				local mem = techage.get_nvm(pos)
+				add_line_to_fifo(pos, mem, "Tape punched")
+				mem.reader = false
+			end, pos, item.name)
+			play_sound(pos)
+			break
+		end
+	end
+	
 	minetest.after(1, function(pos)
 		local mem = techage.get_nvm(pos)
 		mem.writer = false
@@ -265,14 +305,19 @@ local function on_receive_fields(pos, formname, fields, player)
 			read_code_from_cpu(pos)
 			M(pos):set_string("formspec", formspec2(mem))
 		end
+	elseif fields.punch and not mem.writer and not mem.reader then
+		if has_tape(pos) then
+			mem.reader = true
+			gen_demotape(pos, fields.demotape)
+		end
 	end
 end
 
 local function node_timer(pos, elapsed)
 	local mem = techage.get_nvm(pos)
 	mem.OutFifo = mem.OutFifo or {}
-	play_sound(pos)
 	if #mem.OutFifo > 0 then
+		play_sound(pos)
 		print_line(pos, mem)
 		return true
 	end

@@ -17,6 +17,7 @@ pdp13.AllNodes = {
 	"pdp13:cpu1", "pdp13:cpu1_on",
 	"pdp13:power1", "pdp13:power1_on",
 	"pdp13:io_rack", "pdp13:io_rack_top",
+	"pdp13:mem_rack",
 }
 
 -- For communication purposes between PDP13 nodes.

@@ -28,6 +28,7 @@ dofile(MP.."/pdp13/system.lua")
 dofile(MP.."/pdp13/cpu.lua")
 dofile(MP.."/pdp13/power.lua")
 dofile(MP.."/pdp13/io_rack.lua")
+dofile(MP.."/pdp13/mem_rack.lua")
 
 -- I/O
 dofile(MP.."/io/lamp.lua")
