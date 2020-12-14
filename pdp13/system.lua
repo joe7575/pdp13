@@ -58,7 +58,10 @@ end
 
 
 pdp13.SysDesc = [[---------------------------------
-sys #0   ; telewriter text output
+Telewriter:
+  sys #0   ; text output:  addr in A => -
+  sys #1   ; string input: addr in A => size in A
+  sys #2   ; number input:         - => number in A
 ]]
 
 pdp13.SysDesc = pdp13.SysDesc:gsub(",", "\\,")

@@ -21,7 +21,7 @@ dofile(MP.."/lib/command.lua")
 dofile(MP.."/lib/opcodes.lua")
 dofile(MP.."/lib/assemble.lua")
 dofile(MP.."/lib/disassemble.lua")
---dofile(MP.."/lib/monitor.lua")
+dofile(MP.."/lib/monitor.lua")
 
 -- PDP-13
 dofile(MP.."/pdp13/system.lua")

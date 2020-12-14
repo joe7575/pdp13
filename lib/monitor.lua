@@ -40,51 +40,86 @@ local function convert_to_numbers(s)
 	return tbl
 end
 
+-- st(art)  s(to)p  r(ese)t  n(ext)  r(egister)  ad(dress)  d(ump)  en(ter)
 Commands["?"] = function(pos, mem, cmd, rest)
 	mem.mstate = nil
 	return {
 		"?         help",
 		"st        start",
 		"sp        stop",
-		"re        reset",
-		"nx        next step",
-		"ad #      set address" 
-		"dm #      dump memory",
-		"sm #      set memory",
+		"rt        reset",
+		"n         next step",
+		"r         register",
+		"ad #      set address",
+		"d  #      dump memory",
+		"en #      enter data",
 		"as #      assemble",
 		"di #      disassemble",
 		"ct # txt  copy text to mem",
 		"cm # # #  copy mem from to num",
+		"ex        exit monitor",
 	}
 end
 
 -- start
 Commands["st"] = function(pos, mem, cmd, rest)
-	
-	
--- assemble
-Commands["as"] = function(pos, mem, cmd, rest)
-	if cmd == "as" then
-		mem.mstate = "as"
-		mem.maddr = pdp13.string_to_number(rest)
-		return {string.format("%04X: ", mem.maddr)}
-	else
-		local tbl = pdp13.assemble(rest)
-		if tbl then
-			vm16.write_mem(pos, mem.maddr, tbl)
-			local addr = mem.maddr
-			mem.maddr = mem.maddr + #tbl
-			return {string.format("%04X: %-15s %s\n", addr, hex_dump(tbl), rest)}
-		else
-			return {rest.." <-- syntax error!"}
-		end
-	end
+	pdp13.start_cpu(pos)
+	mem.monitor = false
+	mem.mstate = nil
+	return {"running"}
 end
 
+-- stop
+Commands["sp"] = function(pos, mem, cmd, rest)
+	pdp13.stop_cpu(pos)
+	mem.mstate = nil
+	local cpu = vm16.get_cpu_reg(pos)
+	local num, s = pdp13.disassemble(cpu)
+	return {s}
+end
+
+-- reset
+Commands["rt"] = function(pos, mem, cmd, rest)
+	vm16.set_pc(pos, 0) 
+	mem.mstate = nil
+	local cpu = vm16.get_cpu_reg(pos)
+	local num, s = pdp13.disassemble(cpu)
+	return {s}
+end
+
+-- next step
+Commands["n"] = function(pos, mem, cmd, rest)
+	pdp13.single_step_cpu(pos)
+	mem.mstate = nil
+	local cpu = vm16.get_cpu_reg(pos)
+	local num, s = pdp13.disassemble(cpu)
+	return {s}
+end
+	
+-- register
+Commands["r"] = function(pos, mem, cmd, rest)
+	local cpu = vm16.get_cpu_reg(pos)
+	mem.mstate = nil
+	return {
+		string.format("A:%04X B:%04X C:%04X D:%04X", cpu.A, cpu.B, cpu.C, cpu.D),
+		string.format("X:%04X Y:%04X P:%04X S:%04X", cpu.X, cpu.Y, cpu.PC, cpu.SP),
+	}
+end
+
+-- set address
+Commands["ad"] = function(pos, mem, cmd, rest)
+	local addr = pdp13.string_to_number(rest)
+	mem.mstate = nil
+	vm16.set_pc(pos, addr) 
+	local cpu = vm16.get_cpu_reg(pos)
+	local num, s = pdp13.disassemble(cpu)
+	return {s}
+end
+	
 -- dump memory
-Commands["dm"] = function(pos, mem, cmd, rest)
-	if cmd == "dm" then
-		mem.mstate = "dm"
+Commands["d"] = function(pos, mem, cmd, rest)
+	if cmd == "d" then
+		mem.mstate = "d"
 		mem.maddr = pdp13.string_to_number(rest)
 	else
 		mem.maddr = mem.maddr or 0
@@ -98,10 +133,10 @@ Commands["dm"] = function(pos, mem, cmd, rest)
 	return {"Address error"}
 end
 
--- set memory
-Commands["sm"] = function(pos, mem, cmd, rest)
-	if cmd == "sm" then
-		mem.mstate = "sm"
+-- enter data
+Commands["en"] = function(pos, mem, cmd, rest)
+	if cmd == "en" then
+		mem.mstate = "en"
 		mem.maddr = pdp13.string_to_number(rest)
 		return {string.format("%04X: ", mem.maddr)}
 	else
@@ -112,33 +147,93 @@ Commands["sm"] = function(pos, mem, cmd, rest)
 		return {string.format("%04X: %s", addr, hex_dump(tbl))}
 	end
 end
-	
-Commands["go"] = function(pos, mem, cmd, rest)	
-	mem.mstate = nil
-	mem.maddr = pdp13.string_to_number(rest)
-	vm16lib.set_pc(pos, mem.maddr)
-	return {"running"}
+		
+-- assemble
+Commands["as"] = function(pos, mem, cmd, rest)
+	if cmd == "as" then
+		mem.mstate = "as"
+		mem.maddr = pdp13.string_to_number(rest)
+		return {string.format("%04X: ", mem.maddr)}
+	else
+		local tbl = pdp13.assemble(rest)
+		if tbl then
+			vm16.write_mem(pos, mem.maddr, tbl)
+			local addr = mem.maddr
+			mem.maddr = mem.maddr + #tbl
+			return {string.format("%04X: %-11s %s", addr, hex_dump(tbl), rest)}
+		else
+			return {rest.." <-- syntax error!"}
+		end
+	end
 end
 
-	
---local function disassemble(vm, pos, s)
---	local _,mem = pdp13.get_mem(pos)
---	address(mem, s)
---	local tbl = vm16.read_mem(vm, mem.mon_addr, 4)
---	local num, cmnd = pdp13.disassemble(tbl)
---	tbl = vm16.read_mem(vm, mem.mon_addr, num)
---	write_tty(vm, pos, string.format("%04X: %-15s %s", mem.mon_addr, pdp13.hex_dump(tbl), cmnd))
---	mem.mon_addr = mem.mon_addr + num
---	sleep(1)
---end
+-- disassemble
+Commands["di"] = function(pos, mem, cmd, rest)
+	if cmd == "di" then
+		mem.mstate = "di"
+		mem.maddr = pdp13.string_to_number(rest)
+	else
+		mem.maddr = mem.maddr or 0
+	end
+	local dump = vm16.read_mem(pos, mem.maddr, 16)
+	local tbl = {}
+	local offs = 1
+	for i = 1, 8 do
+		local cpu = {PC = mem.maddr + offs - 1, mem0 = dump[offs], mem1 = dump[offs+1]}
+		local num, s = pdp13.disassemble(cpu)
+		offs = offs + num
+		tbl[#tbl+1] = s
+	end
+	mem.maddr = mem.maddr + offs - 1
+	return tbl
+end
+
+-- copy text
+Commands["ct"] = function(pos, mem, cmd, rest)
+	mem.mstate = nil
+	local words = string.split(rest, " ", true, 1)
+	if #words == 2 then
+		local addr = pdp13.string_to_number(words[1])
+		vm16.write_ascii(pos, addr, words[2])
+		return {"text copied"}
+	end
+	return {"error!"}
+end
+
+-- copy memory
+Commands["cm"] = function(pos, mem, cmd, rest)
+	mem.mstate = nil
+	local words = string.split(rest, " ", false, 2)
+	if #words == 3 then
+		local src_addr = pdp13.string_to_number(words[1])
+		local dst_addr = pdp13.string_to_number(words[2])
+		local number = pdp13.string_to_number(words[3])
+		if src_addr and dst_addr and number then
+			local tbl = vm16.read_mem(pos, src_addr, number)
+			vm16.write_mem(pos, dst_addr, tbl)
+			return {"memory copied"}
+		end
+	end
+	return {"error!"}
+end
+
+-- exit monitor
+Commands["ex"] = function(pos, mem, cmd, rest)
+	mem.monitor = false
+	pdp13.exit_monitor(pos)
+	return {"finished."}
+end
+
 
 function pdp13.monitor(cpu_pos, mem, command)
-	local words = string.split(command, " ", false, 1)
-	if Commands[words[1]] then
-		return Commands[words[1]](cpu_pos, mem, words[1], words[2])
-	elseif mem.mstate and Commands[mem.mstate] then
-		return Commands[mem.mstate](cpu_pos, mem, "", command)
-	else
-		return Commands["?"](cpu_pos, mem, words[1], words[2])
+	if cpu_pos and mem and command then
+		local words = string.split(command, " ", false, 1)
+		if Commands[words[1]] then
+			return Commands[words[1]](cpu_pos, mem, words[1], words[2])
+		elseif mem.mstate and Commands[mem.mstate] then
+			return Commands[mem.mstate](cpu_pos, mem, "", command)
+		else
+			return Commands["?"](cpu_pos, mem, words[1], words[2])
+		end
 	end
 end

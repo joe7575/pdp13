@@ -42,37 +42,50 @@ function pdp13.num_operands(opcode)
 	return math.min((idx2 >= 16 and 1 or 0) + (idx3 >= 16 and 1 or 0), 1)
 end
 
+local function indexes(cpu)
+	local idx1 = math.floor(cpu.mem0 / 1024)
+	local rest = cpu.mem0 - (idx1 * 1024)
+	local idx2 = math.floor(rest / 32)
+	local idx3 = rest % 32
+	local num = 1 + (idx2 >= 16 and 1 or 0) + (idx3 >= 16 and 1 or 0)
+	if idx1 < 4 then num = 1 end
+	return idx1, idx2, idx3, num
+end	
+	
+local function dump(cpu, num)
+	if num == 1 then
+		return string.format("%04X: %04X     ", cpu.PC, cpu.mem0)
+	else
+		return string.format("%04X: %04X %04X", cpu.PC, cpu.mem0, cpu.mem1)
+	end
+end
 
--- table with up to 3 words for one instruction
 -- Returns the number of words and the instruction string
-function pdp13.disassemble(mem)
-	local idx1 = math.floor(mem[1] / 1024)
+function pdp13.disassemble(cpu)
+	local idx1, idx2, idx3, num = indexes(cpu)
+	local s = dump(cpu, num)
 	local opc1, opc2, opc3 = unpack(string.split(pdp13.VM13Opcodes[idx1] or "", ":"))
 	if opc1 then
-		if opc2 == "NUM" then
-			return 1, string.format("%-4s %u", opc1, mem[1] % 1024)
+		-- code correction for all jump/branch opcodes: from '#0' to '0'
+		if pdp13.JumpInst[opc1] then
+			 if idx2 == 16 then idx2 = 17 end
+			 if idx3 == 16 then idx3 = 17 end
+		end
+		if opc1 == "sys" and opc2 == "CNST" then
+			return 1, string.format("%s  %-4s #$%X", s, opc1, cpu.mem0 % 1024)
 		else
-			local rest = mem[1] - (idx1 * 1024)
-			local idx2 = math.floor(rest / 32)
-			local idx3 = rest % 32
-			local num = 1 + (idx2 >= 16 and 1 or 0) + (idx3 >= 16 and 1 or 0)
-		
-			if num == 3 then -- three words needed
-				opc2 = operand(opc2, pdp13.VM13Operands[idx2], mem[2])
-				opc3 = operand(opc3, pdp13.VM13Operands[idx3], mem[3])
-			else
-				opc2 = operand(opc2, pdp13.VM13Operands[idx2], mem[2])
-				opc3 = operand(opc3, pdp13.VM13Operands[idx3], mem[2])
-			end
+			opc2 = operand(opc2, pdp13.VM13Operands[idx2], cpu.mem1)
+			opc3 = operand(opc3, pdp13.VM13Operands[idx3], cpu.mem1)
+			
 			if opc2 and opc3 then
-				return num, string.format("%-4s %s, %s", opc1, opc2, opc3)
+				return num, string.format("%s  %-4s %s, %s", s, opc1, opc2, opc3)
 			elseif opc2 then
-				return num, string.format("%-4s %s", opc1, opc2)
+				return num, string.format("%s  %-4s %s", s, opc1, opc2)
 			else
-				return num, string.format("%s", opc1)
+				return num, string.format("%s  %s", s, opc1)
 			end
 		end
 	end
 	
-	return 1, string.format("%04X ???", mem[1])
+	return 1, s.."  ???"
 end

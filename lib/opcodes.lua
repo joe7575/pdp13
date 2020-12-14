@@ -37,3 +37,10 @@ pdp13.VM13Operands = {[0] =
     "IMM", "IND", "REL", "[SP+n]",
 }
 
+--
+-- Need special operand handling
+--
+pdp13.JumpInst = {
+	["call"] = true, ["jump"] = true, ["bnze"] = true, ["bze"] = true, 
+	["bpos"] = true, ["bneg"] = true, ["dbnz"] = true}
+

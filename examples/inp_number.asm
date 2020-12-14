@@ -12,14 +12,14 @@ Start:
     move  A, #$80   ; value command to A
     out   #00, A    ; send value to color lamp
 
-    move A, #11
+    move A, #6
     nop
     dbnz A, -3
 
     move    A, #TEXT2
     sys     #0
 
-    move A, #11
+    move A, #6
     nop
     dbnz A, -3
 

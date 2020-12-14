@@ -16,14 +16,14 @@ Start:
 
     move [Y], #0    ; zero terminated string
 
-    move  A, #11    ; delay
+    move  A, #6     ; delay
     nop
     dbnz  A, -3
 
     move  A, #TEXT2
     sys   #0        ; output text
 
-    move A, #11
+    move A, #6
     nop
     dbnz A, -3
 

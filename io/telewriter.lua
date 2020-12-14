@@ -15,6 +15,9 @@
 -- for lazy programmers
 local M = minetest.get_meta
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
+local S2P = minetest.string_to_pos
+
+local DELAY = 0.5	-- time for one line
 
 local function format_text(mem)
 	local t = {}
@@ -44,18 +47,22 @@ end
 
 local function formspec1(mem)
 	mem.redraw = (mem.redraw or 0) + 1
+	local help = mem.monitor and "?  st(art)  s(to)p  r(ese)t  n(ext)  r(egister)  ad(dress)  d(ump)  en(ter)" or ""
 	return "size[10,8.5]" ..
 		"tabheader[0,0;tab;main,tape;1;;true]"..
 		"label[-2,-2;"..mem.redraw.."]"..
 		"background[0,0;10,7.2;pdp13_paper_form.png]"..
 		"container[0.5,0.2]"..
-		"style_type[label;font=mono,color=#000000]"..
+		"style_type[label;font=mono]"..
 		"label[0,0;\027(c@#000000)"..
 		format_text(mem)..
 		"]"..
 		"container_end[]"..
-		"field[1,8;6,0.8;command;;]"..
-		"button[7,7.6;1.7,1;enter;enter]"..
+		"style_type[label;font=normal]"..
+		"label[0,7.2;"..help.."]"..
+		"button[0.4,7.6;1.7,1;clear;clear]"..
+		"field[2.6,8;5.4,0.8;command;;]"..
+		"button[7.94,7.6;1.7,1;enter;enter]"..
 		"field_close_on_enter[command;false]"
 end
 
@@ -85,17 +92,42 @@ local function add_line(pos, mem, text)
 	end
 end
 
-local function print_line(pos, mem, text)
-	add_line(pos, mem, text)
-	M(pos):set_string("formspec", formspec1(mem))
-	mem.blocked = false
-end
-
 local function play_sound(pos)
 	minetest.sound_play("pdp13_telewriter", {
 		pos = pos, 
 		gain = 1,
 		max_hear_distance = 5})
+end
+
+-- print one line to paper
+local function print_line(pos, mem)
+	local text = table.remove(mem.OutFifo, 1)
+	if text then
+		add_line(pos, mem, text)
+		if not mem.reader and not mem.writer then -- not on tape tab?
+			M(pos):set_string("formspec", formspec1(mem))
+		end
+	end
+end
+
+local function add_line_to_fifo(pos, mem, text)
+	mem.OutFifo = mem.OutFifo or {}
+	-- free FIFO space?
+	if text and #mem.OutFifo < 16 then
+		table.insert(mem.OutFifo, text)
+		minetest.get_node_timer(pos):start(DELAY)
+	end
+end
+
+local function add_lines_to_fifo(pos, mem, lines)
+	mem.OutFifo = mem.OutFifo or {}
+	for _, text in ipairs(lines or {}) do
+		-- free FIFO space?
+		if #mem.OutFifo < 16 then
+			table.insert(mem.OutFifo, text)
+		end
+	end
+	minetest.get_node_timer(pos):start(DELAY)
 end
 
 local function has_tape(pos)
@@ -147,8 +179,7 @@ local function write_tape_code(pos, code)
 end
 
 local function write_code_to_cpu(pos, code)
-	play_sound(pos)
-	minetest.after(2, function(pos)
+	minetest.after(1, function(pos)
 		local mem = techage.get_nvm(pos)
 		mem.writer = false
 		M(pos):set_string("formspec", formspec2(mem))
@@ -156,12 +187,11 @@ local function write_code_to_cpu(pos, code)
 	local cpu_num = M(pos):get_string("cpu_number")
 	local res = send_to_cpu(pos, "write_h16", code)
 	local mem = techage.get_nvm(pos)
-	add_line(pos, mem, "Tape to PDP13.."..(res and "ok" or "error"))
+	add_line_to_fifo(pos, mem, "Tape to PDP13.."..(res and "ok" or "error"))
 end
 
 local function read_code_from_cpu(pos)
-	play_sound(pos)
-	minetest.after(2, function(pos)
+	minetest.after(1, function(pos)
 		local mem = techage.get_nvm(pos)
 		mem.reader = false
 		M(pos):set_string("formspec", formspec2(mem))
@@ -171,12 +201,12 @@ local function read_code_from_cpu(pos)
 	local mem = techage.get_nvm(pos)
 	if code then
 		if write_tape_code(pos, code) then
-			add_line(pos, mem, "PDP13 to tape..ok")
+			add_line_to_fifo(pos, mem, "PDP13 to tape..ok")
 		else
-			add_line(pos, mem, "PDP13 to tape..error")
+			add_line_to_fifo(pos, mem, "PDP13 to tape..error")
 		end
 	else
-		add_line(pos, mem, "PDP13 to tape..error")
+		add_line_to_fifo(pos, mem, "PDP13 to tape..error")
 	end
 end
 
@@ -212,6 +242,8 @@ minetest.register_node("pdp13:telewriter", {
 		meta:set_string("node_number", own_num)
 		local cpu_num = pdp13.send(pos, {"pdp13:cpu1", "pdp13:cpu1_on"}, "reg_tele", own_num)
 		meta:set_string("cpu_number", cpu_num)
+		local cpu_pos = (techage.get_node_info(cpu_num) or {}).pos
+		meta:set_string("cpu_pos", P2S(cpu_pos))
 		meta:set_string("formspec", formspec1(mem))
 		if cpu_num then
 			meta:set_string("infotext", "PDP-13 Telewriter: Connected")
@@ -230,10 +262,17 @@ minetest.register_node("pdp13:telewriter", {
 		elseif fields.tab == "1" then
 			M(pos):set_string("formspec", formspec1(mem))
 		elseif fields.key_enter_field or fields.enter then
-			play_sound(pos)
-			mem.blocked = true
-			minetest.after(1, print_line, pos, mem, fields.command or "")
-			mem.input = fields.command or ""
+			if mem.monitor then
+				local lines = pdp13.monitor(mem.cpu_pos, mem, fields.command or "")
+				add_lines_to_fifo(pos, mem, lines)
+				mem.input = nil
+			else
+				add_line_to_fifo(pos, mem, fields.command or "")
+				mem.input = fields.command or ""
+			end
+		elseif fields.clear then
+			mem.lines = {}
+			M(pos):set_string("formspec", formspec1(mem))
 		elseif fields.writer and not mem.reader then
 			local code = get_tape_code(pos)
 			if code then
@@ -249,6 +288,17 @@ minetest.register_node("pdp13:telewriter", {
 			end
 		end
 	end,
+	
+	on_timer = function(pos, elapsed)
+		local mem = techage.get_nvm(pos)
+		mem.OutFifo = mem.OutFifo or {}
+		play_sound(pos)
+		if #mem.OutFifo > 0 then
+			print_line(pos, mem)
+			return true
+		end
+	end,
+	
 	after_dig_node = function(pos, oldnode, oldmetadata)
 		techage.remove_node(pos, oldnode, oldmetadata)
 		techage.remove_node(pos)
@@ -266,13 +316,8 @@ techage.register_node({"pdp13:telewriter"}, {
 		if topic == "output" then
 			payload = tostring(payload) or ""
 			local mem = techage.get_nvm(pos)
-			if not mem.blocked then
-				mem.blocked = true
-				play_sound(pos)
-				minetest.after(1, print_line, pos, mem, payload)
-				return 1
-			end
-			return 0
+			add_line_to_fifo(pos, mem, payload)
+			return 1
 		elseif topic == "input" then
 			local mem = techage.get_nvm(pos)
 			if mem.input then
@@ -280,6 +325,22 @@ techage.register_node({"pdp13:telewriter"}, {
 				mem.input = nil
 				return s
 			end
+		elseif topic == "monitor" then
+			local mem = techage.get_nvm(pos)
+			mem.monitor = payload
+			if payload then
+				mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
+				add_line_to_fifo(pos, mem, "### Monitor v1.0 ###")
+				mem.input = nil
+			end
+			return true
+		elseif topic == "stopped" then  -- CPU stopped
+			local mem = techage.get_nvm(pos)
+			mem.monitor = true
+			mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
+			add_line_to_fifo(pos, mem, "stopped")
+			mem.input = nil
+			return true
 		end
 	end,
 })	
@@ -291,7 +352,6 @@ minetest.register_lbm({
     run_at_every_load = true,
     action = function(pos, node)
 		local mem = techage.get_nvm(pos)
-		mem.blocked = false
 		mem.reader = false
 		mem.writer = false
 		mem.input = nil

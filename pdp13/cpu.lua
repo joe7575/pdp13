@@ -16,6 +16,12 @@
 -- for lazy programmers
 local M = minetest.get_meta
 
+local function telewriter_cmnd(pos, cmd, payload)
+	local dst_num = M(pos):get_string("telewriter_number")
+	local own_num = M(pos):get_string("node_number")
+	return techage.send_single(own_num, dst_num, cmd, payload)
+end
+
 local function leds(address, opcode, operand)
 	local lLed = {}
 	for i = 16,1,-1 do
@@ -178,10 +184,7 @@ local function mem_address(pos, mem, s)
 	update_formspec(pos, mem)
 end
 
-local function fs_single_step(pos, mem)
-	local number = M(pos):get_string("node_number")
-	pdp13.reset_output_buffer(number)
-	local resp = vm16.run(pos, 1)
+local function fs_single_step(pos, mem, resp)
 	local cpu = vm16.get_cpu_reg(pos)
 	mem.state = (resp > vm16.OK and resp) or vm16.STOP
 	mem.regABXY = string.format("A:%04X B:%04X X:%04X Y:%04X", cpu.A, cpu.B, cpu.X, cpu.Y)
@@ -216,6 +219,7 @@ local function fs_cpu_stopped(pos, mem, cpu)
 			end
 			
 			mem.started = false
+			telewriter_cmnd(pos, "monitor", false)
 			mem.state = vm16.STOP
 			mem.cmnd1 = " "
 			mem.cmnd2 = " "
@@ -238,6 +242,8 @@ end
 local function fs_power_off(pos, mem)
 	if pos and mem then
 		mem.started = false
+		mem.monitor = false
+		telewriter_cmnd(pos, "monitor", false)
 		mem.state = vm16.STOP
 		mem.regABXY = "off"
 		mem.cmnd1 = ""
@@ -250,6 +256,8 @@ end
 local function fs_power_on(pos, mem)
 	if pos and mem then
 		mem.started = false
+		mem.monitor = false
+		telewriter_cmnd(pos, "monitor", false)
 		mem.state = vm16.STOP
 		mem.regABXY = "stopped"
 		mem.cmnd1 = ""
@@ -268,6 +276,20 @@ local function fs_cpu_running(pos, mem)
 		mem.cmnd2 = ""
 		mem.cmnd3 = ""
 		update_formspec(pos, mem)
+	end
+end	
+
+local function fs_in_monitor(pos, mem)
+	if pos and mem then
+		mem.started = false
+		telewriter_cmnd(pos, "monitor", true)
+		mem.state = vm16.STOP
+		mem.regABXY = "monitor running"
+		mem.cmnd1 = ""
+		mem.cmnd2 = ""
+		mem.cmnd3 = ""
+		local cpu = {PC = 0xF000, mem0 = 0xAA55, mem1 = 0x0F0F}
+		update_formspec(pos, mem, cpu)
 	end
 end	
 
@@ -308,15 +330,49 @@ end
 local function on_update(pos, resp, cpu)
 	--print("on_update")
 	local mem = techage.get_nvm(pos)
-	mem.state = resp
-	minetest.get_node_timer(pos):stop()
-	swap_node(pos, "pdp13:cpu1")
-	fs_cpu_stopped(pos, mem, cpu)
+	-- External controlled?
+	if mem.monitor then
+		telewriter_cmnd(pos, "stopped", resp)
+		mem.state = resp
+		minetest.get_node_timer(pos):stop()
+	else
+		mem.state = resp
+		minetest.get_node_timer(pos):stop()
+		swap_node(pos, "pdp13:cpu1")
+		fs_cpu_stopped(pos, mem, cpu)
+	end
 end
 
 -- store all data when CPU gets unloaded
 local function on_unload(pos)
 	--pdp13.io_store(pos) geht so nicht
+end
+
+function pdp13.start_cpu(pos)
+	local number = M(pos):get_string("node_number")
+	pdp13.reset_output_buffer(number)
+	minetest.get_node_timer(pos):start(0.1)
+	swap_node(pos, "pdp13:cpu1_on")
+end
+
+function pdp13.stop_cpu(pos)
+	minetest.get_node_timer(pos):stop()
+	swap_node(pos, "pdp13:cpu1")
+end
+
+function pdp13.single_step_cpu(pos)
+	local number = M(pos):get_string("node_number")
+	pdp13.reset_output_buffer(number)
+	return vm16.run(pos, 1)
+end
+
+function pdp13.exit_monitor(pos)
+	local mem = techage.get_nvm(pos)
+	pdp13.stop_cpu(pos)
+	vm16.set_pc(pos, 0) 
+	mem.monitor = false
+	mem.addr = 0
+	fs_cpu_stopped(pos, mem)
 end
 
 vm16.register_callbacks(nil, nil, nil, on_update, on_unload)
@@ -329,6 +385,8 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 	local mem = techage.get_nvm(pos)
 	local meta = minetest.get_meta(pos)
 	--print(vm16.is_loaded(pos), mem.inp_mode, dump(fields))
+	
+	if mem.monitor then return end
 	
 	if fields.tab == "2" then
 		meta:set_string("storeformspec", meta:get_string("formspec"))
@@ -348,19 +406,20 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 			mem.inp_mode = "dump"
 			fs_mem_dump(pos, mem, fields.command)
 		elseif fields.start then
-			local number = M(pos):get_string("node_number")
-			pdp13.reset_output_buffer(number)
-			minetest.get_node_timer(pos):start(0.1)
-			swap_node(pos, "pdp13:cpu1_on")
+			pdp13.start_cpu(pos)
 			fs_cpu_running(pos, mem)
 		elseif fields.reset then
 			vm16.set_pc(pos, 0) 
 			mem.addr = 0
 			fs_cpu_stopped(pos, mem)
 		elseif fields.step then
-			fs_single_step(pos, mem)
+			local resp = pdp13.single_step_cpu(pos)
+			fs_single_step(pos, mem, resp)
 		elseif fields.key_enter_field or fields.enter then
-			if mem.inp_mode == "address" then
+			if fields.command == "mon" then
+				mem.monitor = true
+				fs_in_monitor(pos, mem)
+			elseif mem.inp_mode == "address" then
 				mem_address(pos, mem, fields.command)
 			else
 				fs_mem_data(pos, mem, fields.command)
@@ -422,9 +481,8 @@ local function on_receive_fields_started(pos, formname, fields, player)
 	end
 	
 	if fields.stop then
-		minetest.get_node_timer(pos):stop()
+		pdp13.stop_cpu(pos)
 		local mem = techage.get_nvm(pos)
-		swap_node(pos, "pdp13:cpu1")
 		fs_cpu_stopped(pos, mem)
 	end
 end
