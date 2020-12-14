@@ -16,8 +16,8 @@
 -- for lazy programmers
 local M = minetest.get_meta
 
-local function telewriter_cmnd(pos, cmd, payload)
-	local dst_num = M(pos):get_string("telewriter_number")
+local function programmer_cmnd(pos, cmd, payload)
+	local dst_num = M(pos):get_string("programmer_number")
 	local own_num = M(pos):get_string("node_number")
 	return techage.send_single(own_num, dst_num, cmd, payload)
 end
@@ -219,7 +219,6 @@ local function fs_cpu_stopped(pos, mem, cpu)
 			end
 			
 			mem.started = false
-			telewriter_cmnd(pos, "monitor", false)
 			mem.state = vm16.STOP
 			mem.cmnd1 = " "
 			mem.cmnd2 = " "
@@ -243,7 +242,6 @@ local function fs_power_off(pos, mem)
 	if pos and mem then
 		mem.started = false
 		mem.monitor = false
-		telewriter_cmnd(pos, "monitor", false)
 		mem.state = vm16.STOP
 		mem.regABXY = "off"
 		mem.cmnd1 = ""
@@ -257,7 +255,6 @@ local function fs_power_on(pos, mem)
 	if pos and mem then
 		mem.started = false
 		mem.monitor = false
-		telewriter_cmnd(pos, "monitor", false)
 		mem.state = vm16.STOP
 		mem.regABXY = "stopped"
 		mem.cmnd1 = ""
@@ -282,7 +279,6 @@ end
 local function fs_in_monitor(pos, mem)
 	if pos and mem then
 		mem.started = false
-		telewriter_cmnd(pos, "monitor", true)
 		mem.state = vm16.STOP
 		mem.regABXY = "monitor running"
 		mem.cmnd1 = ""
@@ -320,6 +316,9 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 	elseif cmnd == "reg_tele" then
 		M(pos):set_string("telewriter_number", data)
 		return M(pos):get_string("node_number")
+	elseif cmnd == "reg_prog" then
+		M(pos):set_string("programmer_number", data)
+		return M(pos):get_string("node_number")
 	elseif cmnd == "cpu_num" then
 		--print("CPU cpu_num", M(pos):get_string("node_number"))
 		return M(pos):get_string("node_number")
@@ -332,7 +331,7 @@ local function on_update(pos, resp, cpu)
 	local mem = techage.get_nvm(pos)
 	-- External controlled?
 	if mem.monitor then
-		telewriter_cmnd(pos, "stopped", resp)
+		programmer_cmnd(pos, "stopped", resp)
 		mem.state = resp
 		minetest.get_node_timer(pos):stop()
 	else
@@ -386,7 +385,16 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 	local meta = minetest.get_meta(pos)
 	--print(vm16.is_loaded(pos), mem.inp_mode, dump(fields))
 	
-	if mem.monitor then return end
+	if mem.monitor then
+		if fields.stop then
+			pdp13.stop_cpu(pos)
+			local mem = techage.get_nvm(pos)
+			mem.monitor = false
+			programmer_cmnd(pos, "monitor", false)
+			fs_cpu_stopped(pos, mem)
+		end
+		return 
+	end
 	
 	if fields.tab == "2" then
 		meta:set_string("storeformspec", meta:get_string("formspec"))
@@ -418,6 +426,7 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 		elseif fields.key_enter_field or fields.enter then
 			if fields.command == "mon" then
 				mem.monitor = true
+				programmer_cmnd(pos, "monitor", true)
 				fs_in_monitor(pos, mem)
 			elseif mem.inp_mode == "address" then
 				mem_address(pos, mem, fields.command)
@@ -483,6 +492,8 @@ local function on_receive_fields_started(pos, formname, fields, player)
 	if fields.stop then
 		pdp13.stop_cpu(pos)
 		local mem = techage.get_nvm(pos)
+		mem.monitor = false
+		programmer_cmnd(pos, "monitor", false)
 		fs_cpu_stopped(pos, mem)
 	end
 end

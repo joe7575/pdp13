@@ -45,9 +45,10 @@ local function button(name, label, on, x, y)
 		"container_end[]"
 end
 
-local function formspec1(mem)
+local function formspec1(pos, mem)
 	mem.redraw = (mem.redraw or 0) + 1
-	local help = mem.monitor and "?  st(art)  s(to)p  r(ese)t  n(ext)  r(egister)  ad(dress)  d(ump)  en(ter)" or ""
+	local mon = M(pos):get_int("monitor") == 1
+	local help = mon and "?  st(art)  s(to)p  r(ese)t  n(ext)  r(egister)  ad(dress)  d(ump)  en(ter)" or ""
 	return "size[10,8.5]" ..
 		"tabheader[0,0;tab;main,tape;1;;true]"..
 		"label[-2,-2;"..mem.redraw.."]"..
@@ -105,7 +106,7 @@ local function print_line(pos, mem)
 	if text then
 		add_line(pos, mem, text)
 		if not mem.reader and not mem.writer then -- not on tape tab?
-			M(pos):set_string("formspec", formspec1(mem))
+			M(pos):set_string("formspec", formspec1(pos, mem))
 		end
 	end
 end
@@ -210,99 +211,108 @@ local function read_code_from_cpu(pos)
 	end
 end
 
-minetest.register_node("pdp13:telewriter", {
-	description = "PDP-13 Telewriter",
-	tiles = {
-		-- up, down, right, left, back, front
-		"pdp13_telewriter_top.png",
-		"pdp13_telewriter_side.png",
-		"pdp13_telewriter_side.png",
-		"pdp13_telewriter_side.png",
-		"pdp13_telewriter_side.png",
-		"pdp13_telewriter_front.png",
-	},
-	drawtype = "nodebox",
-	node_box = {
-		type = "fixed",
-		fixed = {
-			{ -8/16, -8/16, -8/16,   8/16, -6/16, 8/16 },
-			{ -8/16, -6/16, -2/16,   8/16, -3/16, 8/16 },
-			{ -8/16, -3/16,  3/16,   2/16,  0/16, 7/16 },
-		},
-	},
-	on_construct = function(pos)
-		local inv = M(pos):get_inventory()
-		inv:set_size('main', 1)
-	end,
-	after_place_node = function(pos, placer, itemstack, pointed_thing)
-		local meta = M(pos)
-		local mem = techage.get_nvm(pos)
-		meta:set_string("owner", placer:get_player_name())
-		local own_num = techage.add_node(pos, "pdp13:telewriter")
-		meta:set_string("node_number", own_num)
-		local cpu_num = pdp13.send(pos, {"pdp13:cpu1", "pdp13:cpu1_on"}, "reg_tele", own_num)
-		meta:set_string("cpu_number", cpu_num)
-		local cpu_pos = (techage.get_node_info(cpu_num) or {}).pos
-		meta:set_string("cpu_pos", P2S(cpu_pos))
-		meta:set_string("formspec", formspec1(mem))
-		if cpu_num then
-			meta:set_string("infotext", "PDP-13 Telewriter: Connected")
+local function after_place_node(pos, placer, itemstack, name, cmnd, ntype)
+	local meta = M(pos)
+	local inv = meta:get_inventory()
+	inv:set_size('main', 1)
+	local mem = techage.get_nvm(pos)
+	meta:set_string("owner", placer:get_player_name())
+	local own_num = techage.add_node(pos, name)
+	meta:set_string("node_number", own_num)
+	local cpu_num = pdp13.send(pos, {"pdp13:cpu1", "pdp13:cpu1_on"}, cmnd, own_num)
+	meta:set_string("cpu_number", cpu_num)
+	local cpu_pos = (techage.get_node_info(cpu_num) or {}).pos
+	meta:set_string("cpu_pos", P2S(cpu_pos))
+	meta:set_string("formspec", formspec1(pos, mem))
+	if cpu_num then
+		meta:set_string("infotext", "PDP-13 Telewriter "..ntype..": Connected")
+	else
+		meta:set_string("infotext", "PDP-13 Telewriter "..ntype..": Not connected!")
+	end
+end
+
+local function on_receive_fields(pos, formname, fields, player)
+	if minetest.is_protected(pos, player:get_player_name()) then
+		return
+	end
+	local mem = techage.get_nvm(pos)
+	mem.codes = mem.codes or {}
+	if fields.tab == "2" then
+		M(pos):set_string("formspec", formspec2(mem))
+	elseif fields.tab == "1" then
+		M(pos):set_string("formspec", formspec1(pos, mem))
+	elseif fields.key_enter_field or fields.enter then
+		if M(pos):get_int("monitor") == 1 then
+			local lines = pdp13.monitor(mem.cpu_pos, mem, fields.command or "")
+			add_lines_to_fifo(pos, mem, lines)
 		else
-			meta:set_string("infotext", "PDP-13 Telewriter: Not connected!")
+			add_line_to_fifo(pos, mem, fields.command or "")
+			mem.input = fields.command or ""
 		end
-	end,
-	on_receive_fields = function(pos, formname, fields, player)
-		if minetest.is_protected(pos, player:get_player_name()) then
-			return
-		end
-		local mem = techage.get_nvm(pos)
-		mem.codes = mem.codes or {}
-		if fields.tab == "2" then
+	elseif fields.clear then
+		mem.lines = {}
+		M(pos):set_string("formspec", formspec1(pos, mem))
+	elseif fields.writer and not mem.reader then
+		local code = get_tape_code(pos)
+		if code then
+			mem.writer = true
+			write_code_to_cpu(pos, code)
 			M(pos):set_string("formspec", formspec2(mem))
-		elseif fields.tab == "1" then
-			M(pos):set_string("formspec", formspec1(mem))
-		elseif fields.key_enter_field or fields.enter then
-			if mem.monitor then
-				local lines = pdp13.monitor(mem.cpu_pos, mem, fields.command or "")
-				add_lines_to_fifo(pos, mem, lines)
-				mem.input = nil
-			else
-				add_line_to_fifo(pos, mem, fields.command or "")
-				mem.input = fields.command or ""
-			end
-		elseif fields.clear then
-			mem.lines = {}
-			M(pos):set_string("formspec", formspec1(mem))
-		elseif fields.writer and not mem.reader then
-			local code = get_tape_code(pos)
-			if code then
-				mem.writer = true
-				write_code_to_cpu(pos, code)
-				M(pos):set_string("formspec", formspec2(mem))
-			end
-		elseif fields.reader and not mem.writer then
-			if has_tape(pos) then
-				mem.reader = true
-				read_code_from_cpu(pos)
-				M(pos):set_string("formspec", formspec2(mem))
-			end
 		end
-	end,
-	
-	on_timer = function(pos, elapsed)
-		local mem = techage.get_nvm(pos)
-		mem.OutFifo = mem.OutFifo or {}
-		play_sound(pos)
-		if #mem.OutFifo > 0 then
-			print_line(pos, mem)
-			return true
+	elseif fields.reader and not mem.writer then
+		if has_tape(pos) then
+			mem.reader = true
+			read_code_from_cpu(pos)
+			M(pos):set_string("formspec", formspec2(mem))
 		end
+	end
+end
+
+local function node_timer(pos, elapsed)
+	local mem = techage.get_nvm(pos)
+	mem.OutFifo = mem.OutFifo or {}
+	play_sound(pos)
+	if #mem.OutFifo > 0 then
+		print_line(pos, mem)
+		return true
+	end
+end
+
+local function after_dig_node(pos, oldnode, oldmetadata)
+	techage.remove_node(pos, oldnode, oldmetadata)
+	techage.remove_node(pos)
+end
+
+local Tiles = {
+	-- up, down, right, left, back, front
+	"pdp13_telewriter_top.png",
+	"pdp13_telewriter_side.png",
+	"pdp13_telewriter_side.png",
+	"pdp13_telewriter_side.png",
+	"pdp13_telewriter_side.png",
+	"pdp13_telewriter_front.png",
+}
+
+local Node_box = {
+	type = "fixed",
+	fixed = {
+		{ -8/16, -8/16, -8/16,   8/16, -6/16, 8/16 },
+		{ -8/16, -6/16, -2/16,   8/16, -3/16, 8/16 },
+		{ -8/16, -3/16,  3/16,   2/16,  0/16, 7/16 },
+	},
+}
+
+minetest.register_node("pdp13:telewriter", {
+	description = "PDP-13 Telewriter Operator",
+	tiles = Tiles,
+	drawtype = "nodebox",
+	node_box = Node_box,
+	after_place_node = function(pos, placer, itemstack, pointed_thing)
+		after_place_node(pos, placer, itemstack, "pdp13:telewriter", "reg_tele", "Operator")
 	end,
-	
-	after_dig_node = function(pos, oldnode, oldmetadata)
-		techage.remove_node(pos, oldnode, oldmetadata)
-		techage.remove_node(pos)
-	end,
+	on_receive_fields = on_receive_fields,
+	on_timer = node_timer,
+	after_dig_node = after_dig_node,
 	paramtype = "light",
 	paramtype2 = "facedir",
 	groups = {cracky=2, crumbly=2, choppy=2},
@@ -311,7 +321,27 @@ minetest.register_node("pdp13:telewriter", {
 	sounds = default.node_sound_wood_defaults(),
 })
 
-techage.register_node({"pdp13:telewriter"}, {
+minetest.register_node("pdp13:telewriter_prog", {
+	description = "PDP-13 Telewriter Programmer",
+	tiles = Tiles,
+	drawtype = "nodebox",
+	node_box = Node_box,
+	after_place_node = function(pos, placer, itemstack, pointed_thing)
+		after_place_node(pos, placer, itemstack, "pdp13:telewriter_prog", "reg_prog", "Programmer")
+		M(pos):set_int("monitor", 1)
+	end,
+	on_receive_fields = on_receive_fields,
+	on_timer = node_timer,
+	after_dig_node = after_dig_node,
+	paramtype = "light",
+	paramtype2 = "facedir",
+	groups = {cracky=2, crumbly=2, choppy=2},
+	on_rotate = screwdriver.disallow,
+	is_ground_content = false,
+	sounds = default.node_sound_wood_defaults(),
+})
+
+techage.register_node({"pdp13:telewriter", "pdp13:telewriter_prog"}, {
 	on_recv_message = function(pos, src, topic, payload)
 		if topic == "output" then
 			payload = tostring(payload) or ""
@@ -327,19 +357,18 @@ techage.register_node({"pdp13:telewriter"}, {
 			end
 		elseif topic == "monitor" then
 			local mem = techage.get_nvm(pos)
-			mem.monitor = payload
 			if payload then
 				mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 				add_line_to_fifo(pos, mem, "### Monitor v1.0 ###")
-				mem.input = nil
+			elseif mem.monitor then
+				add_line_to_fifo(pos, mem, "end.")
 			end
+			mem.monitor = payload
 			return true
 		elseif topic == "stopped" then  -- CPU stopped
 			local mem = techage.get_nvm(pos)
-			mem.monitor = true
 			mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 			add_line_to_fifo(pos, mem, "stopped")
-			mem.input = nil
 			return true
 		end
 	end,
@@ -348,7 +377,7 @@ techage.register_node({"pdp13:telewriter"}, {
 minetest.register_lbm({
     label = "PDP13 unlock telewriter",
     name = "pdp13:unlock_telewriter",
-    nodenames = {"pdp13:telewriter"},
+    nodenames = {"pdp13:telewriter", "pdp13:telewriter_prog"},
     run_at_every_load = true,
     action = function(pos, node)
 		local mem = techage.get_nvm(pos)
@@ -365,4 +394,10 @@ minetest.register_craft({
 		{"default:steel_ingot", "dye:black", "default:steel_ingot"},
 		{"pdp13:ic1", "", "pdp13:ic1"},
 	},
+})
+
+minetest.register_craft({
+	type = "shapeless",
+	output = "pdp13:telewriter_prog",
+	recipe = {"pdp13:telewriter"},
 })
