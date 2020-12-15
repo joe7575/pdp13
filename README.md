@@ -18,7 +18,7 @@ A computer simulation that will take you back to the beginnings of programming:
 - Compatible to TechAge to be able control machines
 - Installable assembler application `vm16asm` (on your PC)
 
-On client side Minetest 5.4 is required (font=mono)
+On client side Minetest 5.4 is recommended (font=mono)
 
 This mod is based on vm16, a virtual CPU implemented as Lua library with an outstanding performance.
 
