@@ -1,17 +1,17 @@
 # PDP13 Minicomputer (TA3)
 
-PDP13 ist ein 16-Bit-Minicomputer, inspiriert von DEC, IBM und anderen Computer aus den 60er und 70er Jahren. "Mini" deshalb, weil die Rechnenanlagen bis dahin nicht nur Schränke, sondern ganze Räume oder Hallen gefüllt hatten. Erst mit der Erfindung der ersten integrierten Schaltkreisen ließen sich die Rechner auf Kleiderschrankgröße reduzieren. Damit passt dieser Computer ideal in das Ölzeitalter. Dadurch dass dieser Computer nur in Maschinencode programmiert werden kann (wie die Originale damals auch), setzt dies einiges an Computerwissen voraus, was nicht in dieser Anleitung vermittelt werden kann.
+PDP13 ist ein 16-Bit-Minicomputer, inspiriert von DEC, IBM und anderen Computer aus den 60er und 70er Jahren. "Mini" deshalb, weil die Rechenanlagen bis dahin nicht nur Schränke, sondern ganze Räume oder Hallen gefüllt hatten. Erst mit der Erfindung der ersten integrierten Schaltkreisen ließen sich die Rechner auf Kleiderschrankgröße reduzieren. Damit passt dieser Computer ideal in das Ölzeitalter. Dadurch dass dieser Computer nur in Maschinencode programmiert werden kann (wie die Originale damals auch), setzt dies einiges an Computerwissen voraus, was nicht in dieser Anleitung vermittelt werden kann.
 
 Voraussetzungen sind damit:
 
 - Grundkenntnisse in Englisch (weitere Dokumente nur in englisch)
 - Rechnen mit HEX-Zahlen (16 Bit System)
-- Grundkenntnisse im Aufbau einer CPU (Register, Speicheraddressierung) und Assemblerprogrammierung
+- Grundkenntnisse im Aufbau einer CPU (Register, Speicheradressierung) und Assemblerprogrammierung
 - Ausdauer und Lernbereitschaft, denn PDP13 ist anders, als alles, was du evtl. schon kennst
 
 Der PDP13 Minicomputer wird aber im Spiel auch nicht benötigt, sondern dient eher als Lehrmaterial in Computergrundlagen und Computergeschichte. Er kann aber wie die anderen Controller zur Steuerung von Maschinen eingesetzt werden. Die PDP13 Mod bringt auch eigene Ausgabeblöcke mit, so dass sich viele Möglichkeiten zur Anwendung bieten.
 
-Aufgrund der Länge empfiehlt sich, diese Anleitung direkt auf GitHub zu lesen. Über den Link `github.com/joe7575/pdp13/wiki` kommt ihr direkt zu der Seite mit Anleitungen und weiteren Links.
+Aufgrund der Länge dieses Textes empfiehlt sich, diese Anleitung direkt auf GitHub zu lesen. Über den Link `github.com/joe7575/pdp13/wiki` kommt ihr direkt zu der Seite mit Anleitungen und weiteren Links.
 
 [pdp13_cpu|image]
 
@@ -34,12 +34,12 @@ Aufgrund der Länge empfiehlt sich, diese Anleitung direkt auf GitHub zu lesen. 
 Das I/O-Rack verbindet die CPU mit der Welt, also anderen Blöcken und Maschinen. Es können mehrere I/O-Blöcke pro CPU genutzt werden
 
 - Das erste I/O-Rack belegt die I/O-Adressen #0 bis #7. Diesen Adressen können über das Menü des I/O-Racks Blocknummern zugeordnet werden
-- Kommandow, welche an Adresse #0 bis #7 ausgegeben werden, werden dann vom I/O-Rack an den entsprechenden Block weitergegeben
+- Kommandos, welche an Adresse #0 bis #7 ausgegeben werden, werden dann vom I/O-Rack an den entsprechenden Block weitergegeben
 - Kommandos, die an die CPU bzw. an die Nummer der CPU gesendet werden (bspw. von einem Schalter) können so wieder eingelesen werden
 - Das Description Feld ist optional und muss nicht beschrieben werden
 - Das "OUT" Feld zeigt den zuletzt ausgegebenen Wert/das zuletzt ausgegebene Kommando
 - Das "IN" Feld zeigt entweder das empfangene Kommando oder die Antwort auf ein gesendetes Kommando. Wird 65535 ausgegeben, wurde kein Antwort empfangen (viele Blöcke senden keine Anwort auf ein "on"/"off" Kommando)
-- Das "help" Register zeigt eine Tabelle mit Informationen zur Umsetzung von Ein/Ausgabe Werten der CPU zu Techage Kommandos
+- Das "help" Register zeigt eine Tabelle mit Informationen zur Umsetzung von Ein/Ausgabe Werten der CPU zu Techage Kommandos (Die CPU kann nur Nummern ausgeben, diese werden dann in Techage Text-Kommandos umgesetzt und umgekehrt)
 
 [pdp13_iorack|image]
 
@@ -58,34 +58,34 @@ Hier werden Kommandos aber über die 6 Tasten links und Maschinenbefehle über d
 
 Das "help" Register zeigt die wichtgsten Assemblerbefehle und jeweils den Maschinencode dazu. Mit diesem Subset an Befehlen kann man bereits arbeiten. Weitere Informationen zum Befehlssatz findest du [hier](https://github.com/joe7575/vm16/blob/master/doc/introduction.md) und [hier](https://github.com/joe7575/vm16/blob/master/doc/opcodes.md).
 
-Am Ende der Tabelle werden die System Kommandos aufgeführt. Dies sind quasi Betriebssystemsaufrufe, welche zusätzliche Befehle ausführen, die sonst nicht möglich wären, wie bspw. einen Text auf dem Telewriter ausgeben. 
+Am Ende der Tabelle werden die System Kommandos aufgeführt. Dies sind quasi Betriebssystemtaufrufe, welche zusätzliche Befehle ausführen, die sonst nicht möglich wären, wie bspw. einen Text auf dem Telewriter ausgeben. 
 
 ### Performance
 
 Die CPU ist in der Lage, bis zu 100.000 Befehle pro Sekunde (0.1 MIPS) auszuführen. Dies gilt, solange nur interne CPU-Befehle ausgeführt werden. Dabei gibt es folgende Ausnahmen:
 
 - Der `sys` und der `in` Befehl "kosten" pauschal 1000 Zyklen, da hier externer Code ausgeführt wird. 
-- Der `out` Befehl unterbricht die Ausführung für 100 ms, sofern sich der Wert am Ausgang ändert und eine externe Aktionen in der Spielewelt durchgeführt werden muss. Anderenfalls sind es auch nur die 1000 Zyklen.
+- Der `out` Befehl unterbricht die Ausführung für 100 ms, sofern sich der Wert am Ausgang ändert und eine externe Aktionen in der Spielwelt durchgeführt werden muss. Anderenfalls sind es auch nur die 1000 Zyklen.
 - Der `nop` Befehl, der für Pausen genutzt werden kann, unterbricht die Ausführung auch für 100 ms.
 
-Ansonsten läuft die CPU "full speed", aber nur solange der Bereich der Welt geladen ist. Damit ist die CPU fast so schnell wie ihr großen Vorbild, die DEC PDP-11/70 (0.4 MIPS). 
-
-TODO:
-
-- Speichererweiterungenüber ein Memory-Rack.
-- ROM Erweiterung über den ROM Block und ROM Chips, bspw. das Monitor-ROM mit asm/disasm
+Ansonsten läuft die CPU "full speed", aber nur solange der Bereich der Welt geladen ist. Damit ist die CPU fast so schnell wie ihr großes Vorbild, die DEC PDP-11/70 (0.4 MIPS). 
 
 [pdp13_cpu|image]
 
 ## PDP-13 Telewriter
 
-Der Telewriter war das Terminal an einem Minicomputer. Ausgaben erfolgten nur auf Papier, Eingaben über die Tastatur. Eingegebene Zeichen konnten an den Rechner gesendet, oder auch auf ein Band (tape) geschrieben werden. Dabei wurden Löcher in das Tape gestanzt. Diese Tapes konnten dann wieder eingelegt und abgespielt werden, so dass gespeicherte Programme wieder an den Computer übertragen werden konnten.
+Der Telewriter war das Terminal an einem Minicomputer. Ausgaben erfolgten nur auf Papier, Eingaben über die Tastatur. Eingegebene Zeichen konnten an den Rechner gesendet, oder auch auf ein Band (tape) geschrieben werden. Dabei wurden Löcher in das Tape gestanzt. Diese Tapes konnten dann wieder eingelegt und abgespielt werden, so dass gespeicherte Programme wieder an den Computer übertragen werden konnten. Das Tape erfüllte damit die Aufgabe einer Festplatte, eines USB-Sticks oder sonstige Speichermedien.
 
-Auch hier dient  das Terminal zur Ein-/Ausgabe und zum Schreiben und Lesen von Tapes. 
+Auch hier dient  das Terminal zur Ein-/Ausgabe und zum Schreiben und Lesen von Tapes, wobei es zwei Typen von Telewriter Terminals gibt:
 
-Es gibt bereits mehrere Demo Tapes, die über das "tape" Menü-Register in den Telewriter eingelegt und über die Schalter an die PDP13 CPU gesendet werden können. Die CPU muss dazu aber eingeschaltet (power) und gestoppt sein. Ob die Übertragung geklappt hat, wird auf Papier ausgegeben ("main" Menü-Register). 
+- Telewriter Operator für normale Ein-/Ausgaben aus einem laufenden Programm
+- Telewriter Programmer für die Programmierung der CPU über Assembler (Monitor ROM Chip wird benötigt)
 
-Eigene Programme können so auch auf Tape gespeichert und später wieder wieder eingelesen und abgearbeitet werden. 
+Beide Typen können an einer CPU "angeschlossen" sein, wobei es pro Typ maximal ein Gerät sein darf, also in der Summe maximal zwei.
+
+Über das "tape" Menü des Telewriters können Programme von Tape zum Rechner (Schalter "tape -> PDP13") und vom Rechner auf das Tape (Schalter "PDP13 -> tape") kopiert werden. In beiden Fällen muss dazu ein Tape "eingelegt" sein. Die CPU muss dazu eingeschaltet (power) und gestoppt sein. Ob die Übertragung geklappt hat, wird auf Papier ausgegeben ("main" Menü-Register). 
+
+Über das "tape" Menü können auch Demo Programme auf ein Tape kopiert und anschließend in den Rechner geladen werden. Diese Programme zeigen, wie man elementare Funktionen des Rechners programmiert.
 
 Der Telewriter kann über folgende `sys` Befehle angesprochen werden:
 
@@ -111,7 +111,7 @@ sys     #2          ; Einlesen Zahl vom Telewriter, das Ergebnis steht in A
 
 Neben den Demo Tapes mit festen, kleinen Programmen gibt es ach die beschreibbaren und editierbaren Tapes. Diese können (im Gegensatz zum Original) mehrfach geschrieben/geändert werden.
 
-Die Tapes besitzen ein Menü so dass diese uch von Hand beschrieben werden können. Dies dient dazu:
+Die Tapes besitzen ein Menü so dass diese auch von Hand beschrieben werden können. Dies dient dazu:
 
 - dem Tape einen eindeutigen Namen zu geben
 - zu beschreiben, wie das Programm genutzt werden kann (Description)
@@ -149,7 +149,15 @@ move B, #8      ; value 0..64 in B
 out #00, A      ; output on port #0
 ```
 
-[pdp13_lamp|image]
+## PDP13 Memory Rack
+
+Dieser Block vervollständigt als 4. Block den Rechneraufbau. Der Block hat ein Inventar für Chips zur Speichererweiterung. Der Rechner hat intern 4 KWords an Speicher (4096 Worte) und kann durch einen 4 K RAM Chip auf 8 KWords erweitert werden. Mit einem zusätzlichen 8 K RAM Chip kann der Speicher dann auf 16 KWords erweitert werden. Theoretisch sind bis zu 64 KWords möglich.
+
+In der unteren Reihe kann das Rack bis zu 4 ROM Chips aufnehmen. Diese ROM Chips beinhalten Programme und sind quasi das Betriebssystem des Rechners. ROM Chips kann man nur auf der TA3 Elektronikfabrik produzieren. Das Programm für den Chip muss man dazu auf Tape besitzen, welches dann mit Hilfe der Elektronikfabrik auf den Chip "gebrannt" wird. An diese Programme kommt man nur, wenn man entsprechende Programmieraufgaben gelöst hat (dazu später mehr).
+
+Das Inventar des Speicherblocks lässt sich nur in der vorgegebenen Reihenfolge von links nach rechts füllen. Der Rechner muss dazu ausgeschaltet sein.
+
+[pdp13_iorack|image]
 
 ## Minimal Beipiel
 
@@ -161,20 +169,24 @@ out #0, A   ; Gebe den Wert aus dem A-Register auf I/O-Adresse 0 aus
 halt        ; Stoppe die CPU nach der Ausgabe
 ```
 
-Da der Rechner diese Asemblerbefehle nicht direkt versteht, muss das Programm in Maschinencode übersetzt werden. Dazu dient die Hilfeseite im Menü des CPU-Blocks. Das Ergebnis sieht dann so aus:
+Da der Rechner diese Assemblerbefehle nicht direkt versteht, muss das Programm in Maschinencode übersetzt werden. Dazu dient die Hilfeseite im Menü des CPU-Blocks. Das Ergebnis sieht dann so aus (der Assemblercode steht als Kommentar dahinter):
 
-```
-2010 0001
-6600 0000
-1C00
+```assembly
+2010 0001   ; mov A, #1  
+6600 0000   ; out #0, A
+1C00        ; halt
 ```
 
-Diese Maschinenbefehle müssen bei der CPU eingegeben werden, wobei für `0000` auch nur `0` eingegeben werden darf (führende Nullen sind nicht relevant).
+`mov A` entspricht dem Wert `2010`, der Parameter `#1` steht dann im zweiten Wort `0001`. Über das zweite Wort lassen sich so Werte von 0 bis 65535 (0000 - FFFF) in das Register A laden.  Ein `mov B` ist beispielsweise `2030`. A und B sind Register der CPU, mit denen die CPU rechnen kann, aber auch alle `in` und `out` Befehle gehen über diese Register. Die CPU hat noch weitere Register, diese werden für einfache Aufgaben aber nicht benötigt.
+
+Bei allen Befehlen mit 2 Operanden steht das Ergebnis der Operation immer im ersten Operand, bei `mov A, #1` also in A. Beim `out #0, A` wird A auf den I/O-Port #0 ausgegeben. Der Code dazu ist `6600 0000`. Da sehr viele Ports unterstützt werden, steht dieser Wert #0 wieder im zweiten Wort. Damit lassen sich wieder bis zu 65535 Ports adressieren.
+
+Diese 5 Maschinenbefehle müssen bei der CPU eingegeben werden, wobei für `0000` auch nur `0` eingegeben werden darf (führende Nullen sind nicht relevant).
 
 Dazu sind die folgenden Schritte notwendig:
 
-- Rechner mit Power, CPU, und IO-Rack aufbauen wie oben beschrieben
-- 7-Segement Bock in die Nähe setzen und die Nummer des Blockes im Menü des I/O-Racks in der obersten Zeile bei Adresse #0 eingeben
+- Rechner mit Power, CPU, und einem IO-Rack aufbauen wie oben beschrieben
+- 7-Segment Bock in die Nähe setzen und die Nummer des Blockes im Menü des I/O-Racks in der obersten Zeile bei Adresse #0 eingeben
 - Den Rechner am Power Block einschalten
 - Die CPU gegebenenfalls stoppen und mit "reset" auf die Adresse 0 setzen
 - Den 1. Befehl eingeben und mit "enter" bestätigen: `2010 1`
@@ -187,3 +199,31 @@ Wenn du alles richtig gemacht hast, leuchtet danach die Lampe. Das "OUT" Feld im
 
 [pdp13_cpu|image]
 
+## Monitor Programm
+
+Hat man den Rechner mit dem "Monitor ROM" Chip erweitert und ein "Telewriter Programmer" Terminal angeschlossen, kann man den Rechner in Assembler programmieren. Dies ist deutlich komfortabler und weniger fehleranfällig.
+
+Das Monitor Programm auf dem Rechner wird durch Eingabe des Kommandos "mon" an der CPU gestartet und über die Taste "stop" auch wieder gestoppt werden. Alle anderen Tasten der CPU sind im Monitor-Mode nicht aktiv. Die Bedienung erfolgt nur über das Terminal. 
+
+Das Monitor Programm unterstützt folgende Kommandos, die auch mit Eingabe von `?` ausgegeben werden (die folgende Tabelle ist ingame nicht darstellbar):
+
+| Kommando   | Bedeutung                                                    |
+| ---------- | ------------------------------------------------------------ |
+| `?`        | Hilfetext ausgeben                                           |
+| `st`       | Starten der CPU (entspricht der "start" Taste an der CPU)    |
+| `sp`       | Stoppen der CPU (entspricht der "stop" Taste an der CPU)     |
+| `rt`       | Rücksetzen des Programm Counters (entspricht der "reset" Taste an der CPU) |
+| `n`        | Nächsten Befehl ausführen (entspricht der "step" Taste an der CPU) |
+| `r`        | Inhalt der CPU Register ausgeben                             |
+| `ad #`     | Setzen des Programm Counters (entspricht der "address" Taste an der CPU). `#` ist dabei die Adresse |
+| `d #`      | Speicher ausgeben (entspricht der "dump" Taste an der CPU). `#` ist dabei die Startadresse. Wird erneut "enter" gedrückt, wird der nächste Speicherblock ausgegeben |
+| `en #`     | Daten eingeben. `#` ist dabei die Adresse. Danach können Werte (Zahlen) eingegeben und mit "enter" übernommen werden |
+| `as #`     | Starten des Assemblers. Für `#` muss die Startadresse angegeben werden Danach können Assemblerbefehle eingegeben werden. Aus diesem Mode kommt man durch Eingabe eines anderen Kommandos |
+| `di #`     | Ausgabe eines Speicherbereichs der CPU in Assemblerschreibweise (disassemble). Es werden immer 8 Befehle ausgegeben. Wird erneut "enter" gedrückt, werden die nächsten 8 Befehle ausgegeben |
+| `ct # txt` | Kopieren von Text in den Speicher, also mit `ct 100 Hallo Welt,` wird der Text an die Adresse 100  kopiert |
+| `cm # # #` | Speicher kopieren. Die drei `#` bedeuten: Quell-Adresse, Ziel-Adresse, Anzahl Worte |
+| `ex`       | Monitor Mode vom Terminal aus beenden                        |
+
+Alle Kommandos unterstützen die dezimale und hexadezimale Eingabe von Zahlen, `100` ist dezimal und entspricht damit `$64` (hexadezimal).
+
+[pdp13_telewriter|image]

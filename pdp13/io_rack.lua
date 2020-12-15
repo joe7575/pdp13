@@ -25,16 +25,46 @@ local Commands = [[   PDP13 Techage I/O Commands
 ---------------------------------------
   00 - off          00 - off
   01 - on           01 - on
-  
+  02 - green        02 - green
+  03 - amber        03 - amber
+  04 - red          04 - red
+  05 - state        05 - running
+  06 - fuel         06 - blocked
+  07 - depth        07 - standby
+  08 - load         08 - nopower
+  09 - delivered    09 - fault
+  0A - count        0A - stopped
+                    0B - unloaded
+   
   80 - cmd value (val in B)
 ]]
+
 Commands = Commands:gsub("\n", ",")
 
 pdp13.register_CommandTopic("techage", "off", 0)
 pdp13.register_CommandTopic("techage", "on", 1)
-pdp13.register_CommandTopic("techage", "value", 0x80)
+pdp13.register_CommandTopic("techage", "green", 2)
+pdp13.register_CommandTopic("techage", "amber", 3)
+pdp13.register_CommandTopic("techage", "red", 4)
+pdp13.register_CommandTopic("techage", "state", 5)
+pdp13.register_CommandTopic("techage", "fuel", 6)
+pdp13.register_CommandTopic("techage", "depth", 7)
+pdp13.register_CommandTopic("techage", "load", 8)
+pdp13.register_CommandTopic("techage", "delivered", 9)
+pdp13.register_CommandTopic("techage", "count", 10)
+
 pdp13.register_ResponseTopic("techage", "off", 0)
 pdp13.register_ResponseTopic("techage", "on", 1)
+pdp13.register_ResponseTopic("techage", "green", 2)
+pdp13.register_ResponseTopic("techage", "amber", 3)
+pdp13.register_ResponseTopic("techage", "red", 4)
+pdp13.register_ResponseTopic("techage", "running", 5)
+pdp13.register_ResponseTopic("techage", "blocked", 6)
+pdp13.register_ResponseTopic("techage", "standby", 7)
+pdp13.register_ResponseTopic("techage", "nopower", 8)
+pdp13.register_ResponseTopic("techage", "fault", 9)
+pdp13.register_ResponseTopic("techage", "stopped", 10)
+pdp13.register_ResponseTopic("techage", "unloaded", 11)
 
 local inp = pdp13.get_input
 local out = pdp13.get_output

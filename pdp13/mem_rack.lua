@@ -118,7 +118,7 @@ minetest.register_node("pdp13:mem_rack", {
 		"pdp13_side.png",
 		"pdp13_side.png",
 		"pdp13_back.png",
-		"pdp13_chassis.png^pdp13_frame.png",
+		"pdp13_chassis.png^pdp13_frame_top.png",
 	},
 	after_place_node = after_place_node,
 	pdp13_on_receive = pdp13_on_receive,
@@ -177,9 +177,9 @@ minetest.register_craft({
 })
 
 minetest.register_craft({
-	output = "pdp13:io_rack",
+	output = "pdp13:mem_rack",
 	recipe = {
-		{"", "pdp13:chassis", ""},
+		{"", "pdp13:chassis", "dye:magenta"},
 		{"", "default:copper_ingot", ""},
 		{"basic_materials:plastic_sheet", "basic_materials:plastic_sheet", "basic_materials:plastic_sheet"},
 	},

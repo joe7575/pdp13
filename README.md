@@ -10,6 +10,7 @@ A 16-bit minicomputer simulation inspired by DEC, IBM, and other Vintage Compute
 
 It is likely that the functionality will change completely again!!!
 
+On client side Minetest 5.4 is required (font=mono)
 
 ### License
 Copyright (C) 2019-2020 Joe (iauit@gmx.de)  
@@ -24,4 +25,5 @@ Required: default,tubelib2,techage,vm16
 ### History  
 - 2019-12-03  v0.01  * First draft
 - 2020-12-05  v0.02  * Restructure completely and adapt to new vm16
+- 2020-12-14  v0.03  * Add memory rack, monitor program, ICs and much more"
 

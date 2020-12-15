@@ -8,20 +8,22 @@ techage.add_to_manual('DE', {
   "2,PDP13 Tape",
   "2,PDP13 7-Segment",
   "2,PDP13 Color Lamp",
+  "2,PDP13 Memory Rack",
   "2,Minimal Beipiel",
+  "2,Monitor Programm",
 }, {
-  "PDP13 ist ein 16-Bit-Minicomputer\\, inspiriert von DEC\\, IBM und anderen Computer aus den 60er und 70er Jahren. \"Mini\" deshalb\\, weil die Rechnenanlagen bis dahin nicht nur Schränke\\, sondern ganze Räume oder Hallen gefüllt hatten. Erst mit der Erfindung der ersten integrierten Schaltkreisen ließen sich die Rechner auf Kleiderschrankgröße reduzieren. Damit passt dieser Computer ideal in das Ölzeitalter. Dadurch dass dieser Computer nur in Maschinencode programmiert werden kann (wie die Originale damals auch)\\, setzt dies einiges an Computerwissen voraus\\, was nicht in dieser Anleitung vermittelt werden kann.\n"..
+  "PDP13 ist ein 16-Bit-Minicomputer\\, inspiriert von DEC\\, IBM und anderen Computer aus den 60er und 70er Jahren. \"Mini\" deshalb\\, weil die Rechenanlagen bis dahin nicht nur Schränke\\, sondern ganze Räume oder Hallen gefüllt hatten. Erst mit der Erfindung der ersten integrierten Schaltkreisen ließen sich die Rechner auf Kleiderschrankgröße reduzieren. Damit passt dieser Computer ideal in das Ölzeitalter. Dadurch dass dieser Computer nur in Maschinencode programmiert werden kann (wie die Originale damals auch)\\, setzt dies einiges an Computerwissen voraus\\, was nicht in dieser Anleitung vermittelt werden kann.\n"..
   "\n"..
   "Voraussetzungen sind damit:\n"..
   "\n"..
   "  - Grundkenntnisse in Englisch (weitere Dokumente nur in englisch)\n"..
   "  - Rechnen mit HEX-Zahlen (16 Bit System)\n"..
-  "  - Grundkenntnisse im Aufbau einer CPU (Register\\, Speicheraddressierung) und Assemblerprogrammierung\n"..
+  "  - Grundkenntnisse im Aufbau einer CPU (Register\\, Speicheradressierung) und Assemblerprogrammierung\n"..
   "  - Ausdauer und Lernbereitschaft\\, denn PDP13 ist anders\\, als alles\\, was du evtl. schon kennst\n"..
   "\n"..
   "Der PDP13 Minicomputer wird aber im Spiel auch nicht benötigt\\, sondern dient eher als Lehrmaterial in Computergrundlagen und Computergeschichte. Er kann aber wie die anderen Controller zur Steuerung von Maschinen eingesetzt werden. Die PDP13 Mod bringt auch eigene Ausgabeblöcke mit\\, so dass sich viele Möglichkeiten zur Anwendung bieten.\n"..
   "\n"..
-  "Aufgrund der Länge empfiehlt sich\\, diese Anleitung direkt auf GitHub zu lesen. Über den Link 'github.com/joe7575/pdp13/wiki' kommt ihr direkt zu der Seite mit Anleitungen und weiteren Links.\n"..
+  "Aufgrund der Länge dieses Textes empfiehlt sich\\, diese Anleitung direkt auf GitHub zu lesen. Über den Link 'github.com/joe7575/pdp13/wiki' kommt ihr direkt zu der Seite mit Anleitungen und weiteren Links.\n"..
   "\n"..
   "\n"..
   "\n",
@@ -38,12 +40,12 @@ techage.add_to_manual('DE', {
   "Das I/O-Rack verbindet die CPU mit der Welt\\, also anderen Blöcken und Maschinen. Es können mehrere I/O-Blöcke pro CPU genutzt werden\n"..
   "\n"..
   "  - Das erste I/O-Rack belegt die I/O-Adressen #0 bis #7. Diesen Adressen können über das Menü des I/O-Racks Blocknummern zugeordnet werden\n"..
-  "  - Kommandow\\, welche an Adresse #0 bis #7 ausgegeben werden\\, werden dann vom I/O-Rack an den entsprechenden Block weitergegeben\n"..
+  "  - Kommandos\\, welche an Adresse #0 bis #7 ausgegeben werden\\, werden dann vom I/O-Rack an den entsprechenden Block weitergegeben\n"..
   "  - Kommandos\\, die an die CPU bzw. an die Nummer der CPU gesendet werden (bspw. von einem Schalter) können so wieder eingelesen werden\n"..
   "  - Das Description Feld ist optional und muss nicht beschrieben werden\n"..
   "  - Das \"OUT\" Feld zeigt den zuletzt ausgegebenen Wert/das zuletzt ausgegebene Kommando\n"..
   "  - Das \"IN\" Feld zeigt entweder das empfangene Kommando oder die Antwort auf ein gesendetes Kommando. Wird 65535 ausgegeben\\, wurde kein Antwort empfangen (viele Blöcke senden keine Anwort auf ein \"on\"/\"off\" Kommando)\n"..
-  "  - Das \"help\" Register zeigt eine Tabelle mit Informationen zur Umsetzung von Ein/Ausgabe Werten der CPU zu Techage Kommandos\n"..
+  "  - Das \"help\" Register zeigt eine Tabelle mit Informationen zur Umsetzung von Ein/Ausgabe Werten der CPU zu Techage Kommandos (Die CPU kann nur Nummern ausgeben\\, diese werden dann in Techage Text-Kommandos umgesetzt und umgekehrt)\n"..
   "\n"..
   "\n"..
   "\n",
@@ -60,30 +62,30 @@ techage.add_to_manual('DE', {
   "\n"..
   "Das \"help\" Register zeigt die wichtgsten Assemblerbefehle und jeweils den Maschinencode dazu. Mit diesem Subset an Befehlen kann man bereits arbeiten. Weitere Informationen zum Befehlssatz findest du  und .\n"..
   "\n"..
-  "Am Ende der Tabelle werden die System Kommandos aufgeführt. Dies sind quasi Betriebssystemsaufrufe\\, welche zusätzliche Befehle ausführen\\, die sonst nicht möglich wären\\, wie bspw. einen Text auf dem Telewriter ausgeben. \n"..
+  "Am Ende der Tabelle werden die System Kommandos aufgeführt. Dies sind quasi Betriebssystemtaufrufe\\, welche zusätzliche Befehle ausführen\\, die sonst nicht möglich wären\\, wie bspw. einen Text auf dem Telewriter ausgeben. \n"..
   "\n",
   "Die CPU ist in der Lage\\, bis zu 100.000 Befehle pro Sekunde (0.1 MIPS) auszuführen. Dies gilt\\, solange nur interne CPU-Befehle ausgeführt werden. Dabei gibt es folgende Ausnahmen:\n"..
   "\n"..
   "  - Der 'sys' und der 'in' Befehl \"kosten\" pauschal 1000 Zyklen\\, da hier externer Code ausgeführt wird.\n"..
-  "  - Der 'out' Befehl unterbricht die Ausführung für 100 ms\\, sofern sich der Wert am Ausgang ändert und eine externe Aktionen in der Spielewelt durchgeführt werden muss. Anderenfalls sind es auch nur die 1000 Zyklen.\n"..
+  "  - Der 'out' Befehl unterbricht die Ausführung für 100 ms\\, sofern sich der Wert am Ausgang ändert und eine externe Aktionen in der Spielwelt durchgeführt werden muss. Anderenfalls sind es auch nur die 1000 Zyklen.\n"..
   "  - Der 'nop' Befehl\\, der für Pausen genutzt werden kann\\, unterbricht die Ausführung auch für 100 ms.\n"..
   "\n"..
-  "Ansonsten läuft die CPU \"full speed\"\\, aber nur solange der Bereich der Welt geladen ist. Damit ist die CPU fast so schnell wie ihr großen Vorbild\\, die DEC PDP-11/70 (0.4 MIPS). \n"..
-  "\n"..
-  "TODO:\n"..
-  "\n"..
-  "  - Speichererweiterungenüber ein Memory-Rack.\n"..
-  "  - ROM Erweiterung über den ROM Block und ROM Chips\\, bspw. das Monitor-ROM mit asm/disasm\n"..
+  "Ansonsten läuft die CPU \"full speed\"\\, aber nur solange der Bereich der Welt geladen ist. Damit ist die CPU fast so schnell wie ihr großes Vorbild\\, die DEC PDP-11/70 (0.4 MIPS). \n"..
   "\n"..
   "\n"..
   "\n",
-  "Der Telewriter war das Terminal an einem Minicomputer. Ausgaben erfolgten nur auf Papier\\, Eingaben über die Tastatur. Eingegebene Zeichen konnten an den Rechner gesendet\\, oder auch auf ein Band (tape) geschrieben werden. Dabei wurden Löcher in das Tape gestanzt. Diese Tapes konnten dann wieder eingelegt und abgespielt werden\\, so dass gespeicherte Programme wieder an den Computer übertragen werden konnten.\n"..
+  "Der Telewriter war das Terminal an einem Minicomputer. Ausgaben erfolgten nur auf Papier\\, Eingaben über die Tastatur. Eingegebene Zeichen konnten an den Rechner gesendet\\, oder auch auf ein Band (tape) geschrieben werden. Dabei wurden Löcher in das Tape gestanzt. Diese Tapes konnten dann wieder eingelegt und abgespielt werden\\, so dass gespeicherte Programme wieder an den Computer übertragen werden konnten. Das Tape erfüllte damit die Aufgabe einer Festplatte\\, eines USB-Sticks oder sonstige Speichermedien.\n"..
   "\n"..
-  "Auch hier dient  das Terminal zur Ein-/Ausgabe und zum Schreiben und Lesen von Tapes. \n"..
+  "Auch hier dient  das Terminal zur Ein-/Ausgabe und zum Schreiben und Lesen von Tapes\\, wobei es zwei Typen von Telewriter Terminals gibt:\n"..
   "\n"..
-  "Es gibt bereits mehrere Demo Tapes\\, die über das \"tape\" Menü-Register in den Telewriter eingelegt und über die Schalter an die PDP13 CPU gesendet werden können. Die CPU muss dazu aber eingeschaltet (power) und gestoppt sein. Ob die Übertragung geklappt hat\\, wird auf Papier ausgegeben (\"main\" Menü-Register). \n"..
+  "  - Telewriter Operator für normale Ein-/Ausgaben aus einem laufenden Programm\n"..
+  "  - Telewriter Programmer für die Programmierung der CPU über Assembler (Monitor ROM Chip wird benötigt)\n"..
   "\n"..
-  "Eigene Programme können so auch auf Tape gespeichert und später wieder wieder eingelesen und abgearbeitet werden. \n"..
+  "Beide Typen können an einer CPU \"angeschlossen\" sein\\, wobei es pro Typ maximal ein Gerät sein darf\\, also in der Summe maximal zwei.\n"..
+  "\n"..
+  "Über das \"tape\" Menü des Telewriters können Programme von Tape zum Rechner (Schalter \"tape -> PDP13\") und vom Rechner auf das Tape (Schalter \"PDP13 -> tape\") kopiert werden. In beiden Fällen muss dazu ein Tape \"eingelegt\" sein. Die CPU muss dazu eingeschaltet (power) und gestoppt sein. Ob die Übertragung geklappt hat\\, wird auf Papier ausgegeben (\"main\" Menü-Register). \n"..
+  "\n"..
+  "Über das \"tape\" Menü können auch Demo Programme auf ein Tape kopiert und anschließend in den Rechner geladen werden. Diese Programme zeigen\\, wie man elementare Funktionen des Rechners programmiert.\n"..
   "\n"..
   "Der Telewriter kann über folgende 'sys' Befehle angesprochen werden:\n"..
   "\n"..
@@ -103,7 +105,7 @@ techage.add_to_manual('DE', {
   "\n",
   "Neben den Demo Tapes mit festen\\, kleinen Programmen gibt es ach die beschreibbaren und editierbaren Tapes. Diese können (im Gegensatz zum Original) mehrfach geschrieben/geändert werden.\n"..
   "\n"..
-  "Die Tapes besitzen ein Menü so dass diese uch von Hand beschrieben werden können. Dies dient dazu:\n"..
+  "Die Tapes besitzen ein Menü so dass diese auch von Hand beschrieben werden können. Dies dient dazu:\n"..
   "\n"..
   "  - dem Tape einen eindeutigen Namen zu geben\n"..
   "  - zu beschreiben\\, wie das Programm genutzt werden kann (Description)\n"..
@@ -132,6 +134,12 @@ techage.add_to_manual('DE', {
   "    move A\\, #$80    \\; 'value' command\n"..
   "    move B\\, #8      \\; value 0..64 in B\n"..
   "    out #00\\, A      \\; output on port #0\n"..
+  "\n",
+  "Dieser Block vervollständigt als 4. Block den Rechneraufbau. Der Block hat ein Inventar für Chips zur Speichererweiterung. Der Rechner hat intern 4 KWords an Speicher (4096 Worte) und kann durch einen 4 K RAM Chip auf 8 KWords erweitert werden. Mit einem zusätzlichen 8 K RAM Chip kann der Speicher dann auf 16 KWords erweitert werden. Theoretisch sind bis zu 64 KWords möglich.\n"..
+  "\n"..
+  "In der unteren Reihe kann das Rack bis zu 4 ROM Chips aufnehmen. Diese ROM Chips beinhalten Programme und sind quasi das Betriebssystem des Rechners. ROM Chips kann man nur auf der TA3 Elektronikfabrik produzieren. Das Programm für den Chip muss man dazu auf Tape besitzen\\, welches dann mit Hilfe der Elektronikfabrik auf den Chip \"gebrannt\" wird. An diese Programme kommt man nur\\, wenn man entsprechende Programmieraufgaben gelöst hat (dazu später mehr).\n"..
+  "\n"..
+  "Das Inventar des Speicherblocks lässt sich nur in der vorgegebenen Reihenfolge von links nach rechts füllen. Der Rechner muss dazu ausgeschaltet sein.\n"..
   "\n"..
   "\n"..
   "\n",
@@ -141,18 +149,22 @@ techage.add_to_manual('DE', {
   "    out #0\\, A   \\; Gebe den Wert aus dem A-Register auf I/O-Adresse 0 aus\n"..
   "    halt        \\; Stoppe die CPU nach der Ausgabe\n"..
   "\n"..
-  "Da der Rechner diese Asemblerbefehle nicht direkt versteht\\, muss das Programm in Maschinencode übersetzt werden. Dazu dient die Hilfeseite im Menü des CPU-Blocks. Das Ergebnis sieht dann so aus:\n"..
+  "Da der Rechner diese Assemblerbefehle nicht direkt versteht\\, muss das Programm in Maschinencode übersetzt werden. Dazu dient die Hilfeseite im Menü des CPU-Blocks. Das Ergebnis sieht dann so aus (der Assemblercode steht als Kommentar dahinter):\n"..
   "\n"..
-  "    2010 0001\n"..
-  "    6600 0000\n"..
-  "    1C00\n"..
+  "    2010 0001   \\; mov A\\, #1  \n"..
+  "    6600 0000   \\; out #0\\, A\n"..
+  "    1C00        \\; halt\n"..
   "\n"..
-  "Diese Maschinenbefehle müssen bei der CPU eingegeben werden\\, wobei für '0000' auch nur '0' eingegeben werden darf (führende Nullen sind nicht relevant).\n"..
+  "'mov A' entspricht dem Wert '2010'\\, der Parameter '#1' steht dann im zweiten Wort '0001'. Über das zweite Wort lassen sich so Werte von 0 bis 65535 (0000 - FFFF) in das Register A laden.  Ein 'mov B' ist beispielsweise '2030'. A und B sind Register der CPU\\, mit denen die CPU rechnen kann\\, aber auch alle 'in' und 'out' Befehle gehen über diese Register. Die CPU hat noch weitere Register\\, diese werden für einfache Aufgaben aber nicht benötigt.\n"..
+  "\n"..
+  "Bei allen Befehlen mit 2 Operanden steht das Ergebnis der Operation immer im ersten Operand\\, bei 'mov A\\, #1' also in A. Beim 'out #0\\, A' wird A auf den I/O-Port #0 ausgegeben. Der Code dazu ist '6600 0000'. Da sehr viele Ports unterstützt werden\\, steht dieser Wert #0 wieder im zweiten Wort. Damit lassen sich wieder bis zu 65535 Ports adressieren.\n"..
+  "\n"..
+  "Diese 5 Maschinenbefehle müssen bei der CPU eingegeben werden\\, wobei für '0000' auch nur '0' eingegeben werden darf (führende Nullen sind nicht relevant).\n"..
   "\n"..
   "Dazu sind die folgenden Schritte notwendig:\n"..
   "\n"..
-  "  - Rechner mit Power\\, CPU\\, und IO-Rack aufbauen wie oben beschrieben\n"..
-  "  - 7-Segement Bock in die Nähe setzen und die Nummer des Blockes im Menü des I/O-Racks in der obersten Zeile bei Adresse #0 eingeben\n"..
+  "  - Rechner mit Power\\, CPU\\, und einem IO-Rack aufbauen wie oben beschrieben\n"..
+  "  - 7-Segment Bock in die Nähe setzen und die Nummer des Blockes im Menü des I/O-Racks in der obersten Zeile bei Adresse #0 eingeben\n"..
   "  - Den Rechner am Power Block einschalten\n"..
   "  - Die CPU gegebenenfalls stoppen und mit \"reset\" auf die Adresse 0 setzen\n"..
   "  - Den 1. Befehl eingeben und mit \"enter\" bestätigen: '2010 1'\n"..
@@ -165,6 +177,16 @@ techage.add_to_manual('DE', {
   "\n"..
   "\n"..
   "\n",
+  "Hat man den Rechner mit dem \"Monitor ROM\" Chip erweitert und ein \"Telewriter Programmer\" Terminal angeschlossen\\, kann man den Rechner in Assembler programmieren. Dies ist deutlich komfortabler und weniger fehleranfällig.\n"..
+  "\n"..
+  "Das Monitor Programm auf dem Rechner wird durch Eingabe des Kommandos \"mon\" an der CPU gestartet und über die Taste \"stop\" auch wieder gestoppt werden. Alle anderen Tasten der CPU sind im Monitor-Mode nicht aktiv. Die Bedienung erfolgt nur über das Terminal. \n"..
+  "\n"..
+  "Das Monitor Programm unterstützt folgende Kommandos\\, die auch mit Eingabe von '?' ausgegeben werden (die folgende Tabelle ist ingame nicht darstellbar):\n"..
+  "\n"..
+  "Alle Kommandos unterstützen die dezimale und hexadezimale Eingabe von Zahlen\\, '100' ist dezimal und entspricht damit '$64' (hexadezimal).\n"..
+  "\n"..
+  "\n"..
+  "\n",
 }, {
   "pdp13_cpu",
   "pdp13_cpu",
@@ -174,9 +196,13 @@ techage.add_to_manual('DE', {
   "pdp13_telewriter",
   "pdp13_tape",
   "pdp13_7segment",
-  "pdp13_lamp",
+  "",
+  "pdp13_iorack",
   "pdp13_cpu",
+  "pdp13_telewriter",
 }, {
+  "",
+  "",
   "",
   "",
   "",
