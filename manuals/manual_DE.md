@@ -11,7 +11,7 @@ Voraussetzungen sind damit:
 
 Der PDP13 Minicomputer wird aber im Spiel auch nicht benötigt, sondern dient eher als Lehrmaterial in Computergrundlagen und Computergeschichte. Er kann aber wie die anderen Controller zur Steuerung von Maschinen eingesetzt werden. Die PDP13 Mod bringt auch eigene Ausgabeblöcke mit, so dass sich viele Möglichkeiten zur Anwendung bieten.
 
-Aufgrund der Länge dieses Textes empfiehlt sich, diese Anleitung direkt auf GitHub zu lesen. Über den Link `github.com/joe7575/pdp13/wiki` kommt ihr direkt zu der Seite mit Anleitungen und weiteren Links.
+Aufgrund der Länge dieses Textes empfiehlt sich, diese Anleitung direkt auf GitHub zu lesen. Über den Link `github.com/joe7575/pdp13/wiki` kommst du direkt zu der Seite mit Anleitungen und weiteren Links (todo).
 
 [pdp13_cpu|image]
 
@@ -227,3 +227,28 @@ Das Monitor Programm unterstützt folgende Kommandos, die auch mit Eingabe von `
 Alle Kommandos unterstützen die dezimale und hexadezimale Eingabe von Zahlen, `100` ist dezimal und entspricht damit `$64` (hexadezimal).
 
 [pdp13_telewriter|image]
+
+## Programmieraufgaben
+
+Um einen ROM Chip herstellen zu können, wird das Programm für den Chip auf Tape benötigt. Diese Aufgabe in echt zu lösen wäre zwar eine Herausforderung, aber für 99,9 % der Spieler kaum zu lösen.
+
+Deshalb soll die Programmierung hier simuliert werden, in dem man eine (einfache) Programmieraufgabe löst, was immer noch nicht ganz einfach ist. Aber man bekommt einen Eindruck, wie aufwändig es damals war, ein Programm zu schreiben.
+
+### Aufgaben 1: PDP-13 Monitor ROM
+
+Um das Tape für das PDP-13 Monitor ROM zu erhalten, musst du folgende Aufgabe lösen:
+
+*Berechne den Abstand zwischen zwei Punkten im Raum, wobei der Abstand in Blöcken berechnet werden soll, also wie wenn eine Hyperloop-Strecke von pos1 zu pos2 gebaut werden müsste. Die Blöcke für pos1 und pos2 zählen mit. pos1 und pos2 bestehen aus x, y, z Kordinaten, wobei sich alle Werte im Bereich von 0 bis 1000 bewegen, Wenn man bspw. von (0,0,0) nach (1000,1000,1000) eine Strecke bauen müsste, würde man 3001 Blöcke benötigen.*
+
+Das Programm muss zuerst die 6 Werte (x1, y1, z1, x2, y2, z2) über `sys #300` anfordern und am Ende das Ergebnis wieder über `sys #301` ausgeben. Wenn die Berechnung passt und im "Telewriter Operator" befindet sich ein leeres Tape, dann wird bei passendem Ergebnis das Tape geschrieben. In jedem Falle erfolgt eine Chat-Ausgabe über die berechneten Werte. Hier der Rahmen des Programms:
+
+```assembly
+2010 0100  ; move A, #$100  (Zieladresse laden)
+0B00       ; sys #$300      (die 6 Werte anfordern, diese stehen dann in $100-$105)
+....
+0B01       ; sys #$301      (das Rechenergebnis muss zuvor in A gespeichert sein)
+1C00       ; halt           (wichtig, sonst läuft das Programm unkontroliert weiter)
+```
+
+
+

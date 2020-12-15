@@ -219,16 +219,19 @@ local function gen_demotape(pos, demotape)
 			break
 		end
 	end
-	
-	minetest.after(1, function(pos)
-		local mem = techage.get_nvm(pos)
-		mem.writer = false
-		M(pos):set_string("formspec", formspec2(mem))
-	end, pos)
-	local cpu_num = M(pos):get_string("cpu_number")
-	local res = send_to_cpu(pos, "write_h16", code)
-	local mem = techage.get_nvm(pos)
-	add_line_to_fifo(pos, mem, "Tape to PDP13.."..(res and "ok" or "error"))
+end
+
+local function gen_rom_tape(pos, rom_tape)
+	if has_tape(pos) then
+		minetest.after(DELAY, function(pos, rom_tape)
+			local inv = M(pos):get_inventory()
+			inv:set_stack("main", 1, ItemStack(rom_tape))
+			local mem = techage.get_nvm(pos)
+			add_line_to_fifo(pos, mem, "Tape punched")
+			mem.reader = false
+		end, pos, rom_tape)
+		play_sound(pos)
+	end
 end
 
 local function read_code_from_cpu(pos)
@@ -414,6 +417,9 @@ techage.register_node({"pdp13:telewriter", "pdp13:telewriter_prog"}, {
 			local mem = techage.get_nvm(pos)
 			mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 			add_line_to_fifo(pos, mem, "stopped")
+			return true
+		elseif topic == "punch" then  -- punch tape
+			gen_rom_tape(pos, payload)
 			return true
 		end
 	end,

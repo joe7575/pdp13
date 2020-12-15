@@ -22,6 +22,13 @@ local function programmer_cmnd(pos, cmd, payload)
 	return techage.send_single(own_num, dst_num, cmd, payload)
 end
 
+function pdp13.operator_cmnd(pos, cmd, payload)
+	local dst_num = M(pos):get_string("telewriter_number")
+	local own_num = M(pos):get_string("node_number")
+	return techage.send_single(own_num, dst_num, cmd, payload)
+end
+
+
 local function leds(address, opcode, operand)
 	local lLed = {}
 	for i = 16,1,-1 do
@@ -123,7 +130,7 @@ local function formspec(pos, mem, cpu)
 end
 
 local function formspec_help()
-	local s = vm16.AsmHelp..","..pdp13.SysDesc
+	local s = pdp13.AsmHelp..","..pdp13.SysDesc
 	return "size[10,7.7]"..
 		"tabheader[0,0;tab;CPU,help;2;;true]"..
 		"style_type[table;font=mono]"..
