@@ -53,6 +53,8 @@ pdp13.register_CommandTopic("techage", "load", 8)
 pdp13.register_CommandTopic("techage", "delivered", 9)
 pdp13.register_CommandTopic("techage", "count", 10)
 
+pdp13.register_CommandTopic("techage", "value", 0x80)
+
 pdp13.register_ResponseTopic("techage", "off", 0)
 pdp13.register_ResponseTopic("techage", "on", 1)
 pdp13.register_ResponseTopic("techage", "green", 2)

@@ -120,6 +120,8 @@ local function print_line(pos, mem)
 		add_line(pos, mem, text)
 		if not mem.reader and not mem.writer then -- not on tape tab?
 			M(pos):set_string("formspec", formspec1(pos, mem))
+			mem.reader = false
+			mem.writer = false
 		end
 	end
 end
@@ -213,7 +215,6 @@ local function gen_demotape(pos, demotape)
 				inv:set_stack("main", 1, ItemStack(name))
 				local mem = techage.get_nvm(pos)
 				add_line_to_fifo(pos, mem, "Tape punched")
-				mem.reader = false
 			end, pos, item.name)
 			play_sound(pos)
 			break
@@ -228,7 +229,6 @@ local function gen_rom_tape(pos, rom_tape)
 			inv:set_stack("main", 1, ItemStack(rom_tape))
 			local mem = techage.get_nvm(pos)
 			add_line_to_fifo(pos, mem, "Tape punched")
-			mem.reader = false
 		end, pos, rom_tape)
 		play_sound(pos)
 	end
@@ -419,6 +419,7 @@ techage.register_node({"pdp13:telewriter", "pdp13:telewriter_prog"}, {
 			add_line_to_fifo(pos, mem, "stopped")
 			return true
 		elseif topic == "punch" then  -- punch tape
+			mem.reader = true
 			gen_rom_tape(pos, payload)
 			return true
 		end
