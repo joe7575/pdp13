@@ -120,9 +120,9 @@ local function print_line(pos, mem)
 		add_line(pos, mem, text)
 		if not mem.reader and not mem.writer then -- not on tape tab?
 			M(pos):set_string("formspec", formspec1(pos, mem))
-			mem.reader = false
-			mem.writer = false
 		end
+		mem.reader = false
+		mem.writer = false
 	end
 end
 

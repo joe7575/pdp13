@@ -17,8 +17,15 @@ local M = minetest.get_meta
 
 local SystemHandlers = {}  -- on startup generated: t[address] = func
 
-function pdp13.register_SystemHandler(address, func)
+function pdp13.register_SystemHandler(address, func, desc)
 	SystemHandlers[address] = func
+	if desc then
+		desc = desc:gsub(",", "\\,")
+		desc = desc:gsub("\n", ",")
+		desc = desc:gsub("#", "\\#")
+		desc = desc:gsub(";", "\\;")
+		pdp13.SysDesc = pdp13.SysDesc..","..desc
+	end
 end
 
 local function on_system(pos, address, val1, val2)
@@ -42,7 +49,7 @@ end
 local function telewriter_input_string(pos, address, val1, val2)
 	local number = M(pos):get_string("telewriter_number")
 	local s = send_cmnd(pos, number, "input")
-	if s and vm16.write_ascii(pos, val1, s) then
+	if s and vm16.write_ascii(pos, val1, s.."\000") then
 		--print("telewriter_input_string", val1, s)
 		return #s
 	end

@@ -7,8 +7,8 @@
 loop:
     add  B, #01
     and  B, #$0F    ; values from 0 to 15
-    out #00, A
-    nop
-    nop
+    out #00, A      ; output to 7-segment
+    nop             ; 100 ms delay
+    nop             ; 100 ms delay
     jump loop
     

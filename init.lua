@@ -39,6 +39,9 @@ dofile(MP.."/io/tape.lua")
 dofile(MP.."/io/demotape.lua")
 dofile(MP.."/io/chips.lua")
 
+-- OS
+dofile(MP.."/os/udp.lua")
+
 -- Exams
 dofile(MP.."/exam/exam1.lua")
 

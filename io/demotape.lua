@@ -166,3 +166,37 @@ register_tape("pdp13:tapemonitor", "PDP13 Monitor Program", [[
 :810C00020900040658A7412FFFD6590000A1240
 :110C800FFEB
 :00000FF]])
+
+register_tape("pdp13:udp_send", "PDP13 UPD Send", [[
+; UDP send v1.0
+; Read string from telewriter and send to remote CPU on port #1
+
+start:
+0000: 2010, 0100       move  A, #$100
+0002: 0801             sys   #1        ; read string from telewriter
+0003: 5C10, 0000       bneg  A, start  ; val >= $8000: branch to move
+
+0005: 202D             move  B, #1     ; port # in B
+0006: 2010, 0100       move  A, #$100  ; addr in A
+0008: 0810             sys   #16       ; udp send
+0009: 1200, 0000       jump  start
+]], [[:80000002010010008015C100000202D20100100
+:3000800081012000000
+:00000FF]])
+
+register_tape("pdp13:udp_recv", "PDP13 UPD Receive", [[
+; UDP receive v1.0
+; Read string from remote CPU on port #1 and write to telewriter
+
+start:
+0000: 202D             move  B, #1     ; port # in B
+0001: 2010, 0100       move  A, #$100  ; addr in A
+0003: 0811             sys   #17       ; udp recv
+0004: 5410, 0000       bze   A, start  ; 1 => msg received
+
+0006: 2010, 0100       move  A, #$100
+0008: 0800             sys   #0        ; output string to telewriter
+0009: 1200, 0000       jump  start
+]], [[:8000000202D2010010008115410000020100100
+:3000800080012000000
+:00000FF]])

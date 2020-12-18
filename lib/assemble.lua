@@ -50,6 +50,7 @@ end
 
 local function operand(s)
 	if not s then return 0 end
+	s = string.upper(s)
 	if tOperands[s] then
 		return tOperands[s]
 	end

@@ -41,14 +41,14 @@ end
 --
 function pdp13.register_OutputNumber(own_num, addr, rmt_num)
 	OutputNumbers[own_num] = OutputNumbers[own_num] or {}
-	OutputNumbers[own_num][addr]= rmt_num
+	OutputNumbers[own_num][addr] = rmt_num
 	InputAdresses[own_num] = InputAdresses[own_num] or {}
 	InputAdresses[own_num][rmt_num] = addr
 end
 
 function pdp13.register_AddressType(own_num, addr, type_)
 	AddressTypes[own_num] = AddressTypes[own_num] or {}
-	AddressTypes[own_num][addr]= type_
+	AddressTypes[own_num][addr] = type_
 end
 
 function pdp13.register_CommandTopic(type_, topic_str, cmnd)
@@ -152,4 +152,8 @@ function pdp13.get_output(cpu_num, addr)
 	cpu_num = tonumber(cpu_num) or 0
 	--print("get_output", cpu_num, addr)
 	return (Outputs[cpu_num] or {})[addr]
+end
+
+function pdp13.get_rmt_node_number(cpu_num, addr)
+	return OutputNumbers[cpu_num] and OutputNumbers[cpu_num][addr]
 end
