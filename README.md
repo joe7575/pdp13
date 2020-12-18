@@ -48,4 +48,5 @@ Required: default,tubelib2,techage,vm16
 - 2019-12-03  v0.01  * First draft
 - 2020-12-05  v0.02  * Restructure completely and adapt to new vm16
 - 2020-12-15  v0.03  * Add memory rack, monitor program, ICs and much more"
+- 2020-12-18  v0.04  * Add UDP like communication mechanism"
 
