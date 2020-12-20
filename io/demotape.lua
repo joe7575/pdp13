@@ -40,7 +40,7 @@ local function register_tape(name, desc, text, code)
 		inventory_image = "pdp13_punched_tape.png",
 		groups = {book = 1, flammable = 3, pdp13_tape = 1},
 		on_use = on_use})
-	if name ~= "pdp13:tapemonitor" then -- do not publish
+	if name ~= "pdp13:tapemonitor" and name ~= "pdp13:tapeos" then -- do not publish
 		pdp13.register_demotape(name, desc)
 	end
 end
