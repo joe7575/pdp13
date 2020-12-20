@@ -14,6 +14,8 @@ A computer simulation that will take you back to the beginnings of programming:
 - Telewriter
 - Punch tapes
 - Monitor program with assembler / disassembler (in-game)
+- RAM and ROM chips to expand the computer
+- Communication possibilities between computers
 - Output possibilities like color lamp and 7-segment node
 - Compatible to TechAge to be able control machines
 - Installable assembler application `vm16asm` (on your PC)
@@ -47,7 +49,7 @@ Required: default,tubelib2,techage,vm16
 ### History  
 - 2019-12-03  v0.01  * First draft
 - 2020-12-05  v0.02  * Restructure completely and adapt to new vm16
-- 2020-12-15  v0.03  * Add memory rack, monitor program, ICs and much more"
-- 2020-12-18  v0.04  * Add UDP like communication mechanism"
-- 2020-12-20  v0.05  * Add OS ROM chip and exam2"
+- 2020-12-15  v0.03  * Add memory rack, monitor program, ICs and much more
+- 2020-12-18  v0.04  * Add UDP like communication mechanism
+- 2020-12-20  v0.05  * Add OS ROM chip and exam2
 
