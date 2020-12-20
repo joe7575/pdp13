@@ -64,7 +64,7 @@ local function formspec()
 	"label[0.5,3.0;ROM]"..
 	"container[2,2.2]"..
 	"label[0.0,0.1;Mon.]"..
-	"label[1.0,0.1;  ---]"..
+	"label[1.0,0.1;O/S]"..
 	"label[2.0,0.1;  ---]"..
 	"label[3.0,0.1;  ---]"..
 	"list[context;rom;0,0.6;4,4;]"..
@@ -150,6 +150,9 @@ minetest.register_node("pdp13:mem_rack", {
 			return 1
 		end
 		if listname == "rom" and index == 1 and stack:get_name() == "pdp13:mon_rom" then
+			return 1
+		end
+		if listname == "rom" and index == 2 and stack:get_name() == "pdp13:os_rom" then
 			return 1
 		end
 		return 0

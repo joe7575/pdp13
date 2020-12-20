@@ -16,6 +16,7 @@ local MP = minetest.get_modpath("pdp13")
 
 pdp13 = {}
 
+dofile(MP.."/lib/storage.lua")
 dofile(MP.."/lib/io_lib.lua")
 dofile(MP.."/lib/asm_help.lua")
 dofile(MP.."/lib/command.lua")
@@ -41,10 +42,11 @@ dofile(MP.."/io/chips.lua")
 
 -- OS
 dofile(MP.."/os/udp.lua")
+dofile(MP.."/os/lib.lua")
 
 -- Exams
 dofile(MP.."/exam/exam1.lua")
-
+dofile(MP.."/exam/exam2.lua")
 
 dofile(MP.."/manuals/manual_DE.lua")
 dofile(MP.."/manuals/manual_EN.lua")

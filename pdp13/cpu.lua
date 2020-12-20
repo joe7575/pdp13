@@ -548,13 +548,6 @@ minetest.register_node("pdp13:cpu1_on", {
 	on_timer = function(pos, elapsed)
 		return vm16.run(pos) < vm16.HALT
 	end,
---	on_timer = function(pos, elapsed)
---		local t = minetest.get_us_time()
---		local res = vm16.run(pos)
---		t = minetest.get_us_time() - t
---		print("on_timer", t)
---		return res < vm16.HALT
---	end,
 	on_receive_fields = on_receive_fields_started,
 	pdp13_on_receive = pdp13_on_receive,
 	paramtype2 = "facedir",
@@ -601,7 +594,11 @@ minetest.register_lbm({
 		pdp13.io_restore(pos, number)
 		if vm16.on_load(pos) then
 			if node.name == "pdp13:cpu1" then
-				fs_power_on(pos, mem)
+				if mem.monitor then
+					fs_in_monitor(pos, mem)
+				else
+					fs_power_on(pos, mem)
+				end
 			else
 				fs_cpu_running(pos, mem)
 			end

@@ -64,12 +64,13 @@ local function telewriter_input_number(pos, address, val1, val2)
 end
 
 
-pdp13.SysDesc = [[---------------------------------
-Telewriter:
-  sys #0   ; text output:  addr in A => -
-  sys #1   ; string input: addr in A => size in A
-  sys #2   ; number input:         - => number in A
-]]
+pdp13.SysDesc = [[
++-----+----------------+------------+------+
+|sys #| Telewriter     |   A    B   | rtn  |
++-----+----------------+------------+------+
+ $0    text output      addr   -      
+ $1    string input     addr   -     size
+ $2    number input      -     -     number]]
 
 pdp13.SysDesc = pdp13.SysDesc:gsub(",", "\\,")
 pdp13.SysDesc = pdp13.SysDesc:gsub("\n", ",")

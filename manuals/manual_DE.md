@@ -234,11 +234,13 @@ Um einen ROM Chip herstellen zu können, wird das Programm für den Chip auf Tap
 
 Deshalb soll die Programmierung hier simuliert werden, in dem man eine (einfache) Programmieraufgabe löst, was immer noch nicht ganz einfach ist. Aber man bekommt einen Eindruck, wie aufwändig es damals war, ein Programm zu schreiben.
 
-### Aufgaben 1: PDP-13 Monitor ROM
+[pdp13_tape|image]
+
+### Aufgabe 1: PDP-13 Monitor ROM
 
 Um das Tape für das PDP-13 Monitor ROM zu erhalten, musst du folgende Aufgabe lösen:
 
-*Berechne den Abstand zwischen zwei Punkten im Raum, wobei der Abstand in Blöcken berechnet werden soll, also wie wenn eine Hyperloop-Strecke von pos1 zu pos2 gebaut werden müsste. Die Blöcke für pos1 und pos2 zählen mit. pos1 und pos2 bestehen aus x, y, z Kordinaten, wobei sich alle Werte im Bereich von 0 bis 1000 bewegen, Wenn man bspw. von (0,0,0) nach (1000,1000,1000) eine Strecke bauen müsste, würde man 3001 Blöcke benötigen.*
+*Berechne den Abstand zwischen zwei Punkten im Raum, wobei der Abstand in Blöcken berechnet werden soll, also wie wenn eine Hyperloop-Strecke von pos1 zu pos2 gebaut werden müsste. Die Blöcke für pos1 und pos2 zählen mit. pos1 und pos2 bestehen aus x, y, z Koordinaten, wobei sich alle Werte im Bereich von 0 bis 1000 bewegen, Wenn man bspw. von (0,0,0) nach (1000,1000,1000) eine Strecke bauen müsste, würde man 3001 Blöcke benötigen.*
 
 Das Programm muss zuerst die 6 Werte (x1, y1, z1, x2, y2, z2) über `sys #300` anfordern und am Ende das Ergebnis wieder über `sys #301` ausgeben. Wenn die Berechnung passt und im "Telewriter Operator" befindet sich ein leeres Tape, dann wird bei passendem Ergebnis das Tape geschrieben. In jedem Falle erfolgt eine Chat-Ausgabe über die berechneten Werte. Hier der Rahmen des Programms:
 
@@ -247,8 +249,25 @@ Das Programm muss zuerst die 6 Werte (x1, y1, z1, x2, y2, z2) über `sys #300` a
 0B00       ; sys #$300      (die 6 Werte anfordern, diese stehen dann in $100-$105)
 ....
 0B01       ; sys #$301      (das Rechenergebnis muss zuvor in A gespeichert sein)
-1C00       ; halt           (wichtig, sonst läuft das Programm unkontroliert weiter)
+1C00       ; halt           (wichtig, sonst läuft das Programm unkontrolliert weiter)
 ```
 
+[pdp13_tape|image]
 
+### Aufgabe 2: PDP-13 OS ROM
 
+Um das Tape für das PDP-13 OS ROM zu erhalten, musst du folgende Aufgabe lösen:
+
+*Wandle die übergebenen Wert (0..65535) um in einen String mit der dezimalen Darstellung der Zahl (das was bspw. auch die Lua-Funktion `tostring()` macht).*
+
+Das Programm muss zuerst den Wert über `sys #302` anfordern und am Ende das Ergebnis wieder über `sys #303` ausgeben. Wenn die Umwandlung passt und im "Telewriter Operator" befindet sich ein leeres Tape, dann wird bei passendem Ergebnis das Tape geschrieben. In jedem Falle erfolgt eine Chat-Ausgabe mit den Strings. Hier der Rahmen des Programms:
+
+```assembly
+sys #$302      ; den Werte anfordern, dieser stehen dann in A
+....
+move A, #$nnn  ; A mit der String-Adresse laden
+sys #$303      ; Ergebnis übergeben
+halt           ; wichtig, sonst läuft das Programm unkontrolliert weiter
+```
+
+[pdp13_tape|image]

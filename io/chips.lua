@@ -30,6 +30,11 @@ minetest.register_craftitem("pdp13:mon_rom", {
 	inventory_image = "pdp13_rom.png",
 })
 
+minetest.register_craftitem("pdp13:os_rom", {
+	description = "PDP-13 OS ROM",
+	inventory_image = "pdp13_rom.png",
+})
+
 minetest.register_craftitem("pdp13:ic1", {
 	description = "PDP-13 IC small",
 	inventory_image = "pdp13_ic1.png",

@@ -419,6 +419,7 @@ techage.register_node({"pdp13:telewriter", "pdp13:telewriter_prog"}, {
 			add_line_to_fifo(pos, mem, "stopped")
 			return true
 		elseif topic == "punch" then  -- punch tape
+			local mem = techage.get_nvm(pos)
 			mem.reader = true
 			gen_rom_tape(pos, payload)
 			return true
