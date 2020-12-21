@@ -16,17 +16,24 @@ local MP = minetest.get_modpath("pdp13")
 
 pdp13 = {}
 
+-- Library
 dofile(MP.."/lib/storage.lua")
 dofile(MP.."/lib/io_lib.lua")
-dofile(MP.."/lib/asm_help.lua")
 dofile(MP.."/lib/command.lua")
-dofile(MP.."/lib/opcodes.lua")
-dofile(MP.."/lib/assemble.lua")
-dofile(MP.."/lib/disassemble.lua")
-dofile(MP.."/lib/monitor.lua")
+dofile(MP.."/lib/system.lua")
+
+-- OS
+dofile(MP.."/os/asm_help.lua")
+dofile(MP.."/os/os_lib.lua")
+dofile(MP.."/os/opcodes.lua")
+dofile(MP.."/os/assemble.lua")
+dofile(MP.."/os/disassemble.lua")
+dofile(MP.."/os/monitor.lua")
+dofile(MP.."/os/udp.lua")
+--dofile(MP.."/os/shell.lua")
+
 
 -- PDP-13
-dofile(MP.."/pdp13/system.lua")
 dofile(MP.."/pdp13/cpu.lua")
 dofile(MP.."/pdp13/power.lua")
 dofile(MP.."/pdp13/io_rack.lua")
@@ -36,18 +43,18 @@ dofile(MP.."/pdp13/mem_rack.lua")
 dofile(MP.."/io/lamp.lua")
 dofile(MP.."/io/7segment.lua")
 dofile(MP.."/io/telewriter.lua")
-dofile(MP.."/io/tape.lua")
-dofile(MP.."/io/demotape.lua")
-dofile(MP.."/io/chips.lua")
+dofile(MP.."/io/terminal.lua")
 
--- OS
-dofile(MP.."/os/udp.lua")
-dofile(MP.."/os/lib.lua")
+-- Items
+dofile(MP.."/items/tape.lua")
+dofile(MP.."/items/demotape.lua")
+dofile(MP.."/items/chips.lua")
 
 -- Exams
 dofile(MP.."/exam/exam1.lua")
 dofile(MP.."/exam/exam2.lua")
 
+-- Manuals
 dofile(MP.."/manuals/manual_DE.lua")
 dofile(MP.."/manuals/manual_EN.lua")
 

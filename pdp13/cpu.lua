@@ -326,6 +326,9 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 	elseif cmnd == "reg_tele" then
 		M(pos):set_string("telewriter_number", data)
 		return M(pos):get_string("node_number")
+	elseif cmnd == "reg_term" then
+		M(pos):set_string("terminal_number", data)
+		return M(pos):get_string("node_number")
 	elseif cmnd == "reg_prog" then
 		M(pos):set_string("programmer_number", data)
 		return M(pos):get_string("node_number")

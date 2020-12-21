@@ -16,7 +16,7 @@ local Commands = {}  -- [cmnd] = func(pos, mem, cmd, rest): returns list of outp
 
 local function hex_dump(tbl)
 	local t2 = {}
-	for _,val in ipairs(tbl) do
+	for _,val in ipairs(tbl or {}) do
 		t2[#t2+1] = string.format("%04X", val)
 	end
 	return table.concat(t2, " ")
@@ -237,3 +237,8 @@ function pdp13.monitor(cpu_pos, mem, command)
 		end
 	end
 end
+
+
+pdp13.hex_dump = hex_dump
+pdp13.mem_dump = mem_dump
+pdp13.convert_to_numbers = convert_to_numbers
