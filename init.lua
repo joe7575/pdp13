@@ -30,7 +30,7 @@ dofile(MP.."/os/assemble.lua")
 dofile(MP.."/os/disassemble.lua")
 dofile(MP.."/os/monitor.lua")
 dofile(MP.."/os/udp.lua")
---dofile(MP.."/os/shell.lua")
+dofile(MP.."/os/shell.lua")
 
 
 -- PDP-13

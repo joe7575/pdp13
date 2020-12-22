@@ -29,9 +29,8 @@ local function format_text(mem)
 	return table.concat(t, "\n")
 end
 
-local function formspec1(pos, mem)
+local function formspec1(mem)
 	mem.redraw = (mem.redraw or 0) + 1
-	local mon = M(pos):get_int("monitor") == 1
 	return "size[10,8.5]" ..
 		"label[-2,-2;"..mem.redraw.."]"..
 		"container[0.2,0.2]"..
@@ -40,23 +39,20 @@ local function formspec1(pos, mem)
 		"label[0,0;"..format_text(mem).."]"..
 		"container_end[]"..
 		"style_type[label;font=normal]"..
-		"field[2.6,8;5.4,0.8;command;;]"..
+		"field[0.2,8;7.4,0.8;command;;]"..
 		"button[7.94,7.6;1.7,1;enter;enter]"..
 		"field_close_on_enter[command;false]"
 end
 
-local function formspec2(mem)
+local function formspec2(code)
 	return "size[10,8.5]" ..
-		"label[-2,-2;"..mem.redraw.."]"..
-		"bgcolor[#000000;false]"..
-		"container[0.2,0.2]"..
-		"style_type[label;font=mono]"..
-		"label[0,0;"..format_text(mem).."]"..
-		"container_end[]"..
-		"style_type[label;font=normal]"..
-		"field[2.6,8;5.4,0.8;command;;]"..
-		"button[7.94,7.6;1.7,1;enter;enter]"..
-		"field_close_on_enter[command;false]"
+		default.gui_bg..
+		default.gui_bg_img..
+		default.gui_slots..
+		"style_type[textarea;font=mono]"..
+		"textarea[0.3,0;10,9.3;edit;;"..code.."]"..
+		"button[5.4,7.9;1.8,1;cancel;Cancel]"..
+		"button[7.3,7.9;1.8,1;save;Save]"
 end
 
 local function send_to_cpu(pos, topic, payload)
@@ -80,7 +76,7 @@ local function print_lines(pos, mem, lines)
 	for _, line in ipairs(lines) do
 		add_line(pos, mem, line)
 	end
-	M(pos):set_string("formspec", formspec1(pos, mem))
+	M(pos):set_string("formspec", formspec1(mem))
 end
 
 local function register_terminal(_type, description, command)
@@ -126,7 +122,7 @@ local function register_terminal(_type, description, command)
 			meta:set_string("cpu_number", cpu_num)
 			local cpu_pos = (techage.get_node_info(cpu_num) or {}).pos
 			meta:set_string("cpu_pos", P2S(cpu_pos))
-			meta:set_string("formspec", formspec1(pos, mem))
+			meta:set_string("formspec", formspec1(mem))
 			if cpu_num then
 				meta:set_string("infotext", description..": Connected")
 			else
@@ -139,18 +135,41 @@ local function register_terminal(_type, description, command)
 				return
 			end
 			local mem = techage.get_nvm(pos)
-			mem.codes = mem.codes or {}
+			mem.cpu_pos = mem.cpu_pos or S2P(M(pos):get_string("cpu_pos"))
+				
+			print(dump(fields))
 			if fields.key_enter_field or fields.enter then
 				if M(pos):get_int("monitor") == 1 then
+					print("monitor")
 					local lines = pdp13.monitor(mem.cpu_pos, mem, fields.command or "")
 					print_lines(pos, mem, lines)
-				else
-					print_lines(pos, mem, {fields.command or ""})
+				elseif mem.app then
 					mem.input = fields.command or ""
+					print("mem.app")
+				else
+					print("else")
+					local state, resp = pdp13.shell(mem.cpu_pos, mem, fields.command or "")
+					print("shell", state, dump(resp))
+					if state == "app" then
+						mem.app = true
+						mem.edit = false
+						mem.input = fields.command or ""
+						print_lines(pos, mem, resp)
+					elseif state == "edit" then
+						mem.app = false
+						mem.edit = true
+						M(pos):set_string("formspec", formspec2(resp))
+					else
+						print_lines(pos, mem, resp)
+					end
 				end
-			elseif fields.clear then
-				mem.lines = {}
-				M(pos):set_string("formspec", formspec1(pos, mem))
+			elseif fields.save then
+				local resp = pdp13.shell_file_save(mem.cpu_pos, mem, fields.edit)
+				mem.edit = false
+				print_lines(pos, mem, resp)
+			elseif fields.cancel then
+				mem.edit = false
+				print_lines(pos, mem, {"canceled"})
 			end
 		end,
 		
