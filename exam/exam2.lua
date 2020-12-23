@@ -37,11 +37,12 @@ local function exam2_check_result(pos, address, val1, val2)
 	return mem.exam2_res == s and 1 or 0
 end
 
-local s1 = [[+-----+----------------+------------+------+
-|sys #| Exam2          |   A    B   | rtn  |
-+-----+----------------+------------+------+
- $302  request number    -      -    number]]
-local s2 = " $303  provide string   addr"
-pdp13.register_SystemHandler(0x0302, exam2_provide_positions, s1)
-pdp13.register_SystemHandler(0x0303, exam2_check_result, s2)
+local help = [[+-----+----------------+-------------+------+
+|sys #| Exam2          | A    | B    | rtn  |
++-----+----------------+-------------+------+
+ $302  request number    -      -     number
+ $303  provide string   addr    -     1=ok]]
+
+pdp13.register_SystemHandler(0x0302, exam2_provide_positions, help)
+pdp13.register_SystemHandler(0x0303, exam2_check_result)
 

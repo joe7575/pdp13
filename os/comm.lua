@@ -55,12 +55,11 @@ local function upd_receive(pos, address, val1, val2)
 	return 65535
 end
 
-local help = [[+-----+----------------+------------+------+
-|sys #| O/S            |   A    B   | rtn  |
-+-----+----------------+------------+------+
- $10   send datagram    addr   port  1=ok
- $11   recv datagram    addr   port  1=ok]]
+local help = [[+-----+----------------+-------------+------+
+|sys #| Communication  | A    | B    | rtn  |
++-----+----------------+-------------+------+
+ $40   send datagram    @data  port   1=ok
+ $41   recv datagram    @dest  port   1=ok]]
 
-
-pdp13.register_SystemHandler(16, upd_send, help)
-pdp13.register_SystemHandler(17, upd_receive)
+pdp13.register_SystemHandler(40, upd_send, help)
+pdp13.register_SystemHandler(41, upd_receive)

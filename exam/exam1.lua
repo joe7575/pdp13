@@ -47,12 +47,11 @@ local function exam1_check_result(pos, address, val1, val2)
 	return mem.exam1_dist == val1 and 1 or 0
 end
 
-local s1 = [[+-----+----------------+------------+------+
-|sys #| Exam1          |   A    B   | rtn  |
-+-----+----------------+------------+------+
- $300  request pos1/2   addr    -    1=ok]]
+local s1 = [[+-----+----------------+-------------+------+
+|sys #| Exam1          | A    | B    | rtn  |
+ $300  request pos1/2   addr    -     1=ok]]
 
-local s2 = " $301  provide dist     result  -    1=ok"
+local s2 = " $301  provide dist     result  -     1=ok"
 pdp13.register_SystemHandler(0x0300, exam1_provide_positions, s1)
 pdp13.register_SystemHandler(0x0301, exam1_check_result, s2)
 

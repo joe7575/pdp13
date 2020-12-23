@@ -64,7 +64,7 @@ end
 -- start
 Commands["st"] = function(pos, mem, cmd, rest)
 	pdp13.start_cpu(pos)
-	mem.monitor = false
+	techage.get_nvm(pos).monitor = true
 	mem.mstate = nil
 	return {"running"}
 end
@@ -72,6 +72,7 @@ end
 -- stop
 Commands["sp"] = function(pos, mem, cmd, rest)
 	pdp13.stop_cpu(pos)
+	techage.get_nvm(pos).monitor = true
 	mem.mstate = nil
 	local cpu = vm16.get_cpu_reg(pos)
 	local num, s = pdp13.disassemble(cpu)
@@ -81,6 +82,7 @@ end
 -- reset
 Commands["rt"] = function(pos, mem, cmd, rest)
 	vm16.set_pc(pos, 0) 
+	techage.get_nvm(pos).monitor = true
 	mem.mstate = nil
 	local cpu = vm16.get_cpu_reg(pos)
 	local num, s = pdp13.disassemble(cpu)
@@ -90,6 +92,7 @@ end
 -- next step
 Commands["n"] = function(pos, mem, cmd, rest)
 	pdp13.single_step_cpu(pos)
+	techage.get_nvm(pos).monitor = true
 	mem.mstate = nil
 	local cpu = vm16.get_cpu_reg(pos)
 	local num, s = pdp13.disassemble(cpu)
@@ -99,6 +102,7 @@ end
 -- register
 Commands["r"] = function(pos, mem, cmd, rest)
 	local cpu = vm16.get_cpu_reg(pos)
+	techage.get_nvm(pos).monitor = true
 	mem.mstate = nil
 	return {
 		string.format("A:%04X B:%04X C:%04X D:%04X", cpu.A, cpu.B, cpu.C, cpu.D),
@@ -109,6 +113,7 @@ end
 -- set address
 Commands["ad"] = function(pos, mem, cmd, rest)
 	local addr = pdp13.string_to_number(rest)
+	techage.get_nvm(pos).monitor = true
 	mem.mstate = nil
 	vm16.set_pc(pos, addr) 
 	local cpu = vm16.get_cpu_reg(pos)
@@ -118,6 +123,7 @@ end
 	
 -- dump memory
 Commands["d"] = function(pos, mem, cmd, rest)
+	techage.get_nvm(pos).monitor = true
 	if cmd == "d" then
 		mem.mstate = "d"
 		mem.maddr = pdp13.string_to_number(rest)
@@ -135,6 +141,7 @@ end
 
 -- enter data
 Commands["en"] = function(pos, mem, cmd, rest)
+	techage.get_nvm(pos).monitor = true
 	if cmd == "en" then
 		mem.mstate = "en"
 		mem.maddr = pdp13.string_to_number(rest)
@@ -150,6 +157,7 @@ end
 		
 -- assemble
 Commands["as"] = function(pos, mem, cmd, rest)
+	techage.get_nvm(pos).monitor = true
 	if cmd == "as" then
 		mem.mstate = "as"
 		mem.maddr = pdp13.string_to_number(rest)
@@ -169,6 +177,7 @@ end
 
 -- disassemble
 Commands["di"] = function(pos, mem, cmd, rest)
+	techage.get_nvm(pos).monitor = true
 	if cmd == "di" then
 		mem.mstate = "di"
 		mem.maddr = pdp13.string_to_number(rest)
@@ -190,11 +199,12 @@ end
 
 -- copy text
 Commands["ct"] = function(pos, mem, cmd, rest)
+	techage.get_nvm(pos).monitor = true
 	mem.mstate = nil
 	local words = string.split(rest, " ", true, 1)
 	if #words == 2 then
 		local addr = pdp13.string_to_number(words[1])
-		vm16.write_ascii(pos, addr, words[2])
+		vm16.write_ascii(pos, addr, words[2].."\000")
 		return {"text copied"}
 	end
 	return {"error!"}
@@ -202,6 +212,7 @@ end
 
 -- copy memory
 Commands["cm"] = function(pos, mem, cmd, rest)
+	techage.get_nvm(pos).monitor = true
 	mem.mstate = nil
 	local words = string.split(rest, " ", false, 2)
 	if #words == 3 then
@@ -219,7 +230,7 @@ end
 
 -- exit monitor
 Commands["ex"] = function(pos, mem, cmd, rest)
-	mem.monitor = false
+	techage.get_nvm(pos).monitor = false
 	pdp13.exit_monitor(pos)
 	return {"finished."}
 end

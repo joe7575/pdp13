@@ -8,7 +8,7 @@
 	AGPL v3
 	See LICENSE.txt for more information
 	
-	PDP-13 Memeory Rack
+	PDP-13 Memory Rack
 
 ]]--
 
@@ -45,7 +45,7 @@ local function register_memory_data(pos)
 	end
 	
 	local names = {"pdp13:cpu1", "pdp13:cpu1_on"}
-	pdp13.send(pos, names, "memory", {ram=ram, rom=rom})
+	pdp13.send(pos, nil, names, "memory", {ram=ram, rom=rom})
 end
 
 local function formspec()

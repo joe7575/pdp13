@@ -27,9 +27,12 @@ local function number_to_string(pos, address, val1, val2)
 	return 1
 end
 
---          |sys # | O/S            |   A    B   | rtn  |
-local s1 = " $18   string to num    addr    -    number"
-local s2 = " $19   num to string    number addr  1=ok"
-pdp13.register_SystemHandler(0x18, string_to_number, s1)
-pdp13.register_SystemHandler(0x19, number_to_string, s2)
---pdp13.register_SystemHandler(0x0301, number_to_string, s2)
+local help = [[+-----+----------------+-------------+------+
+|sys #| stdlib         | A    | B    | rtn  |
++-----+----------------+-------------+------+
+ $20   string to num    @str    -     number
+ $21   num to string    number @dest  1=ok"]]
+ 
+pdp13.register_SystemHandler(0x20, string_to_number, help)
+pdp13.register_SystemHandler(0x21, number_to_string)
+--pdp13.register_SystemHandler(0x22, number_to_string, s2)

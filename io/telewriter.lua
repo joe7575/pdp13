@@ -18,6 +18,7 @@ local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = minetest.string_to_pos
 
 local DELAY = 0.5	-- time for one line
+local STR_LEN = 64
 
 local DemoTapes = {}
 
@@ -262,7 +263,7 @@ local function after_place_node(pos, placer, itemstack, name, cmnd, ntype)
 	meta:set_string("owner", placer:get_player_name())
 	local own_num = techage.add_node(pos, name)
 	meta:set_string("node_number", own_num)
-	local cpu_num = pdp13.send(pos, {"pdp13:cpu1", "pdp13:cpu1_on"}, cmnd, own_num)
+	local cpu_num = pdp13.send(pos, nil, {"pdp13:cpu1", "pdp13:cpu1_on"}, cmnd, own_num)
 	meta:set_string("cpu_number", cpu_num)
 	local cpu_pos = (techage.get_node_info(cpu_num) or {}).pos
 	meta:set_string("cpu_pos", P2S(cpu_pos))
@@ -290,7 +291,7 @@ local function on_receive_fields(pos, formname, fields, player)
 			add_lines_to_fifo(pos, mem, lines)
 		else
 			add_line_to_fifo(pos, mem, fields.command or "")
-			mem.input = fields.command or ""
+			mem.input = string.sub(fields.command or "", 1, STR_LEN)
 		end
 	elseif fields.clear then
 		mem.lines = {}

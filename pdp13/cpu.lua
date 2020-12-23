@@ -15,10 +15,13 @@
 
 -- for lazy programmers
 local M = minetest.get_meta
+local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
+local S2P = minetest.string_to_pos
 
 local function programmer_cmnd(pos, cmd, payload)
 	local dst_num = M(pos):get_string("programmer_number")
 	local own_num = M(pos):get_string("node_number")
+	print("programmer_cmnd", own_num, dst_num, cmd, payload)
 	return techage.send_single(own_num, dst_num, cmd, payload)
 end
 
@@ -327,8 +330,8 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 		M(pos):set_string("telewriter_number", data)
 		return M(pos):get_string("node_number")
 	elseif cmnd == "reg_term" then
-		M(pos):set_string("terminal_number", data)
-		return M(pos):get_string("node_number")
+		M(pos):set_string("terminal_pos", P2S(data))
+		return pos
 	elseif cmnd == "reg_prog" then
 		M(pos):set_string("programmer_number", data)
 		return M(pos):get_string("node_number")
@@ -345,8 +348,8 @@ end
 
 -- update CPU formspec
 local function on_update(pos, resp, cpu)
-	--print("on_update")
 	local mem = techage.get_nvm(pos)
+	print("on_update", mem.monitor)
 	-- External controlled?
 	if mem.monitor then
 		programmer_cmnd(pos, "stopped", resp)
