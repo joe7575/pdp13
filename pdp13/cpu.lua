@@ -299,24 +299,95 @@ local function fs_in_monitor(pos, mem)
 	end
 end	
 
+local function reset_periphery_settings(meta)
+	meta:set_string("telewriter_number", "")
+	meta:set_string("terminal_pos", "")
+	meta:set_string("programmer_number", "")
+	meta:set_string("tape_pos", "")
+	meta:set_string("hdd_pos", "")
+	meta:set_int("has_tape", 0)
+	meta:set_int("has_hdd", 0)
+	meta:set_int("ram_size", 0)
+	meta:set_int("rom_size", 0)
+end
+
+local function add_periphery_settings(pos, meta, cmnd, data)
+	print("add_periphery_settings", cmnd, dump(data))
+	if cmnd == "reg_tele" then
+		meta:set_string("telewriter_number", data)
+		return M(pos):get_string("node_number")
+	elseif cmnd == "reg_term" then
+		meta:set_string("terminal_pos", P2S(data))
+		return pos
+	elseif cmnd == "reg_prog" then
+		meta:set_string("programmer_number", data)
+		return meta:get_string("node_number")
+	elseif cmnd == "reg_tape" then
+		meta:set_string("tape_pos", P2S(data))
+		meta:set_int("has_tape", 1)
+		return pos
+	elseif cmnd == "reg_hdd" then
+		meta:set_string("hdd_pos", P2S(data))
+		meta:set_int("has_hdd", 1)
+		return pos
+	elseif cmnd == "memory" then
+		meta:set_int("ram_size", data.ram or 4)
+		meta:set_int("rom_size", data.rom or 0)
+		return pos
+	else
+		return false
+	end
+end
+
+
+local function selftest(pos, mem, number, ram_size)
+	if pos and mem then
+		local rom_size = pdp13.tROM_SIZE[M(pos):get_int("rom_size")]
+		local io_size = (mem.num_ioracks or 0) * 8
+		local telewriter = M(pos):get_string("telewriter_number") ~= "" and "Telewriter..ok  " or ""
+		local terminal   = M(pos):get_string("terminal_pos") ~= "" and "Terminal..ok" or ""
+		local programmer = M(pos):get_string("programmer_number") ~= "" and "Programmer..ok" or ""
+		local tape_drive = M(pos):get_int("has_tape") == 1 and "Tape drive..ok  " or ""
+		local hard_disk  = M(pos):get_int("has_hdd") == 1 and "Hard disk..ok" or ""
+		if rom_size >= 8 then
+			mem.regABXY = "RAM="..ram_size.."K   ROM="..rom_size.."K   I/O="..io_size
+			mem.cmnd1   = telewriter..terminal
+			mem.cmnd2   = programmer
+			if rom_size >= 16 then
+				mem.cmnd3 = tape_drive..hard_disk
+			else
+				mem.cmnd3 = ""
+			end
+			update_formspec(pos, mem)
+		end
+	end
+end
+
 -- For Rack communication
 local function pdp13_on_receive(pos, src_pos, cmnd, data)
 	if cmnd == "power" then
 		if data == "on" then
 			local mem = techage.get_nvm(pos)
-			local ram_size = M(pos):get_int("ram_size")
+			local meta = M(pos)
+			local ram_size = meta:get_int("ram_size")
+			local rom_size = meta:get_int("rom_size")
 			if ram_size == 0 then ram_size = 4 end
 			if vm16.on_power_on(pos, ram_size/4) then
 				fs_power_on(pos, mem)
 			end
-			local number = M(pos):get_string("node_number")
+			local number = meta:get_string("node_number")
 			pdp13.io_store(pos, number)
+			selftest(pos, mem, number, ram_size)
+			local has_tape = meta:get_int("has_tape") and rom_size >= 2
+			local has_hdd = meta:get_int("has_hdd") and rom_size >= 3
+			pdp13.init_filesystem(pos, has_tape, has_hdd)
 			return true
 		elseif data == "off" then
 			minetest.get_node_timer(pos):stop()
-			local mem = techage.get_nvm(pos)
+			reset_periphery_settings(M(pos))
 			if vm16.on_power_off(pos) then
 				swap_node(pos, "pdp13:cpu1")
+				local mem = techage.get_nvm(pos)
 				fs_power_off(pos, mem)
 			end
 			return true
@@ -326,23 +397,10 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 		local mem = techage.get_nvm(pos)
 		mem.num_ioracks = (mem.num_ioracks or 0) + 1
 		return mem.num_ioracks - 1
-	elseif cmnd == "reg_tele" then
-		M(pos):set_string("telewriter_number", data)
-		return M(pos):get_string("node_number")
-	elseif cmnd == "reg_term" then
-		M(pos):set_string("terminal_pos", P2S(data))
-		return pos
-	elseif cmnd == "reg_prog" then
-		M(pos):set_string("programmer_number", data)
-		return M(pos):get_string("node_number")
 	elseif cmnd == "cpu_num" then
-		--print("CPU cpu_num", M(pos):get_string("node_number"))
 		return M(pos):get_string("node_number")
-	elseif cmnd == "memory" then
-		M(pos):set_int("ram_size", data.ram or 4)
-		M(pos):set_int("rom_size", data.rom or 0)
 	else
-		print(cmnd, dump(data))
+		return add_periphery_settings(pos, M(pos), cmnd, data)
 	end
 end
 

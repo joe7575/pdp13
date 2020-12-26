@@ -17,7 +17,7 @@ local M = minetest.get_meta
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = minetest.string_to_pos
 
-local NUM_CHARS = 64
+local NUM_CHARS = pdp13.MAX_LINE_LEN
 
 local function send_cmnd(pos, dst_num, topic, payload)
 	local own_num = M(pos):get_string("node_number")

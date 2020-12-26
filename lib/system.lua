@@ -36,3 +36,21 @@ end
 
 -- Overwrite one of the five event handlers
 vm16.register_callbacks(nil, nil, on_system)
+
+-- For fake calls from Lua
+-- if val is a string, addr is the VM address for the string in val
+function pdp13.sys_call(pos, address, val1, val2, addr1, addr2)
+	if val1 then
+		if type(val1) == "string" then
+			vm16.write_ascii(pos, addr1, val1.."\000")
+			val1 = addr1
+		end
+	end
+	if val2 then
+		if type(val2) == "string" then
+			vm16.write_ascii(pos, addr2, val2.."\000")
+			val2 = addr2
+		end
+	end
+	return SystemHandlers[address](pos, address, val1, val2)
+end

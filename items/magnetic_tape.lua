@@ -8,7 +8,7 @@
 	AGPL v3
 	See LICENSE.txt for more information
 	
-	PDP-13 tape
+	PDP-13 Magnetic Tape
 
 ]]--
 
@@ -20,34 +20,32 @@ local function on_use(itemstack, user)
 	local data = meta:to_table().fields
 	local name = data.name or ""
 	local desc = data.desc or ""
-	local code = data.code or ""
+	local size = string.len(data.code or "")
 
 	name = minetest.formspec_escape(name)
 	desc = minetest.formspec_escape(desc)
-	code = minetest.formspec_escape(code)
 	
-	local formspec = "size[10,8.5]"..
+	local formspec = "size[10,4]"..
 		default.gui_bg..
 		default.gui_bg_img..
 		default.gui_slots..
 		"field[0.3,0.5;10,1;name;Name:;"..name.."]"..
 		"textarea[0.3,1.6;10,1.8;desc;Description:;"..desc.."]"..
-		"style_type[textarea,table;font=mono]"..
-		"textarea[0.3,3.6;10,5;code;Code:;"..code.."]"..
+		"label[0,3.3;Used: "..size.." bytes]"..
 		"button_exit[3.5,7.8;3,1;save;Save]"
 	
 	local player_name = user:get_player_name()
-	minetest.show_formspec(player_name, "pdp13:tape", formspec)
+	minetest.show_formspec(player_name, "pdp13:magnetic_tape", formspec)
 	return itemstack
 end
 
 
 minetest.register_on_player_receive_fields(function(player, formname, fields)
-	if formname ~= "pdp13:tape" then return end
+	if formname ~= "pdp13:magnetic_tape" then return end
 	local inv = player:get_inventory()
 	local stack = player:get_wielded_item()
 
-	if fields.save and fields.name and fields.name ~= "" then
+	if fields.save then
 		local data = stack:get_meta():to_table().fields or {}
 		data.name = fields.name:sub(1, MAX_SIZE)
 		data.description = data.name
@@ -58,18 +56,17 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	player:set_wielded_item(stack)
 end)
 
-minetest.register_craftitem("pdp13:tape", {
-	description = "PDP-13 Tape",
-	inventory_image = "pdp13_punched_tape.png",
-	groups = {book = 1, flammable = 3, pdp13_tape = 1},
+minetest.register_craftitem("pdp13:magnetic_tape", {
+	description = "PDP-13 Magnetic Tape",
+	inventory_image = "pdp13_magnetic_tape.png",
+	groups = {book = 1, flammable = 3, pdp13_mtape = 1},
 	on_use = on_use,
 })
 
-minetest.register_craft({
-	output = "pdp13:tape",
-	recipe = {
-		{"", "default:paper", "default:paper"},
-		{"", "dye:yellow", "default:paper"},
-		{"default:paper", "default:paper", "default:paper"},
-	},
+techage.recipes.add("ta3_electronic_fab", {
+	output = "pdp13:magnetic_tape 1",
+	input = {
+		"basic_materials:plastic_strip 4", 
+		"dye:dark_green 1"
+	}
 })

@@ -228,6 +228,26 @@ Alle Kommandos unterstützen die dezimale und hexadezimale Eingabe von Zahlen, `
 
 [pdp13_telewriter|image]
 
+## BIOS ROM
+
+Hat man den Rechner mit dem "BIOS ROM" Chip erweitert, hat der Rechner Zugriff auf das Terminal und auf das Filesystem des Bandlaufwerks und der Festplatte. Der Rechner kann damit theoretisch von einem der Laufwerke booten, wenn er denn eine Betriebssystem hätte, aber dazu später mehr.
+
+Zur Verfügung stehen ab sofort folgende zusätzliche sys Kommandos:
+
+| sys Nr. (hex) | Bedeutung                          | Parameter                                      | Ergebnis        |
+| ------------- | ---------------------------------- | ---------------------------------------------- | --------------- |
+| 50            | file open                          | A = @file name                                 | file reference  |
+| 51            | file close                         | A = file reference                             | 1=ok, 0=error   |
+| 52            | read file (ins Shared Memory)      | A = file reference                             | 1=ok, 0=error   |
+| 53            | read line                          | A = file reference                             | 1=ok, 0=error   |
+| 54            | write file (aus dem Shared Memory) | A = file reference                             | 1=ok, 0=error   |
+| 55            | write line                         | A = file reference                             | 1=ok, 0=error   |
+| 56            | file size                          | A = @file name                                 | size in bytes   |
+| 57            | list files                         | A = @file name pattern                         | number of files |
+| 58            | remove files                       | A = @file name pattern                         | number of files |
+| 59            | copy file                          | A = @source file name<br />B = @dest file name | 1=ok, 0=error   |
+| 5A            | move file                          | A = @source file name<br />B = @dest file name | 1=ok, 0=error   |
+
 ## Programmieraufgaben
 
 Um einen ROM Chip herstellen zu können, wird das Programm für den Chip auf Tape benötigt. Diese Aufgabe in echt zu lösen wäre zwar eine Herausforderung, aber für 99,9 % der Spieler kaum zu lösen.
@@ -254,9 +274,9 @@ Das Programm muss zuerst die 6 Werte (x1, y1, z1, x2, y2, z2) über `sys #300` a
 
 [pdp13_tape|image]
 
-### Aufgabe 2: PDP-13 OS ROM
+### Aufgabe 2: PDP-13 BIOS ROM
 
-Um das Tape für das PDP-13 OS ROM zu erhalten, musst du folgende Aufgabe lösen:
+Um das Tape für das PDP-13 BIOS ROM zu erhalten, musst du folgende Aufgabe lösen:
 
 *Wandle die übergebenen Wert (0..65535) um in einen String mit der dezimalen Darstellung der Zahl (das was bspw. auch die Lua-Funktion `tostring()` macht).*
 

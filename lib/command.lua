@@ -8,7 +8,7 @@
 	AGPL v3
 	See LICENSE.txt for more information
 	
-	PDP-13 Helper Functions
+	PDP-13 Inter-node communication
 
 ]]--
 
@@ -20,6 +20,9 @@ pdp13.AllNodes = {
 	"pdp13:io_rack", "pdp13:io_rack_top",
 	"pdp13:mem_rack",
 	"pdp13:tape_drive",
+	"pdp13:hard_disk",
+	"pdp13:telewriter", "pdp13:telewriter_prog",
+	"pdp13:terminal", "pdp13:terminal_prog",
 }
 
 -- For communication purposes between PDP13 nodes.
@@ -45,8 +48,8 @@ end
 -- Provide for all nodes, returns the number of receivers
 function pdp13.publish(src_pos, names, cmnd, data)
 	local cnt = 0
-	local pos1 = {x = src_pos.x-RANGE, y = src_pos.y-RANGE, z = src_pos.z-range}
-	local pos2 = {x = src_pos.x+RANGE, y = src_pos.y+RANGE, z = src_pos.z+range}
+	local pos1 = {x = src_pos.x-RANGE, y = src_pos.y-RANGE, z = src_pos.z-RANGE}
+	local pos2 = {x = src_pos.x+RANGE, y = src_pos.y+RANGE, z = src_pos.z+RANGE}
 	for _, dest_pos in ipairs(minetest.find_nodes_in_area(pos1, pos2, names)) do
 		local ndef = minetest.registered_nodes[minetest.get_node(dest_pos).name]
 		if ndef and ndef.pdp13_on_receive then

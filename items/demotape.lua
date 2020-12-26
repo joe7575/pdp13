@@ -38,14 +38,14 @@ local function register_tape(name, desc, text, code)
 		code = code,
 		stack_max = 1,
 		inventory_image = "pdp13_punched_tape.png",
-		groups = {book = 1, flammable = 3, pdp13_tape = 1},
+		groups = {book = 1, flammable = 3, pdp13_ptape = 1},
 		on_use = on_use})
-	if name ~= "pdp13:tapemonitor" and name ~= "pdp13:tapeos" then -- do not publish
+	if name ~= "pdp13:tape_monitor" and name ~= "pdp13:tape_bios" then -- do not publish
 		pdp13.register_demotape(name, desc)
 	end
 end
 
-register_tape("pdp13:tape7seg", "7-Segment Demo", [[
+register_tape("pdp13:tape_7seg", "7-Segment Demo", [[
 ; 7 segment demo v1.0
 ; PDP13 7-Segment on port #0
 
@@ -63,7 +63,7 @@ register_tape("pdp13:tape7seg", "7-Segment Demo", [[
 :500080065800000000012000004
 :00000FF]])
 
-register_tape("pdp13:tapecolor", "Color Lamp Demo", [[
+register_tape("pdp13:tape_color", "Color Lamp Demo", [[
 ; Color lamp demo v1.0
 ; PDP13 Color Lamp on port #0
 
@@ -80,7 +80,7 @@ register_tape("pdp13:tapecolor", "Color Lamp Demo", [[
 :500080066000000000012000004
 :00000FF]])
 
-register_tape("pdp13:tapetele", "Telewriter Demo", [[
+register_tape("pdp13:tape_tele", "Telewriter Demo", [[
 ; Hello world for the Telewriter v1.0
 
 0000: 2010, 0004       move    A, #TEXT
@@ -136,7 +136,7 @@ TEXT2:
 :6002800007200200073006500740000
 :00000FF]])
 
-register_tape("pdp13:tapemonitor", "PDP13 Monitor Program", [[
+register_tape("pdp13:tape_monitor", "PDP13 Monitor Program", [[
 ; PDP13 Monitor Program Code
 ; Use this tape to produce a PDP-13 Monitor ROM chip
 ; on the Fab.
@@ -167,9 +167,9 @@ register_tape("pdp13:tapemonitor", "PDP13 Monitor Program", [[
 :110C800FFEB
 :00000FF]])
 
-register_tape("pdp13:tapeos", "PDP13 OS Program", [[
-; PDP13 OS Program Code
-; Use this tape to produce a PDP-13 OS ROM chip
+register_tape("pdp13:tape_bios", "PDP13 BIOS Program", [[
+; PDP13 BIOS Program Code
+; Use this tape to produce a PDP-13 BIOS ROM chip
 ; on the Fab.
 ]], [[:410000020F010001240000C
 :81010001200104B120010581200106B12001089
@@ -198,7 +198,7 @@ register_tape("pdp13:tapeos", "PDP13 OS Program", [[
 :110C800FFEB
 :00000FF]])
 
-register_tape("pdp13:udp_send", "PDP13 UPD Send", [[
+register_tape("pdp13:tape_udp_send", "PDP13 UPD Send", [[
 ; UDP send v1.0
 ; Read string from telewriter and send to remote CPU on port #1
 
@@ -215,7 +215,7 @@ start:
 :3000800081012000000
 :00000FF]])
 
-register_tape("pdp13:udp_recv", "PDP13 UPD Receive", [[
+register_tape("pdp13:tape_udp_recv", "PDP13 UPD Receive", [[
 ; UDP receive v1.0
 ; Read string from remote CPU on port #1 and write to telewriter
 
@@ -232,3 +232,31 @@ start:
 ]], [[:8000000202D2010010008112C00501000002010
 :40008000100080012000000
 :00000FF]])
+
+register_tape("pdp13:tape_terminal", "PDP13 Terminal Demo", [[
+Output 
+ - title
+ - RAM size
+ - ROM size
+ - tape info 
+see: https://github.com/joe7575/pdp13/blob/main/examples/terminal.asm 
+]], [[:800000008102010004608142010DEAD2220FFFF
+:800080020110FFF3410DEAD5010001220100004
+:80010001200002820111FFF3410DEAD5010001C
+:8001800201000081200002820113FFF3410DEAD
+:800200050100026201000101200002820100020
+:80028002030010008212010010008132010005F
+:800300008140873203001000821201001000813
+:80038002010006608142010006D081420100073
+:8004000085708182010007908141C0000230023
+:800480000230020005400650072006D0069006E
+:80050000061006C002000440065006D006F0020
+:800580000760031002000230023002300000020
+:8006000004B002000520041004D00000020004B
+:800680000200052004F004D0000005400610070
+:80070000065003A00000074002F002A002E002A
+:8007800000000520065006100640079002E0000
+:00000FF]])
+
+
+

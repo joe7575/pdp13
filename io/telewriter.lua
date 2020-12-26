@@ -20,11 +20,37 @@ local S2P = minetest.string_to_pos
 local DELAY = 0.5	-- time for one line
 local STR_LEN = 64
 
+local function register_telewriter(pos, cmnd)
+	local names = {"pdp13:cpu1", "pdp13:cpu1_on"}
+	local number = M(pos):get_string("node_number")
+	local cpu_num = pdp13.send(pos, nil, names,  cmnd, number)
+	if cpu_num then
+		M(pos):set_string("cpu_number", cpu_num)
+		local cpu_pos = (techage.get_node_info(cpu_num) or {}).pos
+		M(pos):set_string("cpu_pos", P2S(cpu_pos))
+	end
+end	
+
+local function pdp13_on_receive(pos, src_pos, cmnd, data)
+	if cmnd == "register" then
+		if M(pos):get_int("monitor") == 1 then
+			register_telewriter(pos, "reg_prog")
+		else
+			register_telewriter(pos, "reg_tele")
+		end
+		return true
+	elseif cmnd == "power" then
+		M(pos):set_int("has_power", data == "on" and 1 or 0)
+		return true
+	end
+end
+
 local DemoTapes = {}
 
 function pdp13.register_demotape(name, desc)
 	DemoTapes[#DemoTapes+1] = {name = name, desc = desc}
 end
+
 
 local function format_text(mem)
 	local t = {}
@@ -153,7 +179,7 @@ local function has_tape(pos)
 	if inv:is_empty("main") then return nil end
 	local stack = inv:get_stack("main", 1)
 	local name = stack:get_name()
-	return minetest.get_item_group(name, "pdp13_tape") == 1
+	return minetest.get_item_group(name, "pdp13_ptape") == 1
 end
 
 
@@ -162,7 +188,7 @@ local function get_tape_code(pos)
 	if inv:is_empty("main") then return nil end
 	local stack = inv:get_stack("main", 1)
 	local name = stack:get_name()
-	if minetest.get_item_group(name, "pdp13_tape") == 1 then
+	if minetest.get_item_group(name, "pdp13_ptape") == 1 then
 		-- test if demo tape
 		local idef = minetest.registered_craftitems[name] or {}
 		if idef.code then
@@ -184,7 +210,7 @@ local function write_tape_code(pos, code)
 	if inv:is_empty("main") then return nil end
 	local stack = inv:get_stack("main", 1)
 	local name = stack:get_name()
-	if name == "pdp13:tape" then
+	if name == "pdp13:punch_tape" then
 		local meta = stack:get_meta()
 		if meta then
 			local data = meta:to_table().fields or {}
@@ -263,22 +289,39 @@ local function after_place_node(pos, placer, itemstack, name, cmnd, ntype)
 	meta:set_string("owner", placer:get_player_name())
 	local own_num = techage.add_node(pos, name)
 	meta:set_string("node_number", own_num)
-	local cpu_num = pdp13.send(pos, nil, {"pdp13:cpu1", "pdp13:cpu1_on"}, cmnd, own_num)
-	meta:set_string("cpu_number", cpu_num)
-	local cpu_pos = (techage.get_node_info(cpu_num) or {}).pos
-	meta:set_string("cpu_pos", P2S(cpu_pos))
 	meta:set_string("formspec", formspec1(pos, mem))
-	if cpu_num then
-		meta:set_string("infotext", "PDP-13 Telewriter "..ntype..": Connected")
-	else
-		meta:set_string("infotext", "PDP-13 Telewriter "..ntype..": Not connected!")
+	meta:set_string("infotext", "PDP-13 Telewriter "..ntype)
+end
+
+local function allow_metadata_inventory_put(pos, listname, index, stack, player)
+	if minetest.is_protected(pos, player:get_player_name()) then
+		return 0
 	end
+	
+	local meta = minetest.get_meta(pos)
+	local inv = meta:get_inventory()
+	if inv:get_stack(listname, index):get_count() > 0 then
+		return 0
+	end
+	
+	if minetest.get_item_group(stack:get_name(), "pdp13_ptape") == 1 then
+		return 1
+	end
+	
+	return 0
 end
 
 local function on_receive_fields(pos, formname, fields, player)
 	if minetest.is_protected(pos, player:get_player_name()) then
 		return
 	end
+	if M(pos):get_string("cpu_number") == "" then
+		return
+	end
+	if M(pos):get_int("has_power") ~= 1 then
+		return
+	end
+	
 	local mem = techage.get_nvm(pos)
 	mem.codes = mem.codes or {}
 	if fields.tab == "2" then
@@ -327,9 +370,14 @@ local function node_timer(pos, elapsed)
 	end
 end
 
+local function can_dig(pos)
+	return M(pos):get_int("has_power") ~= 1 and M(pos):get_inventory():is_empty("main")
+end
+
 local function after_dig_node(pos, oldnode, oldmetadata)
 	techage.remove_node(pos, oldnode, oldmetadata)
 	techage.remove_node(pos)
+	techage.del_mem(pos)
 end
 
 local Tiles = {
@@ -345,9 +393,9 @@ local Tiles = {
 local Node_box = {
 	type = "fixed",
 	fixed = {
-		{ -8/16, -8/16, -8/16,   8/16, -6/16, 8/16 },
-		{ -8/16, -6/16, -2/16,   8/16, -3/16, 8/16 },
-		{ -8/16, -3/16,  3/16,   2/16,  0/16, 7/16 },
+		{ -8.2/16, -10/16, -8.2/16,   8.2/16, -7/16, 8.2/16 },
+		{ -8/16, -8/16, -2/16,   8/16, -5/16, 8/16 },
+		{ -8/16, -5/16,  3/16,   2/16, -2/16, 7/16 },
 	},
 }
 
@@ -359,8 +407,11 @@ minetest.register_node("pdp13:telewriter", {
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
 		after_place_node(pos, placer, itemstack, "pdp13:telewriter", "reg_tele", "Operator")
 	end,
+	allow_metadata_inventory_put = allow_metadata_inventory_put,
 	on_receive_fields = on_receive_fields,
+	pdp13_on_receive = pdp13_on_receive,
 	on_timer = node_timer,
+	can_dig = can_dig,
 	after_dig_node = after_dig_node,
 	paramtype = "light",
 	paramtype2 = "facedir",
@@ -379,8 +430,11 @@ minetest.register_node("pdp13:telewriter_prog", {
 		after_place_node(pos, placer, itemstack, "pdp13:telewriter_prog", "reg_prog", "Programmer")
 		M(pos):set_int("monitor", 1)
 	end,
+	allow_metadata_inventory_put = allow_metadata_inventory_put,
 	on_receive_fields = on_receive_fields,
+	pdp13_on_receive = pdp13_on_receive,
 	on_timer = node_timer,
+	can_dig = can_dig,
 	after_dig_node = after_dig_node,
 	paramtype = "light",
 	paramtype2 = "facedir",

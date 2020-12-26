@@ -17,12 +17,14 @@ local MP = minetest.get_modpath("pdp13")
 pdp13 = {}
 
 -- Library
+dofile(MP.."/lib/helper.lua")
 dofile(MP.."/lib/storage.lua")
 dofile(MP.."/lib/io_lib.lua")
 dofile(MP.."/lib/command.lua")
 dofile(MP.."/lib/system.lua")
 
 -- OS
+dofile(MP.."/os/defines.lua")
 dofile(MP.."/os/asm_help.lua")
 dofile(MP.."/os/opcodes.lua")
 dofile(MP.."/os/assemble.lua")
@@ -33,6 +35,7 @@ dofile(MP.."/os/terminal.lua")
 dofile(MP.."/os/std_lib.lua")
 dofile(MP.."/os/comm.lua")
 dofile(MP.."/os/filesystem.lua")
+dofile(MP.."/os/boot.lua")
 --dofile(MP.."/os/shell.lua")
 
 
@@ -42,6 +45,7 @@ dofile(MP.."/pdp13/power.lua")
 dofile(MP.."/pdp13/io_rack.lua")
 dofile(MP.."/pdp13/mem_rack.lua")
 dofile(MP.."/pdp13/tape_drive.lua")
+dofile(MP.."/pdp13/hard_disk.lua")
 
 -- I/O
 dofile(MP.."/io/lamp.lua")
@@ -50,7 +54,8 @@ dofile(MP.."/io/telewriter.lua")
 dofile(MP.."/io/terminal.lua")
 
 -- Items
-dofile(MP.."/items/tape.lua")
+dofile(MP.."/items/punch_tape.lua")
+dofile(MP.."/items/magnetic_tape.lua")
 dofile(MP.."/items/demotape.lua")
 dofile(MP.."/items/chips.lua")
 

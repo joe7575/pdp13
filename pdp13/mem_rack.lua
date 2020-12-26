@@ -64,7 +64,7 @@ local function formspec()
 	"label[0.5,3.0;ROM]"..
 	"container[2,2.2]"..
 	"label[0.0,0.1;Mon.]"..
-	"label[1.0,0.1;O/S]"..
+	"label[1.0,0.1;BIOS]"..
 	"label[2.0,0.1;  ---]"..
 	"label[3.0,0.1;  ---]"..
 	"list[context;rom;0,0.6;4,4;]"..
@@ -74,12 +74,16 @@ local function formspec()
 	"list[current_player;main;0,4.3;8,4;]"
 end
 
+local function on_rightclick(pos)
+	M(pos):set_string("formspec", formspec())
+end
+
 local function pdp13_on_receive(pos, src_pos, cmnd, data)
-	if cmnd == "power" then
+	if cmnd == "register" then
+		register_memory_data(pos)
+		return true
+	elseif cmnd == "power" then
 		M(pos):set_int("has_power", data == "on" and 1 or 0)
-		if data == "on" then
-			register_memory_data(pos)
-		end
 		return true
 	end
 end
@@ -122,6 +126,7 @@ minetest.register_node("pdp13:mem_rack", {
 	},
 	after_place_node = after_place_node,
 	pdp13_on_receive = pdp13_on_receive,
+	on_rightclick = on_rightclick,
 	can_dig = can_dig,
 	
 	allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
@@ -143,6 +148,13 @@ minetest.register_node("pdp13:mem_rack", {
 		if M(pos):get_int("has_power") == 1 then
 			return 0
 		end
+		
+		local meta = minetest.get_meta(pos)
+		local inv = meta:get_inventory()
+		if inv:get_stack(listname, index):get_count() > 0 then
+			return 0
+		end
+		
 		if listname == "ram" and index == 1 and stack:get_name() == "pdp13:ram4k" then
 			return 1
 		end
@@ -152,7 +164,8 @@ minetest.register_node("pdp13:mem_rack", {
 		if listname == "rom" and index == 1 and stack:get_name() == "pdp13:mon_rom" then
 			return 1
 		end
-		if listname == "rom" and index == 2 and stack:get_name() == "pdp13:os_rom" then
+		if listname == "rom" and index == 2 and stack:get_name() == "pdp13:bios_rom" 
+				or stack:get_name() == "pdp13:os_rom" then
 			return 1
 		end
 		return 0

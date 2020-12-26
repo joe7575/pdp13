@@ -39,6 +39,17 @@ local function trim_text(text)
 	return table.concat(t, "\n")
 end
 
+local function register_terminal(pos, cmnd, data)
+	local names = {"pdp13:cpu1", "pdp13:cpu1_on"}
+	local cpu_pos = pdp13.send(pos, nil, names,  cmnd, data)
+	if cpu_pos then
+		M(pos):set_string("cpu_pos", P2S(cpu_pos))
+		-- needed for sys commands
+		local mem = techage.get_nvm(cpu_pos)
+		mem.term_pos = pos
+	end
+end	
+
 local function formspec1(pos, mem)
 	local s
 	
@@ -53,6 +64,7 @@ local function formspec1(pos, mem)
 		return  -- screensaver
 	end
 	
+	print("redraw")
 	mem.redraw = (mem.redraw or 0) + 1
 	M(pos):set_string("formspec", "size[10,8.5]" ..
 		default.gui_bg..
@@ -154,30 +166,14 @@ local selection_box = {
 	},
 }
 
-local function after_place_node(pos, placer, command, description)
+local function after_place_node(pos, placer, name)
 	local meta = M(pos)
 	local mem = techage.get_nvm(pos)
 	mem.ttl = minetest.get_gametime() + SCREENSAVER_TIME
 	clear_screen(pos, mem)
-	
 	meta:set_string("owner", placer:get_player_name())
 	local own_num = techage.add_node(pos, name)
 	meta:set_string("node_number", own_num)
-	local cpu_pos = pdp13.send(pos, nil, {"pdp13:cpu1", "pdp13:cpu1_on"}, command, pos)
-	meta:set_string("cpu_pos", P2S(cpu_pos))
-	
-	-- needed for sys commands
-	mem = techage.get_nvm(cpu_pos)
-	mem.term_pos = pos
-	
-	if cpu_pos then
-		meta:set_string("infotext", description..": Connected")
-	else
-		meta:set_string("infotext", description..": Not connected")
-	end
-	if command == "reg_prog" then
-		M(pos):set_int("monitor", 1)
-	end
 end
 
 local function on_rightclick(pos)
@@ -187,7 +183,14 @@ local function on_rightclick(pos)
 end
 
 local function on_receive_fields(pos, formname, fields, player)
+	print(dump(fields))
 	if minetest.is_protected(pos, player:get_player_name()) then
+		return
+	end
+	if M(pos):get_string("cpu_pos") == "" then
+		return
+	end
+	if M(pos):get_int("has_power") ~= 1 then
 		return
 	end
 	
@@ -222,6 +225,8 @@ local function on_receive_fields(pos, formname, fields, player)
 		mem.input = "\030"
 	elseif fields.f4 then
 		mem.input = "\031"
+	elseif fields.quit then
+		mem.ttl = 0
 	end
 end
 
@@ -249,7 +254,27 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 	elseif cmnd == "edit" then
 		editor_screen(pos, mem, data)
 		return 1
+	elseif cmnd == "register" then
+		if M(pos):get_int("monitor") == 1 then
+			register_terminal(pos, "reg_prog", pos)
+		else
+			register_terminal(pos, "reg_term", pos)
+		end
+		return true
+	elseif cmnd == "power" then
+		M(pos):set_int("has_power", data == "on" and 1 or 0)
+		local mem = techage.get_nvm(pos)
+		if data == "on" then
+			print_string(pos, mem, "PDP13 Terminal")
+		else
+			clear_screen(pos, mem)
+		end
+		return true
 	end
+end
+
+local function can_dig(pos)
+	return M(pos):get_int("has_power") ~= 1
 end
 
 local function after_dig_node(pos, oldnode, oldmetadata)
@@ -265,11 +290,14 @@ minetest.register_node("pdp13:terminal", {
 	node_box = node_box,
 	selection_box = selection_box,
 	after_place_node = function(pos, placer)
-		after_place_node(pos, placer,  "reg_term", "PDP13 Terminal Operator")
+		after_place_node(pos, placer, "pdp13:terminal")
+		M(pos):set_string("infotext", "PDP13 Terminal Operator")
+		M(pos):set_int("monitor", 0)
 	end,
 	on_rightclick = on_rightclick,
 	on_receive_fields = on_receive_fields,
 	pdp13_on_receive = pdp13_on_receive,
+	can_dig = can_dig,
 	after_dig_node = after_dig_node,
 	
 	paramtype = "light",
@@ -287,11 +315,14 @@ minetest.register_node("pdp13:terminal_prog", {
 	node_box = node_box,
 	selection_box = selection_box,
 	after_place_node = function(pos, placer)
-		after_place_node(pos, placer,  "reg_prog", "PDP13 Terminal Programmer")
+		after_place_node(pos, placer, "pdp13:terminal_prog")
+		M(pos):set_string("infotext", "PDP13 Terminal Programmer")
+		M(pos):set_int("monitor", 1)
 	end,
 	on_rightclick = on_rightclick,
 	on_receive_fields = on_receive_fields,
 	pdp13_on_receive = pdp13_on_receive,
+	can_dig = can_dig,
 	after_dig_node = after_dig_node,
 	
 	paramtype = "light",

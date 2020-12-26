@@ -26,6 +26,7 @@ local function exam1_provide_positions(pos, address, val1, val2)
 	local mem = techage.get_nvm(pos)
 	mem.exam1_dist = math.abs(x2 - x1) + math.abs(y2 - y1) + math.abs(z2 - z1) + 1
 
+	vm16.poke(pos, val1 + 0, x1)
 	vm16.poke(pos, val1 + 1, y1)
 	vm16.poke(pos, val1 + 2, z1)
 	vm16.poke(pos, val1 + 3, x2)

@@ -17,7 +17,7 @@ local M = minetest.get_meta
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = minetest.string_to_pos
 
-local NUM_CHARS = 64
+local NUM_CHARS = pdp13.MAX_LINE_LEN
 local SCREENBUFFER_SIZE = 48*16
 
 local function send_terminal_command(cpu_pos, cmnd, payload)
@@ -29,6 +29,30 @@ end
 local function sys_clear_screen(cpu_pos)
 	print("clear_screen")
 	return send_terminal_command(cpu_pos, "clear")
+end
+
+local function sys_print_char(cpu_pos, address, val1)
+	print("print_char")
+	if val1 > 255 then
+		local s = string.char(pdp13.range(val1 / 256, 32, 127, 46))..
+		          string.char(pdp13.range(val1 % 256, 32, 127, 46))
+		return send_terminal_command(cpu_pos, "print", s)
+	else
+		local s = string.char(pdp13.range(val1, 32, 127, 46))
+		return send_terminal_command(cpu_pos, "print", s)
+	end
+end
+
+local function sys_print_number(cpu_pos, address, val1, val2)
+	print("print_number")
+	local s
+	
+	if val2 == 16 then
+		s = string.format("%04X", val1)
+	else
+		s = tostring(val1)
+	end
+	return send_terminal_command(cpu_pos, "print", s)
 end
 
 local function sys_print_string(cpu_pos, address, val1)
@@ -51,7 +75,7 @@ end
 
 local function sys_editor_start(cpu_pos, address, val1)
 	print("edit_start")
-	local number = M(pos):get_string("node_number")
+	local number = M(cpu_pos):get_string("node_number")
 	number = tonumber(number)
 	local text = pdp13.SharedMemory[number] or ""
 	return send_terminal_command(cpu_pos, "edit", text)
@@ -66,19 +90,45 @@ local function sys_input_string(cpu_pos, address, val1)
 	return 65535
 end
 
+local function sys_print_shared_mem(cpu_pos, address, val1)
+	local number = M(cpu_pos):get_string("node_number")
+	number = tonumber(number)
+	local sm = pdp13.SharedMemory[number]
+	print("print_shared mem", dump(sm))
+	if type(sm) == "string" then
+		for s in sm:gmatch("[^\n]+") do
+			send_terminal_command(cpu_pos, "println", s)
+		end
+		return 1
+	elseif type(sm) == "table" then
+		for _,s in ipairs(sm) do
+			send_terminal_command(cpu_pos, "println", s)
+		end
+		return 1
+	end
+	return 0
+end
+
+
 local help = [[+-----+-----------------+------------+------+
 |sys #| Terminal       | A    | B    | rtn  |
 +-----+----------------+-------------+------+
  $10   clear screen      -      -     1=ok
- $11   print string     @text   -     1=ok
- $12   println string   @text   -     1=ok
- $13   update screen    @text   -     1=ok
- $14   start editor      -      -     1=ok
- $15   input string     @dest   -     size]]
+ $11   print char       char    -     1=ok
+ $12   print number     number  base  1=ok
+ $13   print string     @text   -     1=ok
+ $14   println string   @text   -     1=ok
+ $15   update screen    @text   -     1=ok
+ $16   start editor      -      -     1=ok
+ $17   input string     @dest   -     size
+ $18   print SM (<SM)   -       -     1=ok]]
 
 pdp13.register_SystemHandler(0x10, sys_clear_screen, help)
-pdp13.register_SystemHandler(0x11, sys_print_string)
-pdp13.register_SystemHandler(0x12, sys_print_string_ln)
-pdp13.register_SystemHandler(0x13, sys_update_screen)
-pdp13.register_SystemHandler(0x14, sys_editor_start)
-pdp13.register_SystemHandler(0x15, sys_input_string)
+pdp13.register_SystemHandler(0x11, sys_print_char)
+pdp13.register_SystemHandler(0x12, sys_print_number)
+pdp13.register_SystemHandler(0x13, sys_print_string)
+pdp13.register_SystemHandler(0x14, sys_print_string_ln)
+pdp13.register_SystemHandler(0x15, sys_update_screen)
+pdp13.register_SystemHandler(0x16, sys_editor_start)
+pdp13.register_SystemHandler(0x17, sys_input_string)
+pdp13.register_SystemHandler(0x18, sys_print_shared_mem)

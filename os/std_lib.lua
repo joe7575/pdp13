@@ -31,7 +31,7 @@ local help = [[+-----+----------------+-------------+------+
 |sys #| stdlib         | A    | B    | rtn  |
 +-----+----------------+-------------+------+
  $20   string to num    @str    -     number
- $21   num to string    number @dest  1=ok"]]
+ $21   num to string    number @dest  1=ok]]
  
 pdp13.register_SystemHandler(0x20, string_to_number, help)
 pdp13.register_SystemHandler(0x21, number_to_string)
