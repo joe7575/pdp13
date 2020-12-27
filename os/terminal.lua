@@ -82,12 +82,12 @@ local function sys_editor_start(cpu_pos, address, val1)
 end
 
 local function sys_input_string(cpu_pos, address, val1)
-	print("input_string")
+	--print("input_string")
 	local s = send_terminal_command(cpu_pos, "input")
 	if s and vm16.write_ascii(cpu_pos, val1, s.."\000") then
 		return #s
 	end
-	return 65535
+	return 0
 end
 
 local function sys_print_shared_mem(cpu_pos, address, val1)
@@ -132,3 +132,7 @@ pdp13.register_SystemHandler(0x15, sys_update_screen)
 pdp13.register_SystemHandler(0x16, sys_editor_start)
 pdp13.register_SystemHandler(0x17, sys_input_string)
 pdp13.register_SystemHandler(0x18, sys_print_shared_mem)
+
+vm16.register_sys_cycles(0x11, 100)
+vm16.register_sys_cycles(0x12, 200)
+vm16.register_sys_cycles(0x13, 200)

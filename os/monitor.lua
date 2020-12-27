@@ -22,12 +22,21 @@ local function hex_dump(tbl)
 	return table.concat(t2, " ")
 end
 
-local function mem_dump(pos, addr, mem)
+local function mem_dump(pos, addr, mem, is_terminal)
 	local lines = {}
-	for i = 1, (#mem/4) do
-		local offs = (i - 1) * 4
-		lines[i] = string.format("%04X: %04X %04X %04X %04X", 
-				addr+offs, mem[1+offs], mem[2+offs], mem[3+offs], mem[4+offs])
+	if is_terminal then
+		for i = 1, (#mem/8) do
+			local offs = (i - 1) * 8
+			lines[i] = string.format("%04X: %04X %04X %04X %04X %04X %04X %04X %04X", 
+					addr+offs, mem[1+offs], mem[2+offs], mem[3+offs], mem[4+offs],
+					mem[5+offs], mem[6+offs], mem[7+offs], mem[8+offs])
+		end
+	else
+		for i = 1, (#mem/4) do
+			local offs = (i - 1) * 4
+			lines[i] = string.format("%04X: %04X %04X %04X %04X", 
+					addr+offs, mem[1+offs], mem[2+offs], mem[3+offs], mem[4+offs])
+		end
 	end
 	return lines
 end
@@ -98,7 +107,7 @@ end
 Commands["n"] = function(pos, mem, cmd, rest)
 	if techage.get_nvm(pos).monitor then
 		pdp13.single_step_cpu(pos)
-		mem.mstate = nil
+		mem.mstate = 'n'
 		local cpu = vm16.get_cpu_reg(pos)
 		local num, s = pdp13.disassemble(cpu)
 		return {s}
@@ -106,14 +115,21 @@ Commands["n"] = function(pos, mem, cmd, rest)
 end
 	
 -- register
-Commands["r"] = function(pos, mem, cmd, rest)
+Commands["r"] = function(pos, mem, cmd, rest, is_terminal)
 	if techage.get_nvm(pos).monitor then
 		local cpu = vm16.get_cpu_reg(pos)
 		mem.mstate = nil
-		return {
-			string.format("A:%04X B:%04X C:%04X D:%04X", cpu.A, cpu.B, cpu.C, cpu.D),
-			string.format("X:%04X Y:%04X P:%04X S:%04X", cpu.X, cpu.Y, cpu.PC, cpu.SP),
-		}
+		if is_terminal then
+			return {
+				string.format("A:%04X B:%04X C:%04X D:%04X", cpu.A, cpu.B, cpu.C, cpu.D).." "..
+				string.format("X:%04X Y:%04X PC:%04X SP:%04X", cpu.X, cpu.Y, cpu.PC, cpu.SP),
+			}
+		else
+			return {
+				string.format("A:%04X B:%04X C:%04X D:%04X", cpu.A, cpu.B, cpu.C, cpu.D),
+				string.format("X:%04X Y:%04X P:%04X S:%04X", cpu.X, cpu.Y, cpu.PC, cpu.SP),
+			}
+		end
 	end
 end
 
@@ -130,7 +146,8 @@ Commands["ad"] = function(pos, mem, cmd, rest)
 end
 	
 -- dump memory
-Commands["d"] = function(pos, mem, cmd, rest)
+Commands["d"] = function(pos, mem, cmd, rest, is_terminal)
+	local size = is_terminal and 64 or 32
 	if techage.get_nvm(pos).monitor then
 		if cmd == "d" then
 			mem.mstate = "d"
@@ -138,11 +155,11 @@ Commands["d"] = function(pos, mem, cmd, rest)
 		else
 			mem.maddr = mem.maddr or 0
 		end
-		local dump = vm16.read_mem(pos, mem.maddr, 32)
+		local dump = vm16.read_mem(pos, mem.maddr, size)
 		local addr = mem.maddr
-		mem.maddr = mem.maddr + 32
+		mem.maddr = mem.maddr + size
 		if dump then
-			return mem_dump(pos, addr, dump)
+			return mem_dump(pos, addr, dump, is_terminal)
 		end
 		return {"Address error"}
 	end
@@ -250,16 +267,19 @@ Commands["ex"] = function(pos, mem, cmd, rest)
 end
 
 
-function pdp13.monitor(cpu_pos, mem, command)
+function pdp13.monitor(cpu_pos, mem, command, is_terminal)
 	if cpu_pos and mem and command then
 		local words = string.split(command, " ", false, 1)
+		local resp
+		
 		if Commands[words[1]] then
-			return Commands[words[1]](cpu_pos, mem, words[1], words[2])
+			resp = Commands[words[1]](cpu_pos, mem, words[1], words[2], is_terminal)
 		elseif mem.mstate and Commands[mem.mstate] then
-			return Commands[mem.mstate](cpu_pos, mem, "", command)
+			resp = Commands[mem.mstate](cpu_pos, mem, "", command, is_terminal)
 		else
-			return Commands["?"](cpu_pos, mem, words[1], words[2])
+			resp = Commands["?"](cpu_pos, mem, words[1], words[2], is_terminal)
 		end
+		return "[mon]$ "..command, resp
 	end
 end
 

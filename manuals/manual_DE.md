@@ -21,7 +21,7 @@ Aufgrund der Länge dieses Textes empfiehlt sich, diese Anleitung direkt auf Git
 - Crafte die 3 Blöcke "PDP-13 Power Module", "PDP-13 CPU" und "PDP-13 I/O Rack".
 - Das Rack gibt es in 2 Varianten, die sich aber nur vom Frontdesign unterschieden
 - Setzte den CPU Block auf den Power Block und das I/O-Rack direkt neben den Power Block
-- Diese Reihenfolge muss eingehalten werden, sonst können sich die I/O-Racks nicht mit der CPU verbinden. Der maximale Abstand zwischen einem Erweiterungsblock und der CPU beträgt 2 Blöcke
+- Diese Reihenfolge muss eingehalten werden, sonst können sich die I/O-Racks nicht mit der CPU verbinden. Der maximale Abstand zwischen einem Erweiterungsblock und der CPU beträgt 3 Blöcke. Dies gilt auch für Telewriter, Terminal und alle weiteren Blöcke.
 - Über den Power Block wird die CPU und die weiteren Blöcke eingeschaltet
 - Das I/O-Rack kann nur konfiguriert werden, wenn der Power Block ausgeschaltet ist
 - Die CPU kann nur programmiert werden, wenn der Power Block eingeschaltet ist (logisch)
@@ -56,15 +56,15 @@ Hier werden Kommandos aber über die 6 Tasten links und Maschinenbefehle über d
 - Über die Taste "address" kann der Program Counter auf einen Wert gesetzt werden.
 - Über die Taste "dump" wird ein Speicherbereich ausgegeben. Die Startadresse muss zuvor über die Taste "address" eingegeben worden sein.
 
-Das "help" Register zeigt die wichtgsten Assemblerbefehle und jeweils den Maschinencode dazu. Mit diesem Subset an Befehlen kann man bereits arbeiten. Weitere Informationen zum Befehlssatz findest du [hier](https://github.com/joe7575/vm16/blob/master/doc/introduction.md) und [hier](https://github.com/joe7575/vm16/blob/master/doc/opcodes.md).
+Das "help" Register zeigt die wichtigsten Assemblerbefehle und jeweils den Maschinencode dazu. Mit diesem Subset an Befehlen kann man bereits arbeiten. Weitere Informationen zum Befehlssatz findest du [hier](https://github.com/joe7575/vm16/blob/master/doc/introduction.md) und [hier](https://github.com/joe7575/vm16/blob/master/doc/opcodes.md).
 
-Am Ende der Tabelle werden die System Kommandos aufgeführt. Dies sind quasi Betriebssystemtaufrufe, welche zusätzliche Befehle ausführen, die sonst nicht möglich wären, wie bspw. einen Text auf dem Telewriter ausgeben. 
+Am Ende der Tabelle werden die System-Kommandos aufgeführt. Dies sind quasi Betriebssystemtaufrufe, welche zusätzliche Befehle ausführen, die sonst nicht möglich wären, wie bspw. einen Text auf dem Telewriter auszugeben. 
 
 ### Performance
 
 Die CPU ist in der Lage, bis zu 100.000 Befehle pro Sekunde (0.1 MIPS) auszuführen. Dies gilt, solange nur interne CPU-Befehle ausgeführt werden. Dabei gibt es folgende Ausnahmen:
 
-- Der `sys` und der `in` Befehl "kosten" pauschal 1000 Zyklen, da hier externer Code ausgeführt wird. 
+- Der `sys` und der `in` Befehl "kosten" bis zu 1000 Zyklen, da hier externer Code ausgeführt wird. 
 - Der `out` Befehl unterbricht die Ausführung für 100 ms, sofern sich der Wert am Ausgang ändert und eine externe Aktionen in der Spielwelt durchgeführt werden muss. Anderenfalls sind es auch nur die 1000 Zyklen.
 - Der `nop` Befehl, der für Pausen genutzt werden kann, unterbricht die Ausführung auch für 100 ms.
 
@@ -83,9 +83,9 @@ Auch hier dient  das Terminal zur Ein-/Ausgabe und zum Schreiben und Lesen von T
 
 Beide Typen können an einer CPU "angeschlossen" sein, wobei es pro Typ maximal ein Gerät sein darf, also in der Summe maximal zwei.
 
-Über das "tape" Menü des Telewriters können Programme von Tape zum Rechner (Schalter "tape -> PDP13") und vom Rechner auf das Tape (Schalter "PDP13 -> tape") kopiert werden. In beiden Fällen muss dazu ein Tape "eingelegt" sein. Die CPU muss dazu eingeschaltet (power) und gestoppt sein. Ob die Übertragung geklappt hat, wird auf Papier ausgegeben ("main" Menü-Register). 
+Über das "tape" Menü des Telewriters können Programme von Punch Tape zum Rechner (Schalter "tape -> PDP13") und vom Rechner auf das Punch Tape (Schalter "PDP13 -> tape") kopiert werden. In beiden Fällen muss dazu ein Punch Tape "eingelegt" sein. Die CPU muss dazu eingeschaltet (power) und gestoppt sein. Ob die Übertragung geklappt hat, wird auf Papier ausgegeben ("main" Menü-Register). 
 
-Über das "tape" Menü können auch Demo Programme auf ein Tape kopiert und anschließend in den Rechner geladen werden. Diese Programme zeigen, wie man elementare Funktionen des Rechners programmiert.
+Über das "tape" Menü können auch Demo Programme auf ein Punch Tape kopiert und anschließend in den Rechner geladen werden. Diese Programme zeigen, wie man elementare Funktionen des Rechners programmiert.
 
 Der Telewriter kann über folgende `sys` Befehle angesprochen werden:
 
@@ -107,11 +107,11 @@ sys     #2          ; Einlesen Zahl vom Telewriter, das Ergebnis steht in A
 
 [pdp13_telewriter|image]
 
-## PDP13 Tape
+## PDP13 Punch Tape
 
-Neben den Demo Tapes mit festen, kleinen Programmen gibt es ach die beschreibbaren und editierbaren Tapes. Diese können (im Gegensatz zum Original) mehrfach geschrieben/geändert werden.
+Neben den Demo Tapes mit festen, kleinen Programmen gibt es auch die beschreibbaren und editierbaren Punch Tapes. Diese können (im Gegensatz zum Original) mehrfach geschrieben/geändert werden.
 
-Die Tapes besitzen ein Menü so dass diese auch von Hand beschrieben werden können. Dies dient dazu:
+Die Punch Tapes besitzen ein Menü so dass diese auch von Hand beschrieben werden können. Dies dient dazu:
 
 - dem Tape einen eindeutigen Namen zu geben
 - zu beschreiben, wie das Programm genutzt werden kann (Description)
@@ -153,7 +153,7 @@ out #00, A      ; output on port #0
 
 Dieser Block vervollständigt als 4. Block den Rechneraufbau. Der Block hat ein Inventar für Chips zur Speichererweiterung. Der Rechner hat intern 4 KWords an Speicher (4096 Worte) und kann durch einen 4 K RAM Chip auf 8 KWords erweitert werden. Mit einem zusätzlichen 8 K RAM Chip kann der Speicher dann auf 16 KWords erweitert werden. Theoretisch sind bis zu 64 KWords möglich.
 
-In der unteren Reihe kann das Rack bis zu 4 ROM Chips aufnehmen. Diese ROM Chips beinhalten Programme und sind quasi das Betriebssystem des Rechners. ROM Chips kann man nur auf der TA3 Elektronikfabrik produzieren. Das Programm für den Chip muss man dazu auf Tape besitzen, welches dann mit Hilfe der Elektronikfabrik auf den Chip "gebrannt" wird. An diese Programme kommt man nur, wenn man entsprechende Programmieraufgaben gelöst hat (dazu später mehr).
+In der unteren Reihe kann das Rack bis zu 4 ROM Chips aufnehmen. Diese ROM Chips beinhalten Programme und sind quasi das BIOS (basic input/output system) des Rechners. ROM Chips kann man nur auf der TA3 Elektronikfabrik produzieren. Das Programm für den Chip muss man dazu auf Tape besitzen, welches dann mit Hilfe der Elektronikfabrik auf den Chip "gebrannt" wird. An diese Programme kommt man nur, wenn man entsprechende Programmieraufgaben gelöst hat (dazu später mehr).
 
 Das Inventar des Speicherblocks lässt sich nur in der vorgegebenen Reihenfolge von links nach rechts füllen. Der Rechner muss dazu ausgeschaltet sein.
 
@@ -199,13 +199,13 @@ Wenn du alles richtig gemacht hast, leuchtet danach die Lampe. Das "OUT" Feld im
 
 [pdp13_cpu|image]
 
-## Monitor Programm
+## Monitor ROM
 
 Hat man den Rechner mit dem "Monitor ROM" Chip erweitert und ein "Telewriter Programmer" Terminal angeschlossen, kann man den Rechner in Assembler programmieren. Dies ist deutlich komfortabler und weniger fehleranfällig.
 
 Das Monitor Programm auf dem Rechner wird durch Eingabe des Kommandos "mon" an der CPU gestartet und über die Taste "stop" auch wieder gestoppt werden. Alle anderen Tasten der CPU sind im Monitor-Mode nicht aktiv. Die Bedienung erfolgt nur über das Terminal. 
 
-Das Monitor Programm unterstützt folgende Kommandos, die auch mit Eingabe von `?` ausgegeben werden (die folgende Tabelle ist ingame nicht darstellbar):
+Das Monitor Programm unterstützt folgende Kommandos, die auch mit Eingabe von `?` am Telewriter ausgegeben werden (die folgende Tabelle ist in der ingame Hilfe nicht darstellbar):
 
 | Kommando   | Bedeutung                                                    |
 | ---------- | ------------------------------------------------------------ |
@@ -232,21 +232,93 @@ Alle Kommandos unterstützen die dezimale und hexadezimale Eingabe von Zahlen, `
 
 Hat man den Rechner mit dem "BIOS ROM" Chip erweitert, hat der Rechner Zugriff auf das Terminal und auf das Filesystem des Bandlaufwerks und der Festplatte. Der Rechner kann damit theoretisch von einem der Laufwerke booten, wenn er denn eine Betriebssystem hätte, aber dazu später mehr.
 
-Zur Verfügung stehen ab sofort folgende zusätzliche sys Kommandos:
+Zur Verfügung stehen ab sofort bspw. folgende zusätzliche sys-Kommandos (Das Zeichen `@` bedeutet "Speicheradresse von"):
 
-| sys Nr. (hex) | Bedeutung                          | Parameter                                      | Ergebnis        |
-| ------------- | ---------------------------------- | ---------------------------------------------- | --------------- |
-| 50            | file open                          | A = @file name                                 | file reference  |
-| 51            | file close                         | A = file reference                             | 1=ok, 0=error   |
-| 52            | read file (ins Shared Memory)      | A = file reference                             | 1=ok, 0=error   |
-| 53            | read line                          | A = file reference                             | 1=ok, 0=error   |
-| 54            | write file (aus dem Shared Memory) | A = file reference                             | 1=ok, 0=error   |
-| 55            | write line                         | A = file reference                             | 1=ok, 0=error   |
-| 56            | file size                          | A = @file name                                 | size in bytes   |
-| 57            | list files                         | A = @file name pattern                         | number of files |
-| 58            | remove files                       | A = @file name pattern                         | number of files |
-| 59            | copy file                          | A = @source file name<br />B = @dest file name | 1=ok, 0=error   |
-| 5A            | move file                          | A = @source file name<br />B = @dest file name | 1=ok, 0=error   |
+| sys # | Bedeutung                          | Parameter in A             | Parameter in B  | Ergebnis in A   |
+| ----- | ---------------------------------- | -------------------------- | --------------- | --------------- |
+| #$50  | file open                          | @file name                 | -               | file reference  |
+| $51   | file close                         | file reference             | -               | 1=ok, 0=error   |
+| $52   | read file (ins Shared Memory)      | file reference             | -               | 1=ok, 0=error   |
+| $53   | read line                          | file reference             | @destination    | 1=ok, 0=error   |
+| $54   | write file (aus dem Shared Memory) | file reference             | -               | 1=ok, 0=error   |
+| $55   | write line                         | file reference             | @text           | 1=ok, 0=error   |
+| $56   | file size                          | @file name                 | -               | size in bytes   |
+| $57   | list files                         | @file name pattern         | -               | number of files |
+| $58   | remove files                       | @file name pattern         | -               | number of files |
+| $59   | copy file                          | @source file name          | @dest file name | 1=ok, 0=error   |
+| $5A   | move file                          | @source file name          | @dest file name | 1=ok, 0=error   |
+| $5B   | change drive                       | drive character `t` or `h` |                 | 1=ok, 0=error   |
+
+Zusätzlich beinhaltet der BIOS ROM Chip eine Selbsttest Routine, die beim Einschalten des Rechners ausgeführt und das Ergebnis an der CPU ausgegeben wird (dies dient zur Überprüfung, ob man alles korrekt angeschlossen hat):
+
+```
+RAM=8K   ROM=16K   I/O=8
+Telewriter..ok  Terminal..ok
+Tape drive..ok
+```
+
+## Terminal
+
+Sofern das BIOS ROM verfügbar ist, kann am Rechner auch ein Terminal angeschlossen und angesteuert werden. Auch hier gibt es zwei Typen von Terminals:
+
+- Terminal Operator für normale Ein-/Ausgaben aus einem laufenden Programm
+- Terminal Programmer für die Programmierung/Fehlersuche über Assembler (Monitor ROM Chip wird benötigt)
+
+Beide Terminals können an einer CPU angeschlossen sein, wobei es pro Typ wieder maximal ein Gerät sein darf, also in der Summe maximal zwei. Das Terminal Programmer ersetzt dabei den Telewriter Programmer, es kann also nur ein Programmer Gerät genutzt werden.
+
+Das Terminal besitzt quasi 3 Betriebsarten:
+
+- Editor-Mode (tbd)
+- Terminal-Mode 1 mit zeilenweise Ausgabe von Texten
+- Terminal-Mode 2 mit Bildschirmspeicher (48 Zeichen x 16 Zeilen) Hierbei wird immer der komplette Bildschirmspeicher an das Terminal übertragen 
+
+Zu allen drei Betriebsarten gibt es Demoprogramme, die die Funktionsweise zeigen.
+
+Das Terminal besitzt auch zusätzliche Tasten mit folgenden Codierung:  `ESC` = 27, `F1` = 28, `F2` = 29, `F3` = 30, `F4` = 31
+
+Für das Terminal stehen folgende sys-Kommandos zur Verfügung:
+
+| sys # | Bedeutung                 | Parameter in A | Parameter in B | Ergebnis in A |
+| ----- | ------------------------- | -------------- | -------------- | ------------- |
+| $10   | clear screen              | -              | -              | 1=ok, 0=error |
+| $11   | print char                | char/word      | -              | 1=ok, 0=error |
+| $12   | print number              | number         | base: 10 / 16  | 1=ok, 0=error |
+| $13   | print string              | @text          | -              | 1=ok, 0=error |
+| $14   | print string with newline | @text          | -              | 1=ok, 0=error |
+| $15   | update screen             | @screen memory | -              | 1=ok, 0=error |
+| $16   | start editor (tbd)        | -              | -              | 1=ok, 0=error |
+| $17   | input string              | @destination   | -              | size          |
+| $18   | print from shared memory  | -              | -              | 1=ok, 0=error |
+
+Um die Speicherverwaltung für eine in ASM geschriebene Anwendung bei bestimmten Terminal-Ein-/Ausgaben zu vereinfachen, gibt es in Lua einen zusätzlichen Datenpuffer, hier als "shared memory" bezeichnet. Diesen Puffer verwenden sys-Kommandos, um untereinander Daten auszutauschen. Die CPU hat keinen Zugriff auf diesen Speicher.  Dies wird bspw. dazu genutzt, die Daten  des "list files" Kommando direkt auf dem Terminal auszugeben:
+
+```assembly
+move  A, #TEXT          ; file name
+sys   #$57              ; list files (->SM)
+sys   #$18              ; print SM (<-SM)
+```
+
+[pdp13_terminal|image]
+
+## Tape Drive
+
+Das Tape Drive vervollständigt als weitere Block den Rechneraufbau. Damit verfügt der Rechner jetzt über einen echten Massenspeicher, auf dem Daten und Programme wiederholt gespeichert und gelesen werden können. Der Rechner ist mit Hilfe des BIOS ROM Chips auch in der Lage, von diesem Speichermedium zu booten. 
+
+Damit das Tape Drive genutzt werden kann, muss es mit einem Magnetic Tape bestückt und über das Menü gestartet werden. Wird das Tape Drive wieder gestoppt, kann das Tape mit den Daten auch wieder entnommen werden. Damit dienen Tapes auch der Datensicherung und Weitergabe.
+
+Es kann maximal ein Tape Drive am Rechner angeschlossen werden. Das Tape Drive muss bei der Pfadangabe über `t/`, also bspw. `t/myfile.txt` angesprochen werden.
+
+[pdp13_tape_drive|image]
+
+## Hard Disk
+
+Die Hard Disk vervollständigt als weitere Block den Rechneraufbau. Damit verfügt der Rechner jetzt über einen zweiten Massenspeicher mit mehr Kapazität. Der Rechner ist auch hier mit Hilfe des BIOS ROM Chips in der Lage, von diesem Speichermedium zu booten.
+
+Es kann maximal eine Hard Disk am Rechner angeschlossen werden. Der Zugriff auf die Hard Disk erfolgt über `h/`, also bspw. `h/myfile.txt`
+
+**Achtung: Wird dieser Block abgebaut, sind die Daten weg! Dieser Block ist daher zur Sicherheit auch nur schwer zu entfernen.**
+
+[pdp13_hard_disk|image]
 
 ## Programmieraufgaben
 

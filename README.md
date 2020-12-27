@@ -52,4 +52,5 @@ Required: default,tubelib2,techage,vm16
 - 2020-12-15  v0.03  * Add memory rack, monitor program, ICs and much more
 - 2020-12-18  v0.04  * Add UDP like communication mechanism
 - 2020-12-20  v0.05  * Add OS ROM chip and exam2
+- 2020-12-28  v0.06  * Add terminal, tape drive, hard dirk, and more
 

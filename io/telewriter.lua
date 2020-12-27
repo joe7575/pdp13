@@ -159,7 +159,18 @@ local function add_line_to_fifo(pos, mem, text)
 	if text and #mem.OutFifo < 16 then
 		table.insert(mem.OutFifo, text)
 		minetest.get_node_timer(pos):start(DELAY)
-		play_sound(pos)
+	end
+end
+
+local function add_string_to_fifo(pos, mem, text)
+	mem.OutFifo = mem.OutFifo or {}
+	-- free FIFO space?
+	if text then
+		if #mem.OutFifo == 0 then
+			mem.OutFifo = {text}
+		elseif #mem.OutFifo < 16 then
+			mem.OutFifo[#mem.OutFifo] = (mem.OutFifo[#mem.OutFifo] or "")..text
+		end
 	end
 end
 
@@ -315,6 +326,18 @@ local function on_receive_fields(pos, formname, fields, player)
 	if minetest.is_protected(pos, player:get_player_name()) then
 		return
 	end
+	
+	local mem = techage.get_nvm(pos)
+	mem.codes = mem.codes or {}
+	
+	if fields.tab == "2" then
+		M(pos):set_string("formspec", formspec2(mem))
+		return
+	elseif fields.tab == "1" then
+		M(pos):set_string("formspec", formspec1(pos, mem))
+		return
+	end
+	
 	if M(pos):get_string("cpu_number") == "" then
 		return
 	end
@@ -322,15 +345,9 @@ local function on_receive_fields(pos, formname, fields, player)
 		return
 	end
 	
-	local mem = techage.get_nvm(pos)
-	mem.codes = mem.codes or {}
-	if fields.tab == "2" then
-		M(pos):set_string("formspec", formspec2(mem))
-	elseif fields.tab == "1" then
-		M(pos):set_string("formspec", formspec1(pos, mem))
-	elseif fields.key_enter_field or fields.enter then
+	if fields.key_enter_field or fields.enter then
 		if M(pos):get_int("monitor") == 1 then
-			local lines = pdp13.monitor(mem.cpu_pos, mem, fields.command or "")
+			local _, lines = pdp13.monitor(mem.cpu_pos, mem, fields.command or "")
 			add_lines_to_fifo(pos, mem, lines)
 		else
 			add_line_to_fifo(pos, mem, fields.command or "")
@@ -446,10 +463,15 @@ minetest.register_node("pdp13:telewriter_prog", {
 
 techage.register_node({"pdp13:telewriter", "pdp13:telewriter_prog"}, {
 	on_recv_message = function(pos, src, topic, payload)
-		if topic == "output" then
+		if topic == "println" then
 			payload = tostring(payload) or ""
 			local mem = techage.get_nvm(pos)
 			add_line_to_fifo(pos, mem, payload)
+			return 1
+		elseif topic == "print" then
+			payload = tostring(payload) or ""
+			local mem = techage.get_nvm(pos)
+			add_string_to_fifo(pos, mem, payload)
 			return 1
 		elseif topic == "input" then
 			local mem = techage.get_nvm(pos)
@@ -473,7 +495,7 @@ techage.register_node({"pdp13:telewriter", "pdp13:telewriter_prog"}, {
 			mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 			add_line_to_fifo(pos, mem, "stopped")
 			return true
-		elseif topic == "punch" then  -- punch tape
+		elseif topic == "punch" then  -- punch "dongle" tape from exams
 			local mem = techage.get_nvm(pos)
 			mem.reader = true
 			gen_rom_tape(pos, payload)

@@ -14,6 +14,11 @@
 
 local MAX_SIZE = 80
 
+local HiddenList = {
+	["pdp13:tape_monitor"] = true,
+	["pdp13:tape_bios"] = true,
+	["pdp13:tape_bootdemo"] = true,
+}
 
 local function on_use(itemstack, user)
 	local name = itemstack:get_name()
@@ -40,7 +45,7 @@ local function register_tape(name, desc, text, code)
 		inventory_image = "pdp13_punched_tape.png",
 		groups = {book = 1, flammable = 3, pdp13_ptape = 1},
 		on_use = on_use})
-	if name ~= "pdp13:tape_monitor" and name ~= "pdp13:tape_bios" then -- do not publish
+	if not HiddenList[name] then -- do not publish hidden demos
 		pdp13.register_demotape(name, desc)
 	end
 end
@@ -65,22 +70,22 @@ register_tape("pdp13:tape_7seg", "7-Segment Demo", [[
 
 register_tape("pdp13:tape_color", "Color Lamp Demo", [[
 ; Color lamp demo v1.0
-; PDP13 Color Lamp on port #0
+; PDP13 Color Lamp on port #1
 
-0000: 2010, 0002       move A, #$80    ; value command
-0002: 2030, 0000       move B, #00     ; color start value
+0000: 2010, 0080       move A, #$80    ; 'value' command
+0002: 2030, 0000       move B, #00     ; value in B
 
-                   loop:
+loop:
 0004: 4030, 003F       and  B, #$3F    ; values from 1 to 64
 0006: 3030, 0001       add  B, #01
-0008: 6600, 0000       out #00, A
+0008: 6600, 0001       out #01, A
 000A: 0000             nop             ; delay
 000B: 1200, 0004       jump loop
 ]], [[:800000020100080203000004030003F30300001
-:500080066000000000012000004
+:500080066000001000012000004
 :00000FF]])
 
-register_tape("pdp13:tape_tele", "Telewriter Demo", [[
+register_tape("pdp13:tape_tele", "Telewriter Output Demo", [[
 ; Hello world for the Telewriter v1.0
 
 0000: 2010, 0004       move    A, #TEXT
@@ -97,7 +102,7 @@ TEXT:
 :8000800006F00200057006F0072006C00640000
 :00000FF]])
 
-register_tape("pdp13:tapetelecolor", "Telewriter Color Demo", [[
+register_tape("pdp13:tapetelecolor", "Telewriter Input Demo", [[
 ; Input number demo v1.0
 ; PDP13 Color Lamp on port #0
 
@@ -200,37 +205,37 @@ register_tape("pdp13:tape_bios", "PDP13 BIOS Program", [[
 
 register_tape("pdp13:tape_udp_send", "PDP13 UPD Send", [[
 ; UDP send v1.0
-; Read string from telewriter and send to remote CPU on port #1
+; Read string from telewriter and send to remote CPU on port #2
 
 start:
 0000: 2010, 0100       move  A, #$100
 0002: 0801             sys   #1        ; read string from telewriter
 0003: 5C10, 0000       bneg  A, start  ; val >= $8000: branch to move
 
-0005: 202D             move  B, #1     ; port # in B
-0006: 2010, 0100       move  A, #$100  ; addr in A
-0008: 0810             sys   #16       ; udp send
-0009: 1200, 0000       jump  start
-]], [[:80000002010010008015C100000202D20100100
-:3000800081012000000
+0005: 2030, 0002       move  B, #2     ; port # in B
+0007: 2010, 0100       move  A, #$100  ; addr in A
+0009: 0828             sys   #40       ; udp send
+000A: 1200, 0000       jump  start
+]], [[:80000002010010008015C100000203000022010
+:40008000100082812000000
 :00000FF]])
 
 register_tape("pdp13:tape_udp_recv", "PDP13 UPD Receive", [[
 ; UDP receive v1.0
-; Read string from remote CPU on port #1 and write to telewriter
+; Read string from remote CPU on port #2 and write to telewriter
 
 start:
-0000: 202D             move  B, #1     ; port # in B
-0001: 2010, 0100       move  A, #$100  ; addr in A
-0003: 0811             sys   #17       ; udp recv
-0004: 2C00             dec   A
-0005: 5010, 0000       bnze  A, start  ; 0 => msg received
+0000: 2030, 0002       move  B, #2     ; port # in B
+0002: 2010, 0100       move  A, #$100  ; addr in A
+0004: 0829             sys   #41       ; udp recv
+0005: 2C00             dec   A
+0006: 5010, 0000       bnze  A, start  ; 0 => msg received
 
-0007: 2010, 0100       move  A, #$100
-0009: 0800             sys   #0        ; output string to telewriter
-000A: 1200, 0000       jump  start
-]], [[:8000000202D2010010008112C00501000002010
-:40008000100080012000000
+0008: 2010, 0100       move  A, #$100
+000A: 0800             sys   #0        ; output string to telewriter
+000B: 1200, 0000       jump  start
+]], [[:8000000203000022010010008292C0050100000
+:500080020100100080012000000
 :00000FF]])
 
 register_tape("pdp13:tape_terminal", "PDP13 Terminal Demo", [[
@@ -240,23 +245,53 @@ Output
  - ROM size
  - tape info 
 see: https://github.com/joe7575/pdp13/blob/main/examples/terminal.asm 
-]], [[:800000008102010004608142010DEAD2220FFFF
+]], [[:800000008102010004008142010DEAD2220FFFF
 :800080020110FFF3410DEAD5010001220100004
 :80010001200002820111FFF3410DEAD5010001C
 :8001800201000081200002820113FFF3410DEAD
 :800200050100026201000101200002820100020
-:80028002030010008212010010008132010005F
-:800300008140873203001000821201001000813
-:80038002010006608142010006D081420100073
-:8004000085708182010007908141C0000230023
-:800480000230020005400650072006D0069006E
-:80050000061006C002000440065006D006F0020
-:800580000760031002000230023002300000020
-:8006000004B002000520041004D00000020004B
-:800680000200052004F004D0000005400610070
-:80070000065003A00000074002F002A002E002A
-:8007800000000520065006100640079002E0000
+:80028002030000A081220100059081408732030
+:8003000000A0812201000600814201000670814
+:80038002010006D085708182010007108141C00
+:80040000023002300230020005400650072006D
+:80048000069006E0061006C002000440065006D
+:8005000006F0020007600310020002300230023
+:800580000000020004B002000520041004D0000
+:80060000020004B00200052004F004D00000074
+:800680000240020006C007300000074002F002A
+:60070000000007400240020005F0000
 :00000FF]])
 
+register_tape("pdp13:tape_bootdemo", "PDP13 Boot Demo", [[
+Generate files:
+ - 'boot'
+ - 'demo.h16'
+Output file list
+see: https://github.com/joe7575/pdp13/blob/main/examples/boot_demo.asm 
+]], [[:800000012000015686068802081085020602003
+:800080008552001082230202820745000072003
+:8001000085120046C806C601800081020100033
+:80018000814201000972030009E204D16000002
+:80020002010009E203000482050000316000002
+:8002800201000A90814201000AF085708182010
+:800300000B308141C0000230023002300200042
+:8003800006F006F0074002000440065006D006F
+:800400000200076003100200023002300230000
+:8004800003A0038003000300030003000300030
+:800500000320030003100300030003000380030
+:800580000320030003300300030003000300030
+:800600000340030003300300030003000330046
+:800680000330030003300300030003000300031
+:80070000000003A003500300030003000380030
+:800780000300036003600300030003000300030
+:800800000300030003000300030003100320030
+:8008800003000300030003000340000003A0030
+:800900000300030003000300046004600000074
+:8009800002F0062006F006F007400000074002F
+:800A00000640065006D006F002E006800310036
+:800A80000000054006100700065003A00000074
+:800B000002F002A000000520065006100640079
+:200B800002E0000
+:00000FF]])
 
 

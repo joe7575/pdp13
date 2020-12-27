@@ -15,6 +15,7 @@
 -- for lazy programmers
 local M = minetest.get_meta
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
+local S2P = minetest.string_to_pos
 local S2T = function(s) return minetest.deserialize(s) or {} end
 local T2S = function(t) return minetest.serialize(t) or 'return {}' end
 
@@ -45,6 +46,15 @@ local function can_dig(pos)
 	return M(pos):get_int("has_power") ~= 1
 end
 
+local function after_dig_node(pos, oldnode, oldmetadata)
+	local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
+	if cpu_pos then
+		pdp13.get_filesystem(cpu_pos, pdp13.HDD_NUM)
+	end
+end
+
+
+
 minetest.register_node("pdp13:hard_disk", {
 	description = "PDP-13 Hard Disk",
 	drawtype = "nodebox",
@@ -67,8 +77,9 @@ minetest.register_node("pdp13:hard_disk", {
 	after_place_node = after_place_node,
 	pdp13_on_receive = pdp13_on_receive,
 	can_dig = can_dig,
+	after_dig_node = after_dig_node,
 	paramtype2 = "facedir",
-	groups = {cracky=2, crumbly=2, choppy=2},
+	groups = {cracky=1},
 	on_rotate = screwdriver.disallow,
 	is_ground_content = false,
 	sounds = default.node_sound_wood_defaults(),

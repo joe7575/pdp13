@@ -17,7 +17,7 @@ local M = minetest.get_meta
 
 local OS_ENA	= 2  -- OS enables
 local FS_ENA	= 3  -- File System enabled
-local PROMPT    = "[pdp13] ~$ "
+local PROMPT    = "[pdp13] t/$ "
 
 local Commands = {}  -- [cmnd] = func(pos, mem, cmd, rest): returns list of output strings
 local Files = pdp13.Files

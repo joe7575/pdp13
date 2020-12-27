@@ -36,7 +36,7 @@ local function fopen(pos, address, val1, val2)
 	local number = M(pos):get_string("node_number")
 	number = tonumber(number)
 	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
-	local drive, fname = filename(s)
+	local drive, fname = filename(s, number)
 	print("fopen", drive, fname)
 	if drive and Files[number] and Files[number][drive] then
 		Files[number][drive][fname] = Files[number][drive][fname] or ""
@@ -132,7 +132,7 @@ local function file_size(pos, address, val1, val2)
 	local number = M(pos):get_string("node_number")
 	number = tonumber(number)
 	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
-	local drive, fname = filename(s)
+	local drive, fname = filename(s, number)
 	print("file_size", drive, fname)
 	if drive and Files[number] and Files[number][drive] then
 		return string.len(Files[number][drive][fname] or "")
@@ -144,8 +144,9 @@ local function list_files(pos, address, val1, val2)
 	local number = M(pos):get_string("node_number")
 	number = tonumber(number)
 	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
-	local drive, fname = filespattern(s)
-	print("list_files", drive, fname, dump(Files[number]))
+	print(dump(s))
+	local drive, fname = filespattern(s, number)
+	print("list_files", drive, fname)
 	if drive and Files[number] and Files[number][drive] then
 		local t = {}
 		local total_size = 0
@@ -170,7 +171,7 @@ local function remove_files(pos, address, val1, val2)
 	local number = M(pos):get_string("node_number")
 	number = tonumber(number)
 	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
-	local drive, fname = filespattern(s)
+	local drive, fname = filespattern(s, number)
 	print("remove_files", drive, fname)
 	if drive and Files[number] and Files[number][drive] then
 		local t = {}
@@ -192,9 +193,9 @@ local function copy_file(pos, address, val1, val2)
 	local number = M(pos):get_string("node_number")
 	number = tonumber(number)
 	local s1 = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
-	local drive1, fname1 = filename(s1)
+	local drive1, fname1 = filename(s1, number)
 	local s2 = vm16.read_ascii(pos, val2, pdp13.MAX_FNAME_LEN)
-	local drive2, fname2 = filename(s2)
+	local drive2, fname2 = filename(s2, number)
 	print("copy files", drive1, fname1, drive2, fname2)
 	if drive1 and drive2 then
 		if Files[number] and Files[number][drive1] and Files[number][drive2] then
@@ -209,9 +210,9 @@ local function move_file(pos, address, val1, val2)
 	local number = M(pos):get_string("node_number")
 	number = tonumber(number)
 	local s1 = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
-	local drive1, fname1 = filename(s1)
+	local drive1, fname1 = filename(s1, number)
 	local s2 = vm16.read_ascii(pos, val2, pdp13.MAX_FNAME_LEN)
-	local drive2, fname2 = filename(s2)
+	local drive2, fname2 = filename(s2, number)
 	print("copy files", drive1, fname1, drive2, fname2)
 	if drive1 and drive2 then
 		if Files[number] and Files[number][drive1] and Files[number][drive2] then
@@ -222,6 +223,14 @@ local function move_file(pos, address, val1, val2)
 	end
 	return 0
 end
+
+local function change_dir(pos, address, val1, val2)
+	local number = M(pos):get_string("node_number")
+	number = tonumber(number)
+	pdp13.set_current_drive(number, string.char(val1))
+	return 1
+end
+
 
 local help = [[+-----+----------------+-------------+------+
 |sys #| File System    | A    | B    | rtn  |
@@ -237,6 +246,7 @@ local help = [[+-----+----------------+-------------+------+
  $58   remove files     @fname  -     num f
  $59   copy file        @from  @to    1=ok
  $5A   move file        @from  @to    1=ok
+ $5B   change dir       drive         1=ok
  ]]
 
 pdp13.register_SystemHandler(0x50, fopen, help)
@@ -250,6 +260,7 @@ pdp13.register_SystemHandler(0x57, list_files)
 pdp13.register_SystemHandler(0x58, remove_files)
 pdp13.register_SystemHandler(0x59, copy_file)
 pdp13.register_SystemHandler(0x5A, move_file)
+pdp13.register_SystemHandler(0x5B, change_dir)
 
 
 function pdp13.init_filesystem(pos, has_tape, has_hdd)
@@ -278,7 +289,9 @@ function pdp13.get_filesystem(pos, drive)
 	number = tonumber(number)
 	if number then
 		Files[number] = Files[number] or {}
-		return T2S(Files[number][drive])
+		local s = T2S(Files[number][drive])
+		Files[number][drive] = nil
+		return s
 	end
 end
 

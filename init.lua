@@ -56,7 +56,7 @@ dofile(MP.."/io/terminal.lua")
 -- Items
 dofile(MP.."/items/punch_tape.lua")
 dofile(MP.."/items/magnetic_tape.lua")
-dofile(MP.."/items/demotape.lua")
+dofile(MP.."/items/demo_tapes.lua")
 dofile(MP.."/items/chips.lua")
 
 -- Exams
@@ -74,4 +74,7 @@ techage.add_manual_items({
 		pdp13_tape = "pdp13:tape",
 		pdp13_7segment = "pdp13:7segment10",
 		pdp13_lamp = "pdp13:lamp_off",
+		pdp13_terminal = "pdp13:terminal",
+		pdp13_tape_drive = "pdp13:tape_drive",
+		pdp13_hard_disk = "pdp13:hard_disk",
 })

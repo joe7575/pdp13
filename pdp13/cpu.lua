@@ -378,8 +378,8 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 			local number = meta:get_string("node_number")
 			pdp13.io_store(pos, number)
 			selftest(pos, mem, number, ram_size)
-			local has_tape = meta:get_int("has_tape") and rom_size >= 2
-			local has_hdd = meta:get_int("has_hdd") and rom_size >= 3
+			local has_tape = meta:get_int("has_tape") == 1 and rom_size >= 2
+			local has_hdd = meta:get_int("has_hdd") == 1 and rom_size >= 3
 			pdp13.init_filesystem(pos, has_tape, has_hdd)
 			return true
 		elseif data == "off" then
@@ -503,11 +503,23 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 			local resp = pdp13.single_step_cpu(pos)
 			fs_single_step(pos, mem, resp)
 		elseif fields.key_enter_field or fields.enter then
+			local rom_size = pdp13.tROM_SIZE[M(pos):get_int("rom_size")]
 			if fields.command == "mon" then
-				if M(pos):get_int("rom_size") > 0 then
+				if rom_size >= 8 then
 					mem.monitor = true
 					programmer_cmnd(pos, "monitor", true)
 					fs_in_monitor(pos, mem)
+				else
+					fs_cpu_stopped(pos, mem)
+				end
+			elseif fields.command == "boot" then
+				if rom_size >= 16 then
+					if pdp13.sys_call(pos, pdp13.COLD_START, 0, 0) == 1 then
+						fs_cpu_running(pos, mem)
+						pdp13.start_cpu(pos)
+					else
+						fs_help(pos, mem, "error")
+					end
 				else
 					fs_cpu_stopped(pos, mem)
 				end

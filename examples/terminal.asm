@@ -34,10 +34,8 @@ t32k:
     move  A, #32
 
 ram_size:                   ; size in A
-    move  B, #$100          ; str buffer
-    sys   #$21              ; num to string
-    move  A, #$100          ; str buffer
-    sys   #$13              ; print size
+    move  B, #10            ; base 10
+    sys   #$12              ; print size
 
     move  A, #TEXT2
     sys   #$14              ; print text
@@ -45,10 +43,8 @@ ram_size:                   ; size in A
     ;=== ROM size ===
 rom_size: 
     sys   #$73              ; ROM size (->A)
-    move  B, #$100          ; str buffer
-    sys   #$21              ; num to string
-    move  A, #$100          ; str buffer
-    sys   #$13              ; print size
+    move  B, #10            ; base 10
+    sys   #$12              ; print size
     
     move  A, #TEXT3
     sys   #$14              ; print text
@@ -61,10 +57,9 @@ rom_size:
     sys   #$57              ; list files (->SM)
     sys   #$18              ; print SM (<-SM)
     
-    ;=== Ready ===
+    ;=== Prompt ===
     move  A, #TEXT6
     sys   #$14              ; println
-
     halt
 
     .text
@@ -75,8 +70,8 @@ TEXT2:
 TEXT3:
     " K ROM\0"
 TEXT4:
-    "Tape:\0"
+    "t$ ls\0"
 TEXT5:
-    "t/*.*\0"
+    "t/*\0"
 TEXT6:
-    "Ready.\0"
+    "t$ _\0"

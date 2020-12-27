@@ -2,5 +2,5 @@
 *.o
 trash/
 test/
-examples/test.*
+examples/test*.*
 examples/exam*.*

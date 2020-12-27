@@ -39,14 +39,25 @@ local function trim_text(text)
 	return table.concat(t, "\n")
 end
 
-local function register_terminal(pos, cmnd, data)
+local function register_terminal(pos)
 	local names = {"pdp13:cpu1", "pdp13:cpu1_on"}
-	local cpu_pos = pdp13.send(pos, nil, names,  cmnd, data)
+	local cpu_pos = pdp13.send(pos, nil, names,  "reg_term", pos)
 	if cpu_pos then
 		M(pos):set_string("cpu_pos", P2S(cpu_pos))
 		-- needed for sys commands
 		local mem = techage.get_nvm(cpu_pos)
 		mem.term_pos = pos
+	end
+end	
+
+local function register_programmer(pos)
+	local names = {"pdp13:cpu1", "pdp13:cpu1_on"}
+	local number = M(pos):get_string("node_number")
+	local cpu_num = pdp13.send(pos, nil, names,  "reg_prog", number)
+	if cpu_num then
+		M(pos):set_string("cpu_number", cpu_num)
+		local cpu_pos = (techage.get_node_info(cpu_num) or {}).pos
+		M(pos):set_string("cpu_pos", P2S(cpu_pos))
 	end
 end	
 
@@ -106,7 +117,7 @@ end
 
 local function print_string(pos, mem, s)
 	mem.screen_buffer = mem.screen_buffer..s
-	formspec1(pos, mem)
+	--formspec1(pos, mem)
 end
 
 local function print_string_ln(pos, mem, s)
@@ -125,7 +136,7 @@ local function screenbuffer_update(pos, mem, text)
 end
 
 local function monitor_print_lines(pos, mem, lines)
-	for _,line in ipairs(lines) do
+	for _,line in ipairs(lines or {}) do
 		mem.screen_buffer = trim_text(mem.screen_buffer..line..NEWLINE)
 	end
 	formspec1(pos, mem)
@@ -200,8 +211,11 @@ local function on_receive_fields(pos, formname, fields, player)
 	if fields.key_enter_field or fields.enter then
 		if M(pos):get_int("monitor") == 1 then
 			print("monitor")
-			local lines = pdp13.monitor(mem.cpu_pos, mem, fields.command or "")
-			monitor_print_lines(pos, mem, lines)
+			local prompt, lines = pdp13.monitor(mem.cpu_pos, mem, fields.command or "", true)
+			if prompt then
+				print_string_ln(pos, mem, prompt)
+			end
+			monitor_print_lines(pos, mem, lines or {})
 		else
 			print("terminal")
 			mem.input = string.sub(fields.command or "", 1, STR_LEN)
@@ -231,7 +245,7 @@ local function on_receive_fields(pos, formname, fields, player)
 end
 
 local function pdp13_on_receive(pos, src_pos, cmnd, data)
-	print("pdp13_on_receive")
+	--print("pdp13_on_receive", cmnd)
 	local mem = techage.get_nvm(pos)
 	if cmnd == "input" then
 		if mem.input then
@@ -256,19 +270,20 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 		return 1
 	elseif cmnd == "register" then
 		if M(pos):get_int("monitor") == 1 then
-			register_terminal(pos, "reg_prog", pos)
+			register_programmer(pos)
 		else
-			register_terminal(pos, "reg_term", pos)
+			register_terminal(pos)
 		end
 		return true
 	elseif cmnd == "power" then
 		M(pos):set_int("has_power", data == "on" and 1 or 0)
 		local mem = techage.get_nvm(pos)
 		if data == "on" then
-			print_string(pos, mem, "PDP13 Terminal")
+			print_string_ln(pos, mem, "PDP13 Terminal")
 		else
 			clear_screen(pos, mem)
 		end
+		mem.input = nil
 		return true
 	end
 end
@@ -332,3 +347,28 @@ minetest.register_node("pdp13:terminal_prog", {
 	is_ground_content = false,
 	sounds = default.node_sound_metal_defaults(),
 })
+
+-- For monitor mode
+techage.register_node({"pdp13:terminal", "pdp13:terminal_prog"}, {
+	on_recv_message = function(pos, src, topic, payload)
+		print("on_recv_message", topic)
+		if topic == "monitor" then
+			local mem = techage.get_nvm(pos)
+			if payload then
+				mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
+				clear_screen(pos, mem)
+				print_string_ln(pos, mem, "### Monitor v2.0 ###")
+			elseif mem.monitor then
+				print_string_ln(pos, mem, "end.")
+			end
+			mem.monitor = payload
+			return true
+		elseif topic == "stopped" then  -- CPU stopped
+			local mem = techage.get_nvm(pos)
+			mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
+			print_string_ln(pos, mem, "stopped")
+			return true
+		end
+	end,
+})	
+

@@ -39,22 +39,21 @@ end
 local function copy_tape_to_filesystem(pos)
 	local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 	local inv = M(pos):get_inventory()
-	
-	if inv:is_empty("main") then return nil end
+	if not cpu_pos or inv:is_empty("main") then return nil end
 	local stack = inv:get_stack("main", 1)
 	local name = stack:get_name()
 	if minetest.get_item_group(name, "pdp13_mtape") == 1 then
 		-- test if demo tape
 		local idef = minetest.registered_craftitems[name] or {}
 		if idef.code then
-			pdp13.set_filesystem(cpu_pos, 2, idef.code)
+			pdp13.set_filesystem(cpu_pos, pdp13.TAPE_NUM, idef.code)
 			return true
 		end
 		-- test if real tape
 		local meta = stack:get_meta()
 		if meta then
 			local data = meta:to_table().fields
-			pdp13.set_filesystem(pos, 2, data.code or "")
+			pdp13.set_filesystem(cpu_pos, pdp13.TAPE_NUM, data.code or "")
 			return true
 		end
 	end
@@ -64,13 +63,13 @@ local function copy_filesystem_to_tape(pos)
 	local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 	local inv = M(pos):get_inventory()
 	
-	if inv:is_empty("main") then return nil end
+	if not cpu_pos or inv:is_empty("main") then return nil end
 	local stack = inv:get_stack("main", 1)
 	if stack:get_name() == "pdp13:magnetic_tape" then
 		local meta = stack:get_meta()
 		if meta then
 			local data = meta:to_table().fields or {}
-			data.code = pdp13.get_filesystem(cpu_pos, 2) or ""
+			data.code = pdp13.get_filesystem(cpu_pos, pdp13.TAPE_NUM) or ""
 			meta:from_table({ fields = data })
 			inv:set_stack("main", 1, stack)
 			return true

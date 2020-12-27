@@ -1,10 +1,10 @@
 ; UDP receive v1.0
-; Read string from remote CPU on port #1 and write to telewriter
+; Read string from remote CPU on port #2 and write to telewriter
 
 start:
-    move  B, #1     ; port # in B
+    move  B, #2     ; port # in B
     move  A, #$100  ; addr in A
-    sys   #17       ; udp recv
+    sys   #41       ; udp recv
     dec   A
     bnze  A, start  ; 0 => msg received
 

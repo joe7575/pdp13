@@ -30,6 +30,7 @@ pdp13.LIST_FILES   = 0x57
 pdp13.REMOVE_FILES = 0x58
 pdp13.COPY_FILE    = 0x59
 pdp13.MOVE_FILE    = 0x5A
+pdp13.CHANGE_DIR   = 0x5B
 
 pdp13.COLD_START   = 0x70
 pdp13.WARM_START   = 0x71
