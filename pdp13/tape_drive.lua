@@ -36,30 +36,25 @@ local function has_tape(pos)
 end
 
 
-local function copy_tape_to_filesystem(pos)
+local function copy_uid_to_filesystem(pos)
 	local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 	local inv = M(pos):get_inventory()
 	if not cpu_pos or inv:is_empty("main") then return nil end
 	local stack = inv:get_stack("main", 1)
 	local name = stack:get_name()
 	if minetest.get_item_group(name, "pdp13_mtape") == 1 then
-		-- test if demo tape
-		local idef = minetest.registered_craftitems[name] or {}
-		if idef.code then
-			pdp13.set_filesystem(cpu_pos, pdp13.TAPE_NUM, idef.code)
-			return true
-		end
-		-- test if real tape
 		local meta = stack:get_meta()
 		if meta then
 			local data = meta:to_table().fields
-			pdp13.set_filesystem(cpu_pos, pdp13.TAPE_NUM, data.code or "")
-			return true
+			if data.uid then
+				M(cpu_pos):set_string("uid_t", data.uid)
+				return true
+			end
 		end
 	end
 end
 
-local function copy_filesystem_to_tape(pos)
+local function copy_uid_to_tape(pos)
 	local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 	local inv = M(pos):get_inventory()
 	
@@ -69,7 +64,7 @@ local function copy_filesystem_to_tape(pos)
 		local meta = stack:get_meta()
 		if meta then
 			local data = meta:to_table().fields or {}
-			data.code = pdp13.get_filesystem(cpu_pos, pdp13.TAPE_NUM) or ""
+			data.uid = pdp13.get_uid(cpu_pos, "t")
 			meta:from_table({ fields = data })
 			inv:set_stack("main", 1, stack)
 			return true
@@ -102,7 +97,7 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 		else
 			M(pos):set_string("formspec", formspec("no power"))
 			M(pos):set_int("running", 0)
-			copy_filesystem_to_tape(pos)
+			copy_uid_to_tape(pos)
 		end
 		return true
 	end
@@ -159,13 +154,13 @@ local function on_receive_fields(pos, formname, fields, player)
 	end
 	
 	if fields.start and has_tape(pos) then
-		M(pos):set_string("formspec", formspec("started"))
+		M(pos):set_string("formspec", formspec("running"))
 		M(pos):set_int("running", 1)
-		copy_tape_to_filesystem(pos)
+		copy_uid_to_filesystem(pos)
 	elseif fields.stop then
 		M(pos):set_string("formspec", formspec("stopped"))
 		M(pos):set_int("running", 0)
-		copy_filesystem_to_tape(pos)
+		copy_uid_to_tape(pos)
 	end
 end
 

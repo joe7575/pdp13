@@ -37,9 +37,32 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 	end
 end
 
-local function after_place_node(pos, placer)
+local function after_place_node(pos, placer, itemstack)
 	local meta = minetest.get_meta(pos)
 	local inv = meta:get_inventory()
+	print(1)
+	if itemstack then
+	print(2)
+		local stack_meta = itemstack:get_meta()
+		if stack_meta then
+	print(3)
+			pdp13.set_uid(pos, "h", stack_meta:get_string("uid_h"))
+			print(meta:get_string("uid_h"), stack_meta:get_string("uid_h"))
+			return
+		end
+	end
+	pdp13.set_uid(pos, "h")
+	print(meta:get_string("uid_h"))
+end
+
+local function preserve_metadata(pos, oldnode, oldmetadata, drops)
+	print(dump(oldmetadata))
+	local uid_h = oldmetadata and oldmetadata.uid_h
+	if uid_h then
+		local stack_meta = drops[1]:get_meta()
+		stack_meta:set_string("uid_h", uid_h)
+		print(stack_meta:get_string("uid_h"))
+	end
 end
 
 local function can_dig(pos)
@@ -52,8 +75,6 @@ local function after_dig_node(pos, oldnode, oldmetadata)
 		pdp13.get_filesystem(cpu_pos, pdp13.HDD_NUM)
 	end
 end
-
-
 
 minetest.register_node("pdp13:hard_disk", {
 	description = "PDP-13 Hard Disk",
@@ -75,6 +96,7 @@ minetest.register_node("pdp13:hard_disk", {
 		"pdp13_chassis.png^pdp13_harddisk.png^pdp13_frame.png",
 	},
 	after_place_node = after_place_node,
+	preserve_metadata = preserve_metadata,
 	pdp13_on_receive = pdp13_on_receive,
 	can_dig = can_dig,
 	after_dig_node = after_dig_node,

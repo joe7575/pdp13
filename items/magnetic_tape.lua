@@ -20,7 +20,7 @@ local function on_use(itemstack, user)
 	local data = meta:to_table().fields
 	local name = data.name or ""
 	local desc = data.desc or ""
-	local size = string.len(data.code or "")
+	local uid = data.uid or "00000000"
 
 	name = minetest.formspec_escape(name)
 	desc = minetest.formspec_escape(desc)
@@ -31,7 +31,7 @@ local function on_use(itemstack, user)
 		default.gui_slots..
 		"field[0.3,0.5;10,1;name;Name:;"..name.."]"..
 		"textarea[0.3,1.6;10,1.8;desc;Description:;"..desc.."]"..
-		"label[0,3.3;Used: "..size.." bytes]"..
+		"label[0,3.3;ID: "..uid.."]"..
 		"button_exit[3.5,7.8;3,1;save;Save]"
 	
 	local player_name = user:get_player_name()
@@ -50,7 +50,6 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		data.name = fields.name:sub(1, MAX_SIZE)
 		data.description = data.name
 		data.desc = fields.desc or ""
-		data.code = fields.code or ""
 		stack:get_meta():from_table({ fields = data })
 	end
 	player:set_wielded_item(stack)

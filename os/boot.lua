@@ -33,9 +33,9 @@ end
 local function load_h16file(pos, address, val1, val2)
 	print("load_h16file")
 	local res = 0
-	local fref = pdp13.sys_call(pos, pdp13.FOPEN, val1, val2)
+	local fref = pdp13.sys_call(pos, pdp13.FOPEN, val1, 0)
 	if fref then
-		if pdp13.sys_call(pos, pdp13.READ_FILE, fref, val2) == 1 then
+		if pdp13.sys_call(pos, pdp13.READ_FILE, fref, 0) == 1 then
 			local number = M(pos):get_string("node_number")
 			number = tonumber(number)
 			local s = pdp13.SharedMemory[number]
@@ -70,10 +70,9 @@ local function cold_start(pos, address, val1, val2)
 	local fname = read_boot_file(pos, "t/boot") or read_boot_file(pos, "h/boot")
 	if fname then
 		if pdp13.sys_call(pos, pdp13.LOAD_H16, fname, val2, 0x0000) == 1 then
-			local number = M(pos):get_string("node_number")
-			number = tonumber(number)
-			local drive, _ = pdp13.filename(fname, number)
-			pdp13.set_current_drive(number, drive)
+			local mem = techage.get_mem(pos)
+			local drive, _ = pdp13.filename(fname, mem.current_drive)
+			pdp13.set_current_drive(mem, drive)
 			warm_start(pos, address, val1, val2)
 			return 1
 		end
@@ -90,9 +89,8 @@ end
 
 local function get_current_drive(pos, address, val1, val2)
 	print("get_current_drive")
-	local number = M(pos):get_string("node_number")
-	number = tonumber(number)
-	return pdp13.get_current_drive_char(number)
+	local mem = techage.get_mem(pos)
+	return string.byte(mem.current_drive or 't', 1)
 end
 
 
