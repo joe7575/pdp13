@@ -13,6 +13,10 @@ A computer simulation that will take you back to the beginnings of programming:
 - Machine code
 - Telewriter
 - Punch tapes
+- Terminals
+- Hard disks
+- Tape drives
+- Can boot from the drives
 - Monitor program with assembler / disassembler (in-game)
 - RAM and ROM chips to expand the computer
 - Communication possibilities between computers

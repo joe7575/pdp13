@@ -1,5 +1,8 @@
 *.bak
 *.o
+*.lst
+*.h16
+*.com
 trash/
 test/
 examples/test*.*
