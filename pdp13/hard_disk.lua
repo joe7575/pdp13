@@ -40,28 +40,22 @@ end
 local function after_place_node(pos, placer, itemstack)
 	local meta = minetest.get_meta(pos)
 	local inv = meta:get_inventory()
-	print(1)
 	if itemstack then
-	print(2)
 		local stack_meta = itemstack:get_meta()
 		if stack_meta then
-	print(3)
 			pdp13.set_uid(pos, "h", stack_meta:get_string("uid_h"))
 			print(meta:get_string("uid_h"), stack_meta:get_string("uid_h"))
 			return
 		end
 	end
 	pdp13.set_uid(pos, "h")
-	print(meta:get_string("uid_h"))
 end
 
 local function preserve_metadata(pos, oldnode, oldmetadata, drops)
-	print(dump(oldmetadata))
 	local uid_h = oldmetadata and oldmetadata.uid_h
 	if uid_h then
 		local stack_meta = drops[1]:get_meta()
 		stack_meta:set_string("uid_h", uid_h)
-		print(stack_meta:get_string("uid_h"))
 	end
 end
 
@@ -101,7 +95,7 @@ minetest.register_node("pdp13:hard_disk", {
 	can_dig = can_dig,
 	after_dig_node = after_dig_node,
 	paramtype2 = "facedir",
-	groups = {cracky=1},
+	groups = {cracky=2, crumbly=2, choppy=2},
 	on_rotate = screwdriver.disallow,
 	is_ground_content = false,
 	sounds = default.node_sound_wood_defaults(),

@@ -30,7 +30,7 @@ local OpenFiles = {}  -- {fpos, uid, drive, fname}
 local OpenFilesRef = 1
 
 local function fsize(fname)
-	local f = io.open(WP..fname, "r")
+	local f = io.open(WP..fname, "rb")
 	if f then
 		local size = f:seek("end")
 		f:close()
@@ -60,8 +60,6 @@ local function get_uid(pos, drive)
 			uid = string.format("%08X", pdp13.UIDCounter)
 			M(pos):set_string("uid_t", uid)
 		end
-		-- Defensive programming
-		pdp13.UIDCounter = math.max(pdp13.UIDCounter, uid)
 		return uid
 	elseif drive == 'h' then
 		local uid = M(pos):get_string("uid_h")
@@ -70,8 +68,6 @@ local function get_uid(pos, drive)
 			uid = string.format("%08X", pdp13.UIDCounter)
 			M(pos):set_string("uid_h", uid)
 		end
-		-- Defensive programming
-		pdp13.UIDCounter = math.max(pdp13.UIDCounter, uid)
 		return uid
 	end
 end
@@ -83,8 +79,6 @@ local function set_uid(pos, drive, uid)
 			uid = string.format("%08X", pdp13.UIDCounter)
 		end
 		M(pos):set_string("uid_t", uid)
-		-- Defensive programming
-		pdp13.UIDCounter = math.max(pdp13.UIDCounter, uid)
 		return uid
 	elseif drive == 'h' then
 		if not uid or uid == "" then
@@ -92,14 +86,12 @@ local function set_uid(pos, drive, uid)
 			uid = string.format("%08X", pdp13.UIDCounter)
 		end
 		M(pos):set_string("uid_h", uid)
-		-- Defensive programming
-		pdp13.UIDCounter = math.max(pdp13.UIDCounter, uid)
 		return uid
 	end
 end
 
 local function read_file_real(uid, fname)
-	local f = io.open(WP..uid.."_"..fname, "r")
+	local f = io.open(WP..uid.."_"..fname, "rb")
 	if f then
 		local s = f:read("*all")
 		f:close()
@@ -111,7 +103,7 @@ local function write_file_real(uid, fname, s)
 	local path = WP..uid.."_"..fname
 	-- Consider unit test
 	if not pcall(minetest.safe_file_write, path, s) then
-		local f = io.open(path, "w+")
+		local f = io.open(path, "wb")
 		if f then
 			f:write(s)
 			f:close()
@@ -138,8 +130,9 @@ local function fopen(pos, address, val1, val2)
 	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
 	local drive, fname = filename(s, mem.current_drive)
 	local uid = get_uid(pos, drive)
+	local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
 	
-	if uid and Files[uid] then
+	if mounted and Files[uid] then
 		if val2 == 119 then -- 'w' for write
 			Files[uid][fname] = ""
 		else
@@ -246,8 +239,9 @@ local function file_size(pos, address, val1, val2)
 	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
 	local drive, fname = filename(s, mem.current_drive)
 	local uid = get_uid(pos, drive)
-	
-	if drive and Files[uid] then
+	local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
+
+	if mounted and Files[uid] then
 		return tonumber(Files[uid][fname]) or 0
 	end
 	return 0
@@ -260,8 +254,9 @@ local function list_files(pos, address, val1, val2)
 	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
 	local drive, fname = filespattern(s, mem.current_drive)
 	local uid = get_uid(pos, drive)
-	
-	if drive and Files[uid] then
+	local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
+
+	if mounted and Files[uid] then
 		local t = {}
 		local total_size = 0
 		local pattern = gen_filepattern(fname)
@@ -287,8 +282,9 @@ local function remove_files(pos, address, val1, val2)
 	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
 	local drive, fname = filespattern(s, mem.current_drive)
 	local uid = get_uid(pos, drive)
+	local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
 
-	if drive and Files[uid] then
+	if mounted and Files[uid] then
 		local t = {} -- For post-deletion
 		local pattern = gen_filepattern(fname)
 		
@@ -312,12 +308,14 @@ local function copy_file(pos, address, val1, val2)
 	local s1 = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
 	local drive1, fname1 = filename(s1, mem.current_drive)
 	local uid1 = get_uid(pos, drive1)
+	local mounted1 = drive1 == 'h' or M(pos):get_int("mounted_t") == 1
 	
 	local s2 = vm16.read_ascii(pos, val2, pdp13.MAX_FNAME_LEN)
 	local drive2, fname2 = filename(s2, mem.current_drive)
 	local uid2 = get_uid(pos, drive2)
+	local mounted2 = drive2 == 'h' or M(pos):get_int("mounted_t") == 1
 
-	if drive1 and drive2 then
+	if mounted1 and mounted2 then
 		if Files[uid1] and Files[uid1][fname1] and Files[uid2] then
 			Files[uid2][fname2] = Files[uid1][fname1]
 			return 1
@@ -332,12 +330,14 @@ local function move_file(pos, address, val1, val2)
 	local s1 = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
 	local drive1, fname1 = filename(s1, mem.current_drive)
 	local uid1 = get_uid(pos, drive1)
+	local mounted1 = drive1 == 'h' or M(pos):get_int("mounted_t") == 1
 	
 	local s2 = vm16.read_ascii(pos, val2, pdp13.MAX_FNAME_LEN)
 	local drive2, fname2 = filename(s2, mem.current_drive)
 	local uid2 = get_uid(pos, drive2)
+	local mounted2 = drive2 == 'h' or M(pos):get_int("mounted_t") == 1
 	
-	if drive1 and drive2 then
+	if mounted1 and mounted2 then
 		if Files[uid1] and Files[uid1][fname1] and Files[uid2] then
 			Files[uid2][fname2] = Files[uid1][fname1]
 			Files[uid1][fname1] = nil
@@ -401,6 +401,12 @@ function pdp13.init_filesystem(pos, has_tape, has_hdd)
 	end
 end
 
+function pdp13.mount_drive(pos, drive, mount)
+	if drive == "t" then
+		M(pos):set_int("mounted_t", mount == true and 1 or 0)
+	end
+end
+	
 pcall(scan_file_system)
 
 -------------------------------------------------------------------------------

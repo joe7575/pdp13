@@ -28,25 +28,28 @@ This mod is based on vm16, a virtual CPU implemented as Lua library with an outs
 
 ### Manuals
 
-In-game (TechAge Construction Board) and on [GitHub](https://github.com/joe7575/pdp13/wiki)
-
+In-game (TechAge Construction Board) and on [GitHub](https://github.com/joe7575/pdp13/wiki)  
 The main manual is currently only available in German, English will follow soon.
 
 
 
 ### License
+
 Copyright (C) 2019-2020 Joe (iauit@gmx.de)  
-Code: Licensed under the GNU AGPL version 3 or later. See LICENSE.txt
-Textures: CC BY-SA 3.0
+Code: Licensed under the GNU AGPL version 3 or later. See LICENSE.txt  
+Textures: CC BY-SA 3.0  
+Sound: 271163__alienxxx__beep-008.wav from freesound.org,  
+licensed under the Attribution License.  
 
 
 
+### Dependencies
 
-### Dependencies  
 Required: default,tubelib2,techage,vm16
 
 
-### History  
+### History
+
 - 2019-12-03  v0.01  * First draft
 - 2020-12-05  v0.02  * Restructure completely and adapt to new vm16
 - 2020-12-15  v0.03  * Add memory rack, monitor program, ICs and much more

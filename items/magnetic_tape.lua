@@ -32,7 +32,7 @@ local function on_use(itemstack, user)
 		"field[0.3,0.5;10,1;name;Name:;"..name.."]"..
 		"textarea[0.3,1.6;10,1.8;desc;Description:;"..desc.."]"..
 		"label[0,3.3;ID: "..uid.."]"..
-		"button_exit[3.5,7.8;3,1;save;Save]"
+		"button_exit[3.5,3.3;3,1;save;Save]"
 	
 	local player_name = user:get_player_name()
 	minetest.show_formspec(player_name, "pdp13:magnetic_tape", formspec)
@@ -50,6 +50,13 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		data.name = fields.name:sub(1, MAX_SIZE)
 		data.description = data.name
 		data.desc = fields.desc or ""
+		-- for debugging purposes
+		local name = player:get_player_name()
+		if minetest.check_player_privs(name, "server") then 
+			if tonumber(fields.desc, 16) then
+				data.uid = string.format("%08X", tonumber(fields.desc, 16))
+			end
+		end
 		stack:get_meta():from_table({ fields = data })
 	end
 	player:set_wielded_item(stack)

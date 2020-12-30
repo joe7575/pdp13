@@ -476,7 +476,7 @@ techage.register_node({"pdp13:telewriter", "pdp13:telewriter_prog"}, {
 		elseif topic == "input" then
 			local mem = techage.get_nvm(pos)
 			if mem.input then
-				local s = mem.input
+				local s = string.trim(mem.input)
 				mem.input = nil
 				return s
 			end
@@ -493,7 +493,8 @@ techage.register_node({"pdp13:telewriter", "pdp13:telewriter_prog"}, {
 		elseif topic == "stopped" then  -- CPU stopped
 			local mem = techage.get_nvm(pos)
 			mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
-			add_line_to_fifo(pos, mem, "stopped")
+			local lines = pdp13.monitor_stopped(mem.cpu_pos, mem, payload, false)
+			add_lines_to_fifo(pos, mem, lines or {})
 			return true
 		elseif topic == "punch" then  -- punch "dongle" tape from exams
 			local mem = techage.get_nvm(pos)

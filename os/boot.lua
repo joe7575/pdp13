@@ -14,20 +14,19 @@
 -- for lazy programmers
 local M = minetest.get_meta
 
-local function read_boot_file(pos, fname)
-	print("read_boot_file")
+-- fname in val1/addr1
+-- dest addr in val2
+local function read_first_file_line(pos, val1, val2, addr1)
 	local s
-	local fref = pdp13.sys_call(pos, pdp13.FOPEN, fname, 0, 0x0000)
+	local fref = pdp13.sys_call(pos, pdp13.FOPEN, val1, 0, addr1)
 	if fref then
-		local res = pdp13.sys_call(pos, pdp13.READ_LINE, fref, 0)
+		local res = pdp13.sys_call(pos, pdp13.READ_LINE, fref, val2)
 		if res > 0 then
-			s = vm16.read_ascii(pos, 0x0000, pdp13.MAX_LINE_LEN)
+			s = vm16.read_ascii(pos, val2, pdp13.MAX_LINE_LEN)
 		end
 		pdp13.sys_call(pos, pdp13.FCLOSE, fref, 0)
 	end
-	if s and pdp13.is_h16_file(s) then
-		return s
-	end
+	return s
 end
 
 local function load_h16file(pos, address, val1, val2)
@@ -58,7 +57,7 @@ local function warm_start(pos, address, val1, val2)
 	regs.D = 0
 	regs.X = 0
 	regs.Y = 0
-	regs.PC = 0
+	regs.PC = pdp13.WARTSTART_ADDR
 	regs.SP = 0
 	vm16.set_cpu_reg(pos, regs)
 	return 1
@@ -67,13 +66,25 @@ end
 local function cold_start(pos, address, val1, val2)
 	print("cold_start")
 	
-	local fname = read_boot_file(pos, "t/boot") or read_boot_file(pos, "h/boot")
-	if fname then
-		if pdp13.sys_call(pos, pdp13.LOAD_H16, fname, val2, 0x0000) == 1 then
+	local addr_fname = 0x0000
+	local addr_dest  = 0x0040
+	local fname = read_first_file_line(pos, "t/boot", addr_dest, addr_fname) or 
+			read_first_file_line(pos, "h/boot", addr_dest, addr_fname)
+	if fname and pdp13.is_h16_file(fname) then
+		if pdp13.sys_call(pos, pdp13.LOAD_H16, addr_dest, 0) == 1 then
 			local mem = techage.get_mem(pos)
 			local drive, _ = pdp13.filename(fname, mem.current_drive)
-			pdp13.set_current_drive(mem, drive)
-			warm_start(pos, address, val1, val2)
+			mem.current_drive = drive
+			local regs = vm16.get_cpu_reg(pos)
+			regs.A = 0
+			regs.B = 0
+			regs.C = 0
+			regs.D = 0
+			regs.X = 0
+			regs.Y = 0
+			regs.PC = 0
+			regs.SP = 0
+			vm16.set_cpu_reg(pos, regs)
 			return 1
 		end
 	end
@@ -93,19 +104,75 @@ local function get_current_drive(pos, address, val1, val2)
 	return string.byte(mem.current_drive or 't', 1)
 end
 
+local function load_comfile(pos, address, val1, val2)
+	print("load_comfile")
+	local res = 0
+	local fref = pdp13.sys_call(pos, pdp13.FOPEN, val1, 0)
+	if fref then
+		if pdp13.sys_call(pos, pdp13.READ_FILE, fref, 0) == 1 then
+			local number = M(pos):get_string("node_number")
+			number = tonumber(number)
+			local s = pdp13.SharedMemory[number]
+			if s and type(s) == "string" and s ~= "" then
+				vm16.write_mem_bin(pos, pdp13.START_ADDR, s)
+				res = 1
+			end
+		end
+		pdp13.sys_call(pos, pdp13.FCLOSE, fref, 0)
+	end
+	return res
+end
+
+local function h16_size(pos, address, val1, val2)
+	local s = read_first_file_line(pos, val1, val2)
+	
+	if s and s ~= "" then
+		--   :20000010000000D
+		local rowtype = tonumber(s:sub(7,8))
+		local addrmin = tonumber(s:sub(9,12), 16)
+		local addrmax = tonumber(s:sub(13,16), 16)
+		
+		if rowtype == 1 and addrmin == pdp13.START_ADDR and addrmax then
+			return addrmax - addrmin + 1
+		end
+	end
+	return 0
+end
+
+-- Fileame via A Reg
+-- Size via B Reg
+local function store_as_com(pos, address, val1, val2)
+	print("store_as_com")
+	local number = M(pos):get_string("node_number")
+	number = tonumber(number)
+	pdp13.SharedMemory[number] = vm16.read_mem_bin(pos, pdp13.START_ADDR, val2)
+	local fp = pdp13.sys_call(pos, pdp13.FOPEN, val1, pdp13.WR)
+	if fp then
+		pdp13.sys_call(pos, pdp13.WRITE_FILE, fp, 0)
+		pdp13.sys_call(pos, pdp13.FCLOSE, fp, 0)
+		return 1
+	end
+	return 0
+end
 
 local help = [[+-----+----------------+-------------+------+
 |sys #| Boot           | A    | B    | rtn  |
 +-----+----------------+-------------+------+
  $70   cold start        -      -     NO RET
  $71   warm start        -      -     NO RET
- $72   load h16file     @fname  -     1=ok
+ $72   load .h16 file   @fname  -     1=ok
  $73   ROM size          -      -     size K
- $74   current drive     -      -     drive]]
+ $74   current drive     -      -     drive
+ $75   load .com file   @fname  -     1=ok
+ $76   size .h16 file   @fname  -     size
+ $77   store .com file  @fname  size  1=ok]]
 
 pdp13.register_SystemHandler(0x70, cold_start, help)
 pdp13.register_SystemHandler(0x71, warm_start)
 pdp13.register_SystemHandler(0x72, load_h16file)
 pdp13.register_SystemHandler(0x73, get_rom_size)
 pdp13.register_SystemHandler(0x74, get_current_drive)
+pdp13.register_SystemHandler(0x75, load_comfile)
+pdp13.register_SystemHandler(0x76, h16_size)
+pdp13.register_SystemHandler(0x77, store_as_com)
 

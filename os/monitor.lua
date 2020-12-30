@@ -22,14 +22,22 @@ local function hex_dump(tbl)
 	return table.concat(t2, " ")
 end
 
+local function ascii(val)
+	local hb = val / 256
+	local lb = val % 256 
+	hb = (hb > 31 and hb < 128) and string.char(hb) or "."
+	lb = (lb > 31 and lb < 128) and string.char(lb) or "."
+	return hb..lb
+end
+
 local function mem_dump(pos, addr, mem, is_terminal)
 	local lines = {}
 	if is_terminal then
-		for i = 1, (#mem/8) do
-			local offs = (i - 1) * 8
-			lines[i] = string.format("%04X: %04X %04X %04X %04X %04X %04X %04X %04X", 
+		for i = 1, (#mem/4) do
+			local offs = (i - 1) * 4
+			lines[i] = string.format("%04X: %04X %04X %04X %04X  %s", 
 					addr+offs, mem[1+offs], mem[2+offs], mem[3+offs], mem[4+offs],
-					mem[5+offs], mem[6+offs], mem[7+offs], mem[8+offs])
+					ascii(mem[1+offs])..ascii(mem[2+offs])..ascii(mem[3+offs])..ascii(mem[4+offs]))
 		end
 	else
 		for i = 1, (#mem/4) do
@@ -49,26 +57,51 @@ local function convert_to_numbers(s)
 	return tbl
 end
 
+local function patch_breakpoint(cpu, mem)
+	if cpu.mem0 == 0x400 and mem.brkp_code then
+		cpu.mem0 = mem.brkp_code
+	end
+	return cpu
+end
+
 -- st(art)  s(to)p  r(ese)t  n(ext)  r(egister)  ad(dress)  d(ump)  en(ter)
-Commands["?"] = function(pos, mem, cmd, rest)
+Commands["?"] = function(pos, mem, cmd, rest, is_terminal)
 	if techage.get_nvm(pos).monitor then
 		mem.mstate = nil
-		return {
-			"?         help",
-			"st        start",
-			"sp        stop",
-			"rt        reset",
-			"n         next step",
-			"r         register",
-			"ad #      set address",
-			"d  #      dump memory",
-			"en #      enter data",
-			"as #      assemble",
-			"di #      disassemble",
-			"ct # txt  copy text to mem",
-			"cm # # #  copy mem from to num",
-			"ex        exit monitor",
-		}
+		if is_terminal then
+			return {
+				"?......help",
+				"st.....start            sp.....stop",
+				"rt.....reset            n......next step",
+				"r......register         ad #...set address",
+				"d #....dump memory      en #...enter data",
+				"as #...assemble         di #...disassemble",
+				"br #...set brkpoint     br.....rst brkpoint",
+				"",
+				"di #........disassemble",
+				"ct # txt....copy text to mem",
+				"cm # # #....copy mem from to num",
+				"sys # # #...call 'sys num A B'",
+				"ex..........exit monitor",
+			}
+		else
+			return {
+				"?         help",
+				"st        start",
+				"sp        stop",
+				"rt        reset",
+				"n         next step",
+				"r         register",
+				"ad #      set address",
+				"d  #      dump memory",
+				"en #      enter data",
+				"as #      assemble",
+				"di #      disassemble",
+				"ct # txt  copy text to mem",
+				"cm # # #  copy mem from to num",
+				"ex        exit monitor",
+			}
+		end
 	end
 end
 
@@ -87,7 +120,8 @@ Commands["sp"] = function(pos, mem, cmd, rest)
 		pdp13.stop_cpu(pos)
 		mem.mstate = nil
 		local cpu = vm16.get_cpu_reg(pos)
-		local num, s = pdp13.disassemble(cpu)
+		cpu = patch_breakpoint(cpu, mem)
+		local num, s = pdp13.disassemble(cpu, mem)
 		return {s}
 	end
 end
@@ -98,7 +132,8 @@ Commands["rt"] = function(pos, mem, cmd, rest)
 		vm16.set_pc(pos, 0) 
 		mem.mstate = nil
 		local cpu = vm16.get_cpu_reg(pos)
-		local num, s = pdp13.disassemble(cpu)
+		cpu = patch_breakpoint(cpu, mem)
+		local num, s = pdp13.disassemble(cpu, mem)
 		return {s}
 	end
 end
@@ -109,7 +144,8 @@ Commands["n"] = function(pos, mem, cmd, rest)
 		pdp13.single_step_cpu(pos)
 		mem.mstate = 'n'
 		local cpu = vm16.get_cpu_reg(pos)
-		local num, s = pdp13.disassemble(cpu)
+		cpu = patch_breakpoint(cpu, mem)
+		local num, s = pdp13.disassemble(cpu, mem)
 		return {s}
 	end
 end
@@ -140,14 +176,14 @@ Commands["ad"] = function(pos, mem, cmd, rest)
 		mem.mstate = nil
 		vm16.set_pc(pos, addr) 
 		local cpu = vm16.get_cpu_reg(pos)
-		local num, s = pdp13.disassemble(cpu)
+		cpu = patch_breakpoint(cpu, mem)
+		local num, s = pdp13.disassemble(cpu, mem)
 		return {s}
 	end
 end
 	
 -- dump memory
 Commands["d"] = function(pos, mem, cmd, rest, is_terminal)
-	local size = is_terminal and 64 or 32
 	if techage.get_nvm(pos).monitor then
 		if cmd == "d" then
 			mem.mstate = "d"
@@ -155,9 +191,9 @@ Commands["d"] = function(pos, mem, cmd, rest, is_terminal)
 		else
 			mem.maddr = mem.maddr or 0
 		end
-		local dump = vm16.read_mem(pos, mem.maddr, size)
+		local dump = vm16.read_mem(pos, mem.maddr, 32)
 		local addr = mem.maddr
-		mem.maddr = mem.maddr + size
+		mem.maddr = mem.maddr + 32
 		if dump then
 			return mem_dump(pos, addr, dump, is_terminal)
 		end
@@ -217,13 +253,34 @@ Commands["di"] = function(pos, mem, cmd, rest)
 		local offs = 1
 		for i = 1, 8 do
 			local cpu = {PC = mem.maddr + offs - 1, mem0 = dump[offs], mem1 = dump[offs+1]}
-			local num, s = pdp13.disassemble(cpu)
+			cpu = patch_breakpoint(cpu, mem)
+			local num, s = pdp13.disassemble(cpu, mem)
 			offs = offs + num
 			tbl[#tbl+1] = s
 		end
 		mem.maddr = mem.maddr + offs - 1
 		return tbl
 	end
+end
+
+-- set/reset breakpoint
+Commands["br"] = function(pos, mem, cmd, rest, is_terminal)
+	if techage.get_nvm(pos).monitor and is_terminal then
+		mem.mstate = nil
+		local words = string.split(rest, " ", true, 1)
+		if #words == 1 then
+			local addr = pdp13.string_to_number(words[1])
+			mem.brkp_addr = addr
+			mem.brkp_code = vm16.set_breakpoint(pos, addr, 0)
+			return {"breakpoint set"}
+		elseif mem.brkp_addr then
+			vm16.reset_breakpoint(pos, mem.brkp_addr, mem.brkp_code)
+			mem.brkp_addr = nil
+			mem.brkp_code = nil
+			return {"breakpoint reset"}
+		end
+	end
+	return {"error!"}
 end
 
 -- copy text
@@ -259,6 +316,28 @@ Commands["cm"] = function(pos, mem, cmd, rest)
 	end
 end
 
+-- sys command
+Commands["sys"] = function(pos, mem, cmd, rest, is_terminal)
+	if techage.get_nvm(pos).monitor and is_terminal then
+		mem.mstate = nil
+		local num, regA, regB = unpack(string.split(rest, " ", false, 2))
+		num = pdp13.string_to_number(num)
+		regA = pdp13.string_to_number(regA) or 0
+		regB = pdp13.string_to_number(regB) or 0
+		
+		if num then
+			local sts, resp = pcall(pdp13.sys_call, pos, num, regA, regB)
+			if sts then
+				return {"result = "..resp}
+			else
+				return {"sys error", resp:sub(1, 48)}
+			end
+		end
+		return {"error!"}
+	end
+end
+
+
 -- exit monitor
 Commands["ex"] = function(pos, mem, cmd, rest)
 	techage.get_nvm(pos).monitor = false
@@ -279,10 +358,25 @@ function pdp13.monitor(cpu_pos, mem, command, is_terminal)
 		else
 			resp = Commands["?"](cpu_pos, mem, words[1], words[2], is_terminal)
 		end
-		return "[mon]$ "..command, resp
+		if command ~= "" then
+			return "[mon]$ "..command, resp
+		else
+			return nil, resp
+		end
 	end
 end
 
+function pdp13.monitor_stopped(cpu_pos, mem, resp, is_terminal)
+	if is_terminal and resp == vm16.BREAK and mem.brkp_addr then
+		vm16.breakpoint_step(cpu_pos, mem.brkp_addr, mem.brkp_code)
+		local cpu = vm16.get_cpu_reg(cpu_pos)
+		cpu = patch_breakpoint(cpu, mem)
+		local num, s = pdp13.disassemble(cpu, mem)
+		return {s}
+	elseif not mem.mstate then
+		return {"stopped: "..(vm16.CallResults[resp] or "")}
+	end
+end
 
 pdp13.hex_dump = hex_dump
 pdp13.mem_dump = mem_dump

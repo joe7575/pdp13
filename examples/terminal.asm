@@ -38,7 +38,7 @@ ram_size:                   ; size in A
     sys   #$12              ; print size
 
     move  A, #TEXT2
-    sys   #$14              ; print text
+    sys   #$13              ; print text
 
     ;=== ROM size ===
 rom_size: 
@@ -47,7 +47,7 @@ rom_size:
     sys   #$12              ; print size
     
     move  A, #TEXT3
-    sys   #$14              ; print text
+    sys   #$14              ; println text
 
     ;=== ls tape ===
     move  A, #TEXT4
@@ -66,7 +66,7 @@ rom_size:
 TEXT1:
     "### Terminal Demo v1 ###\0"
 TEXT2:
-    " K RAM\0"
+    " K RAM  \0"
 TEXT3:
     " K ROM\0"
 TEXT4:

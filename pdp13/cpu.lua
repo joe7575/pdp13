@@ -18,6 +18,8 @@ local M = minetest.get_meta
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = minetest.string_to_pos
 
+local CYCLE_TIME = 0.1
+
 local function programmer_cmnd(pos, cmd, payload)
 	local dst_num = M(pos):get_string("programmer_number")
 	local own_num = M(pos):get_string("node_number")
@@ -61,7 +63,7 @@ local function vm_state(mem)
 	if mem.state == vm16.STOP then return "" end
 	if mem.state == vm16.IN   then return "image[5.2,0.4;0.4,0.4;pdp13_led_form.png]" end
 	if mem.state == vm16.OUT  then return "image[5.2,0.4;0.4,0.4;pdp13_led_form.png]" end
-	if mem.state == vm16.HALT then return "image[6.7,0.4;0.4,0.4;pdp13_led_form.png]" end
+	if mem.state == vm16.BREAK then return "image[6.7,0.4;0.4,0.4;pdp13_led_form.png]" end
 	if mem.state == vm16.SYS  then return "image[8.2,0.4;0.4,0.4;pdp13_led_form.png]" end
 	return ""
 end
@@ -108,7 +110,7 @@ local function formspec(pos, mem, cpu)
 		"label[2.5,0.4; run]"..
 		"label[4.0,0.4; mon]"..
 		"label[5.5,0.4; i/o]"..
-		"label[7.0,0.4; halt]"..
+		"label[7.0,0.4; brk]"..
 		"label[8.5,0.4; sys]"..
 		
 		"button[0,5.4;1.7,1;start;start]"..
@@ -214,10 +216,10 @@ local function fs_single_step(pos, mem, resp)
 		mem.cmnd3 = string.format(">%04X: %04X %s", cpu.PC, cpu.mem0, operand)
 		mem.inp_mode = "step"
 	end
-	update_formspec(pos, mem, cpu)
+	update_formspec(pos, mem, cpu, resp)
 end
 
-local function fs_cpu_stopped(pos, mem, cpu)
+local function fs_cpu_stopped(pos, mem, cpu, resp)
 	if pos and mem then
 		local cpu = cpu or vm16.get_cpu_reg(pos)
 		if cpu then
@@ -229,7 +231,7 @@ local function fs_cpu_stopped(pos, mem, cpu)
 			end
 			
 			mem.started = false
-			mem.state = vm16.STOP
+			mem.state = resp or vm16.STOP
 			mem.cmnd1 = " "
 			mem.cmnd2 = " "
 			mem.cmnd3 = string.format(">%04X: %04X %s", cpu.PC, cpu.mem0, operand)
@@ -365,6 +367,7 @@ end
 
 -- For Rack communication
 local function pdp13_on_receive(pos, src_pos, cmnd, data)
+	print("pdp13_on_receive", cmnd, data)
 	if cmnd == "power" then
 		if data == "on" then
 			local mem = techage.get_nvm(pos)
@@ -399,6 +402,8 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 		return mem.num_ioracks - 1
 	elseif cmnd == "cpu_num" then
 		return M(pos):get_string("node_number")
+	elseif cmnd == "mount_t" then
+		pdp13.mount_drive(pos, "t", data)
 	else
 		return add_periphery_settings(pos, M(pos), cmnd, data)
 	end
@@ -407,7 +412,7 @@ end
 -- update CPU formspec
 local function on_update(pos, resp, cpu)
 	local mem = techage.get_nvm(pos)
-	print("on_update", mem.monitor)
+	print("on_update", mem.monitor, resp)
 	-- External controlled?
 	if mem.monitor then
 		programmer_cmnd(pos, "stopped", resp)
@@ -417,7 +422,7 @@ local function on_update(pos, resp, cpu)
 		mem.state = resp
 		minetest.get_node_timer(pos):stop()
 		swap_node(pos, "pdp13:cpu1")
-		fs_cpu_stopped(pos, mem, cpu)
+		fs_cpu_stopped(pos, mem, cpu, resp)
 	end
 end
 
@@ -429,7 +434,7 @@ end
 function pdp13.start_cpu(pos)
 	local number = M(pos):get_string("node_number")
 	pdp13.reset_output_buffer(number)
-	minetest.get_node_timer(pos):start(0.1)
+	minetest.get_node_timer(pos):start(CYCLE_TIME)
 	swap_node(pos, "pdp13:cpu1_on")
 end
 
@@ -451,6 +456,14 @@ function pdp13.exit_monitor(pos)
 	mem.monitor = false
 	mem.addr = 0
 	fs_cpu_stopped(pos, mem)
+end
+
+function pdp13.cpu_freeze(pos, freeze)
+	if freeze then
+		minetest.get_node_timer(pos):stop()
+	else
+		minetest.get_node_timer(pos):start(CYCLE_TIME)
+	end
 end
 
 vm16.register_callbacks(nil, nil, nil, on_update, on_unload)

@@ -52,5 +52,8 @@ function pdp13.sys_call(pos, address, val1, val2, addr1, addr2)
 			val2 = addr2
 		end
 	end
-	return SystemHandlers[address](pos, address, val1, val2)
+	if SystemHandlers[address] then
+		return SystemHandlers[address](pos, address, val1, val2)
+	end
+	return 65535
 end

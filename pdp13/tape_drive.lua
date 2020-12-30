@@ -27,6 +27,13 @@ local function register_tapedrive(pos)
 	end
 end
 
+local function mount_tapedrive(pos, mount)
+	local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
+	if cpu_pos then
+		pdp13.send(pos, cpu_pos, nil, "mount_t", mount)
+	end
+end
+
 local function has_tape(pos)
 	local inv = M(pos):get_inventory()
 	if inv:is_empty("main") then return nil end
@@ -67,6 +74,7 @@ local function copy_uid_to_tape(pos)
 			data.uid = pdp13.get_uid(cpu_pos, "t")
 			meta:from_table({ fields = data })
 			inv:set_stack("main", 1, stack)
+			M(cpu_pos):set_string("uid_t", "")
 			return true
 		end
 	end
@@ -86,18 +94,18 @@ end
 
 local function pdp13_on_receive(pos, src_pos, cmnd, data)
 	if cmnd == "register" then
-		if register_tapedrive(pos) then
-			M(pos):set_string("formspec", formspec("connected"))
-			return true
-		end
+		register_tapedrive(pos)
+		return true
 	elseif cmnd == "power" then
 		M(pos):set_int("has_power", data == "on" and 1 or 0)
 		if data == "on" then
 			M(pos):set_string("formspec", formspec("powered"))
+			local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 		else
 			M(pos):set_string("formspec", formspec("no power"))
 			M(pos):set_int("running", 0)
 			copy_uid_to_tape(pos)
+			mount_tapedrive(pos, false)
 		end
 		return true
 	end
@@ -156,11 +164,14 @@ local function on_receive_fields(pos, formname, fields, player)
 	if fields.start and has_tape(pos) then
 		M(pos):set_string("formspec", formspec("running"))
 		M(pos):set_int("running", 1)
-		copy_uid_to_filesystem(pos)
+		if copy_uid_to_filesystem(pos) then
+			mount_tapedrive(pos, true)
+		end
 	elseif fields.stop then
 		M(pos):set_string("formspec", formspec("stopped"))
 		M(pos):set_int("running", 0)
 		copy_uid_to_tape(pos)
+		mount_tapedrive(pos, false)
 	end
 end
 

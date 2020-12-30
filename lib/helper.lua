@@ -36,6 +36,9 @@ function pdp13.range(val, min, max, default)
 end
 
 function pdp13.gen_filepattern(s)
+	if s ==  "" then
+		s = "*"
+	end
 	s = string.gsub(s, "%.", "%%.")
 	s = string.gsub(s, "*", "%.%.%-")
 	return "^"..s.."$"

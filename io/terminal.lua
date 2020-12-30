@@ -22,21 +22,51 @@ local NUM_LINES = 16
 local STR_LEN = 64
 local COLOR = "\027(c@#FFCC00)"  -- amber
 local NEWLINE = "\n"..COLOR
-local NUM_COLOR = string.len(COLOR)
 local SCREENSAVER_TIME = 60 * 5
+local WR = 119 
 
-local function trim_text(text)
-	local t = {}
-	for s in text:gmatch("[^\n]+") do
-		table.insert(t, s)
-	end
-	-- delete first line
-	if #t > (NUM_LINES + 1) then
+local function read_screenbuffer(mem)
+	mem.lLines = mem.lLines or {""}
+	local t, ln = mem.lLines, #mem.lLines
+	if t[ln] == "" then ln = ln + 1 end
+	
+	-- delete old lines
+	for _ = NUM_LINES, ln, 1 do
 		table.remove(t, 1)
 	end
-	-- cut line length
-	t[#t] = string.sub(t[#t], 1, NUM_CHARS + NUM_COLOR)
-	return table.concat(t, "\n")
+	print(table.concat(t, "\n"))
+	return COLOR..table.concat(t, NEWLINE)
+end
+
+local function add_text(mem, text)
+	mem.lLines = mem.lLines or {""}
+	local t, ln = mem.lLines, #mem.lLines
+	
+	t[ln] = (t[ln] or "")..text
+end
+
+local function add_newline(mem)
+	mem.lLines = mem.lLines or {""}
+	local t, ln = mem.lLines, #mem.lLines
+	
+	t[ln] = string.sub(t[ln], 1, NUM_CHARS)
+	t[ln] = minetest.formspec_escape(t[ln])
+	
+	t[ln+1] = ""
+end
+
+local function add_lines(mem, lines)
+	mem.lLines = mem.lLines or {""}
+	local t = mem.lLines
+	
+	add_text(mem, lines[1])
+	
+	for i = 2, #lines do
+		local line = string.sub(lines[i], 1, NUM_CHARS)
+		t[#t+1] = minetest.formspec_escape(line)
+	end
+
+	t[#t+1] = ""
 end
 
 local function register_terminal(pos)
@@ -66,7 +96,7 @@ local function formspec1(pos, mem)
 	
 	if mem.ttl then
 		if mem.ttl > minetest.get_gametime() then
-			s = minetest.formspec_escape(mem.screen_buffer or COLOR)
+			s = read_screenbuffer(mem)
 		else
 			s = ""
 			mem.ttl = nil
@@ -75,7 +105,6 @@ local function formspec1(pos, mem)
 		return  -- screensaver
 	end
 	
-	print("redraw")
 	mem.redraw = (mem.redraw or 0) + 1
 	M(pos):set_string("formspec", "size[10,8.5]" ..
 		default.gui_bg..
@@ -84,15 +113,15 @@ local function formspec1(pos, mem)
 		"label[-2,-2;"..mem.redraw.."]"..
 		"container[0.2,0.2]"..
 		"background[0,0;9.6,6.7;pdp13_form_term2.png]"..
-		"style_type[label;font=mono]"..
+		"style_type[label,field;font=mono]"..
 		"label[0,0;"..s.."]"..
 		"container_end[]"..
-		"style_type[label;font=normal]"..
 		"button[0.1,7.0;1.8,1;exc;ESC]"..
 		"button[2.2,7.0;1.7,1;f1;F1]"..
 		"button[4.2,7.0;1.7,1;f2;F2]"..
 		"button[6.2,7.0;1.7,1;f3;F3]"..
 		"button[8.2,7.0;1.7,1;f4;F4]"..
+		"style_type[field;textcolor=#000000]"..
 		"field[0.4,8.2;7.8,0.8;command;;]"..
 		"button[8.2,7.8;1.7,1;enter;Enter]"..
 		"field_close_on_enter[command;false]")
@@ -104,24 +133,27 @@ local function formspec2(code)
 		default.gui_bg..
 		default.gui_bg_img..
 		default.gui_slots..
-		"style_type[textarea;font=mono]"..
-		"textarea[0.3,0;10,9.3;edit;;"..code.."]"..
-		"button_exit[5.4,7.9;1.8,1;exit;Exit]"..
+		"background[-0.1,-0.2;10.2,9.15;pdp13_form_term1.png]"..
+		"style_type[textarea;font=mono;textcolor=#FFCC00;border=false]"..
+		"textarea[0.4,0.1;9.8,9.3;edit;;"..code.."]"..
+		"background[0.2,0.2;9.6,7.7;pdp13_form_term2.png]"..
+		"button[5.4,7.9;1.8,1;exit;Exit]"..
 		"button[7.3,7.9;1.8,1;save;Save]"
 end
 
 local function clear_screen(pos, mem)
-	mem.screen_buffer = COLOR
+	mem.lLines = {""}
 	formspec1(pos, mem)
 end
 
 local function print_string(pos, mem, s)
-	mem.screen_buffer = mem.screen_buffer..s
-	--formspec1(pos, mem)
+	add_text(mem, s)
+	formspec1(pos, mem)
 end
 
 local function print_string_ln(pos, mem, s)
-	mem.screen_buffer = trim_text(mem.screen_buffer..s..NEWLINE)
+	add_text(mem, s)
+	add_newline(mem)
 	formspec1(pos, mem)
 end
 
@@ -129,21 +161,18 @@ local function screenbuffer_update(pos, mem, text)
 	local t = {}
 	for i = 1, NUM_CHARS * NUM_LINES, NUM_CHARS do
 		local line = string.sub(text, i, i + NUM_CHARS)
-		table.insert(t, line)
+		t[#t] = minetest.formspec_escape(line)
 	end
-	mem.screen_buffer = COLOR..table.concat(t, NEWLINE)
+	mem.lLines = t
 	formspec1(pos, mem)
 end
 
 local function monitor_print_lines(pos, mem, lines)
-	for _,line in ipairs(lines or {}) do
-		mem.screen_buffer = trim_text(mem.screen_buffer..line..NEWLINE)
-	end
+	add_lines(mem, lines)
 	formspec1(pos, mem)
 end
 
 local function editor_screen(pos, mem, text)
-	mem.screen_buffer = COLOR
 	M(pos):set_string("formspec", formspec2(text))
 end
 
@@ -193,8 +222,28 @@ local function on_rightclick(pos)
 	formspec1(pos, mem)
 end
 
+local function edit_save(pos, mem, text)
+	local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
+	if mem.fname == "" then mem.fname = "new.txt" end
+	local number = M(cpu_pos):get_string("node_number")
+	number = tonumber(number)
+	pdp13.SharedMemory[number] = text
+	
+	local fp = pdp13.sys_call(cpu_pos, pdp13.FOPEN, mem.fname, WR, 0x00C0)
+	if fp then
+		pdp13.sys_call(cpu_pos, pdp13.WRITE_FILE, fp, 0)
+		pdp13.sys_call(cpu_pos, pdp13.FCLOSE, fp, 0)
+		print_string_ln(pos, mem, "File stored.")
+		pdp13.sys_call(cpu_pos, pdp13.PROMPT, 0, 0)
+	else
+		print_string_ln(pos, mem, "Store error!")
+		pdp13.sys_call(cpu_pos, pdp13.PROMPT, 0, 0)
+	end
+	pdp13.SharedMemory[number] = nil
+end
+
 local function on_receive_fields(pos, formname, fields, player)
-	print(dump(fields))
+	--print(dump(fields))
 	if minetest.is_protected(pos, player:get_player_name()) then
 		return
 	end
@@ -210,25 +259,22 @@ local function on_receive_fields(pos, formname, fields, player)
 		
 	if fields.key_enter_field or fields.enter then
 		if M(pos):get_int("monitor") == 1 then
-			print("monitor")
 			local prompt, lines = pdp13.monitor(mem.cpu_pos, mem, fields.command or "", true)
 			if prompt then
 				print_string_ln(pos, mem, prompt)
 			end
 			monitor_print_lines(pos, mem, lines or {})
 		else
-			print("terminal")
 			mem.input = string.sub(fields.command or "", 1, STR_LEN)
 		end
 	elseif fields.save then
-		print("edit save")
-		pdp13.edit_save(mem.cpu_pos, mem, fields.edit)
+		edit_save(pos, mem, fields.edit)
+		pdp13.cpu_freeze(pos, false)
 	elseif fields.exit then
-		print("edit exit")
-		local s = pdp13.edit_exit(mem.cpu_pos, mem, fields.edit)
-		print_string_ln(pos, mem, s)
+		print_string_ln(pos, mem, "abort")
 		mem.edit = false
 		mem.input = fields.command or ""
+		pdp13.cpu_freeze(pos, false)
 	elseif fields.esc then
 		mem.input = "\027"
 	elseif fields.f1 then
@@ -245,11 +291,11 @@ local function on_receive_fields(pos, formname, fields, player)
 end
 
 local function pdp13_on_receive(pos, src_pos, cmnd, data)
-	--print("pdp13_on_receive", cmnd)
+	print("pdp13_on_receive", cmnd)
 	local mem = techage.get_nvm(pos)
 	if cmnd == "input" then
 		if mem.input then
-			local s = mem.input
+			local s = string.trim(mem.input)
 			mem.input = nil
 			return s
 		end
@@ -266,7 +312,9 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 		screenbuffer_update(pos, mem, data)
 		return 1
 	elseif cmnd == "edit" then
-		editor_screen(pos, mem, data)
+		editor_screen(pos, mem, data.text)
+		mem.fname = data.fname
+		pdp13.cpu_freeze(pos, true)
 		return 1
 	elseif cmnd == "register" then
 		if M(pos):get_int("monitor") == 1 then
@@ -278,6 +326,7 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 	elseif cmnd == "power" then
 		M(pos):set_int("has_power", data == "on" and 1 or 0)
 		local mem = techage.get_nvm(pos)
+		mem.lLines = {""}
 		if data == "on" then
 			print_string_ln(pos, mem, "PDP13 Terminal")
 		else
@@ -351,7 +400,7 @@ minetest.register_node("pdp13:terminal_prog", {
 -- For monitor mode
 techage.register_node({"pdp13:terminal", "pdp13:terminal_prog"}, {
 	on_recv_message = function(pos, src, topic, payload)
-		print("on_recv_message", topic)
+		--print("on_recv_message", topic)
 		if topic == "monitor" then
 			local mem = techage.get_nvm(pos)
 			if payload then
@@ -366,7 +415,8 @@ techage.register_node({"pdp13:terminal", "pdp13:terminal_prog"}, {
 		elseif topic == "stopped" then  -- CPU stopped
 			local mem = techage.get_nvm(pos)
 			mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
-			print_string_ln(pos, mem, "stopped")
+			local lines = pdp13.monitor_stopped(mem.cpu_pos, mem, payload, true)
+			monitor_print_lines(pos, mem, lines or {})
 			return true
 		end
 	end,

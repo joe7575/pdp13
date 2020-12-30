@@ -20,70 +20,97 @@ local S2P = minetest.string_to_pos
 local NUM_CHARS = pdp13.MAX_LINE_LEN
 local SCREENBUFFER_SIZE = 48*16
 
-local function send_terminal_command(cpu_pos, cmnd, payload)
-	local mem = techage.get_nvm(cpu_pos)
+local function send_terminal_command(cpu_pos, mem, cmnd, payload)
 	mem.term_pos = mem.term_pos or S2P(M(cpu_pos):get_string("terminal_pos"))
 	return pdp13.send(cpu_pos, mem.term_pos, nil, cmnd, payload)
 end
 
 local function sys_clear_screen(cpu_pos)
 	print("clear_screen")
-	return send_terminal_command(cpu_pos, "clear")
+	local mem = techage.get_nvm(cpu_pos)
+	
+	mem.stdout = ""
+	send_terminal_command(cpu_pos, mem, "clear")
+	return 1
 end
 
 local function sys_print_char(cpu_pos, address, val1)
 	print("print_char")
+	local mem = techage.get_nvm(cpu_pos)
+	
 	if val1 > 255 then
-		local s = string.char(pdp13.range(val1 / 256, 32, 127, 46))..
-		          string.char(pdp13.range(val1 % 256, 32, 127, 46))
-		return send_terminal_command(cpu_pos, "print", s)
+		mem.stdout = mem.stdout..
+				string.char(pdp13.range(val1 / 256, 32, 127, 46))..
+		        string.char(pdp13.range(val1 % 256, 32, 127, 46))
 	else
-		local s = string.char(pdp13.range(val1, 32, 127, 46))
-		return send_terminal_command(cpu_pos, "print", s)
+		mem.stdout = mem.stdout..
+				string.char(pdp13.range(val1, 32, 127, 46))
 	end
+	return 1
 end
 
 local function sys_print_number(cpu_pos, address, val1, val2)
 	print("print_number")
-	local s
+	local mem = techage.get_nvm(cpu_pos)
 	
 	if val2 == 16 then
-		s = string.format("%04X", val1)
+		mem.stdout = mem.stdout..string.format("%04X", val1)
 	else
-		s = tostring(val1)
+		mem.stdout = mem.stdout..tostring(val1)
 	end
-	return send_terminal_command(cpu_pos, "print", s)
+	return 1
 end
 
 local function sys_print_string(cpu_pos, address, val1)
 	print("print_string")
+	local mem = techage.get_nvm(cpu_pos)
+	
 	local s = vm16.read_ascii(cpu_pos, val1, NUM_CHARS)
-	return send_terminal_command(cpu_pos, "print", s)
+	mem.stdout = mem.stdout..s
+	return 1
 end
 
 local function sys_print_string_ln(cpu_pos, address, val1)
 	print("print_string_ln")
+	local mem = techage.get_nvm(cpu_pos)
+	
 	local s = vm16.read_ascii(cpu_pos, val1, NUM_CHARS)
-	return send_terminal_command(cpu_pos, "println", s)
+	mem.stdout = mem.stdout..s
+	send_terminal_command(cpu_pos, mem, "println", mem.stdout)
+	mem.stdout = ""
+	return 1
+end
+
+local function sys_flush_stdout(cpu_pos, address, val1)
+	print("flush_stdout")
+	local mem = techage.get_nvm(cpu_pos)
+	send_terminal_command(cpu_pos, mem, "print", mem.stdout)
+	mem.stdout = ""
 end
 
 local function sys_update_screen(cpu_pos, address, val1)
 	print("update_screen")
 	local s = vm16.read_ascii(cpu_pos, val1, SCREENBUFFER_SIZE)
-	return send_terminal_command(cpu_pos, "update", s)
+	local mem = techage.get_nvm(cpu_pos)
+	send_terminal_command(cpu_pos, mem, "update", s)
+	return 1
 end
 
 local function sys_editor_start(cpu_pos, address, val1)
 	print("edit_start")
+	local fname = vm16.read_ascii(cpu_pos, val1, pdp13.MAX_FNAME_LEN)
 	local number = M(cpu_pos):get_string("node_number")
 	number = tonumber(number)
 	local text = pdp13.SharedMemory[number] or ""
-	return send_terminal_command(cpu_pos, "edit", text)
+	local mem = techage.get_nvm(cpu_pos)
+	send_terminal_command(cpu_pos, mem, "edit", {text = text, fname = fname})
+	return 1
 end
 
 local function sys_input_string(cpu_pos, address, val1)
 	--print("input_string")
-	local s = send_terminal_command(cpu_pos, "input")
+	local mem = techage.get_nvm(cpu_pos)
+	local s = send_terminal_command(cpu_pos, mem, "input")
 	if s and vm16.write_ascii(cpu_pos, val1, s.."\000") then
 		return #s
 	end
@@ -91,24 +118,44 @@ local function sys_input_string(cpu_pos, address, val1)
 end
 
 local function sys_print_shared_mem(cpu_pos, address, val1)
+	local mem = techage.get_nvm(cpu_pos)
 	local number = M(cpu_pos):get_string("node_number")
 	number = tonumber(number)
 	local sm = pdp13.SharedMemory[number]
 	print("print_shared mem", dump(sm))
 	if type(sm) == "string" then
 		for s in sm:gmatch("[^\n]+") do
-			send_terminal_command(cpu_pos, "println", s)
+			send_terminal_command(cpu_pos, mem, "println", s)
 		end
 		return 1
 	elseif type(sm) == "table" then
 		for _,s in ipairs(sm) do
-			send_terminal_command(cpu_pos, "println", s)
+			send_terminal_command(cpu_pos, mem, "println", s)
 		end
 		return 1
 	end
 	return 0
 end
 
+local function sys_prompt(cpu_pos, address, val1)
+	print("prompt")
+	local mem = techage.get_nvm(cpu_pos)
+	local drive = mem.current_drive or 't'
+	send_terminal_command(cpu_pos, mem, "print", drive..">")
+	mem.stdout = ""
+	return 1
+end
+
+local function sys_beep(cpu_pos, address, val1)
+	print("beep")
+	local mem = techage.get_nvm(cpu_pos)
+	mem.term_pos = mem.term_pos or S2P(M(cpu_pos):get_string("terminal_pos"))
+	minetest.sound_play("pdp13_beep", {
+		pos = mem.term_pos, 
+		gain = 1,
+		max_hear_distance = 5})
+	return 1
+end
 
 local help = [[+-----+-----------------+------------+------+
 |sys #| Terminal       | A    | B    | rtn  |
@@ -119,9 +166,12 @@ local help = [[+-----+-----------------+------------+------+
  $13   print string     @text   -     1=ok
  $14   println string   @text   -     1=ok
  $15   update screen    @text   -     1=ok
- $16   start editor      -      -     1=ok
+ $16   start edit (<SM) @fname  -     1=ok
  $17   input string     @dest   -     size
- $18   print SM (<SM)   -       -     1=ok]]
+ $18   print SM (<SM)   -       -     1=ok
+ $19   flush stdout     -       -     1=ok
+ $1A   prompt           -       -     1=ok
+ $1B   beep             -       -     1=ok]]
 
 pdp13.register_SystemHandler(0x10, sys_clear_screen, help)
 pdp13.register_SystemHandler(0x11, sys_print_char)
@@ -132,6 +182,9 @@ pdp13.register_SystemHandler(0x15, sys_update_screen)
 pdp13.register_SystemHandler(0x16, sys_editor_start)
 pdp13.register_SystemHandler(0x17, sys_input_string)
 pdp13.register_SystemHandler(0x18, sys_print_shared_mem)
+pdp13.register_SystemHandler(0x19, sys_flush_stdout)
+pdp13.register_SystemHandler(0x1A, sys_prompt)
+pdp13.register_SystemHandler(0x1B, sys_beep)
 
 vm16.register_sys_cycles(0x11, 100)
 vm16.register_sys_cycles(0x12, 200)

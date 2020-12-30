@@ -16,7 +16,7 @@
 -- OP-codes
 --
 pdp13.VM13Opcodes = {[0] =
-    "nop:-:-", "res1:CNST:-", "sys:CNST:-", "res2:CNST:-",
+    "nop:-:-", "brk:CNST:-", "sys:CNST:-", "res2:CNST:-",
 	"jump:ADR:-", "call:ADR:-", "ret:-:-", "halt:-:-",
     "move:DST:SRC", "xchg:DST:DST", "inc:DST:-", "dec:DST:-",
     "add:DST:SRC", "sub:DST:SRC", "mul:DST:SRC", "div:DST:SRC",
