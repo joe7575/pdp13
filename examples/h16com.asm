@@ -2,11 +2,10 @@
 ; h16com as H16 tool
 ; Convert a .h16 file to .com format
 ; fname without ext (.h16/.com) on $C0
+; syntax; h16com <fname> (w/o ext)
 ;===================================
 buff1 = $c0
 buff2 = $FFE0
-buff3 = $FFF0
-buff4 = $FFF1
 
     .code
     ;### entry ===
@@ -16,6 +15,10 @@ buff4 = $FFF1
     ;### main ===
     .org $FF00
 main:
+    ;=== search param fname ===
+    move  A, #buff1
+    call  Strlen
+    
     ;=== determine string len ===
     move  A, #buff1
     call  Strlen
@@ -77,6 +80,7 @@ DCOM:
 DH16:
     ".h16\0"
 
+$include "nextstr.asm"
 $include "strcat.asm"
 $include "strlen.asm"
 

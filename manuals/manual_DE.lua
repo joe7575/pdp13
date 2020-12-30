@@ -5,14 +5,19 @@ techage.add_to_manual('DE', {
   "2,PDP-13 CPU",
   "3,Performance",
   "2,PDP-13 Telewriter",
-  "2,PDP13 Tape",
+  "2,PDP13 Punch Tape",
   "2,PDP13 7-Segment",
   "2,PDP13 Color Lamp",
   "2,PDP13 Memory Rack",
   "2,Minimal Beipiel",
-  "2,Monitor Programm",
+  "2,Monitor ROM",
+  "2,BIOS ROM",
+  "2,Terminal",
+  "2,Tape Drive",
+  "2,Hard Disk",
   "2,Programmieraufgaben",
-  "3,Aufgaben 1: PDP-13 Monitor ROM",
+  "3,Aufgabe 1: PDP-13 Monitor ROM",
+  "3,Aufgabe 2: PDP-13 BIOS ROM",
 }, {
   "PDP13 ist ein 16-Bit-Minicomputer\\, inspiriert von DEC\\, IBM und anderen Computer aus den 60er und 70er Jahren. \"Mini\" deshalb\\, weil die Rechenanlagen bis dahin nicht nur Schränke\\, sondern ganze Räume oder Hallen gefüllt hatten. Erst mit der Erfindung der ersten integrierten Schaltkreisen ließen sich die Rechner auf Kleiderschrankgröße reduzieren. Damit passt dieser Computer ideal in das Ölzeitalter. Dadurch dass dieser Computer nur in Maschinencode programmiert werden kann (wie die Originale damals auch)\\, setzt dies einiges an Computerwissen voraus\\, was nicht in dieser Anleitung vermittelt werden kann.\n"..
   "\n"..
@@ -32,7 +37,7 @@ techage.add_to_manual('DE', {
   "  - Crafte die 3 Blöcke \"PDP-13 Power Module\"\\, \"PDP-13 CPU\" und \"PDP-13 I/O Rack\".\n"..
   "  - Das Rack gibt es in 2 Varianten\\, die sich aber nur vom Frontdesign unterschieden\n"..
   "  - Setzte den CPU Block auf den Power Block und das I/O-Rack direkt neben den Power Block\n"..
-  "  - Diese Reihenfolge muss eingehalten werden\\, sonst können sich die I/O-Racks nicht mit der CPU verbinden. Der maximale Abstand zwischen einem Erweiterungsblock und der CPU beträgt 2 Blöcke\n"..
+  "  - Diese Reihenfolge muss eingehalten werden\\, sonst können sich die I/O-Racks nicht mit der CPU verbinden. Der maximale Abstand zwischen einem Erweiterungsblock und der CPU beträgt 3 Blöcke. Dies gilt auch für Telewriter\\, Terminal und alle weiteren Blöcke.\n"..
   "  - Über den Power Block wird die CPU und die weiteren Blöcke eingeschaltet\n"..
   "  - Das I/O-Rack kann nur konfiguriert werden\\, wenn der Power Block ausgeschaltet ist\n"..
   "  - Die CPU kann nur programmiert werden\\, wenn der Power Block eingeschaltet ist (logisch)\n"..
@@ -62,13 +67,13 @@ techage.add_to_manual('DE', {
   "  - Über die Taste \"address\" kann der Program Counter auf einen Wert gesetzt werden.\n"..
   "  - Über die Taste \"dump\" wird ein Speicherbereich ausgegeben. Die Startadresse muss zuvor über die Taste \"address\" eingegeben worden sein.\n"..
   "\n"..
-  "Das \"help\" Register zeigt die wichtgsten Assemblerbefehle und jeweils den Maschinencode dazu. Mit diesem Subset an Befehlen kann man bereits arbeiten. Weitere Informationen zum Befehlssatz findest du  und .\n"..
+  "Das \"help\" Register zeigt die wichtigsten Assemblerbefehle und jeweils den Maschinencode dazu. Mit diesem Subset an Befehlen kann man bereits arbeiten. Weitere Informationen zum Befehlssatz findest du  und .\n"..
   "\n"..
-  "Am Ende der Tabelle werden die System Kommandos aufgeführt. Dies sind quasi Betriebssystemtaufrufe\\, welche zusätzliche Befehle ausführen\\, die sonst nicht möglich wären\\, wie bspw. einen Text auf dem Telewriter ausgeben. \n"..
+  "Am Ende der Tabelle werden die System-Kommandos aufgeführt. Dies sind quasi Betriebssystemtaufrufe\\, welche zusätzliche Befehle ausführen\\, die sonst nicht möglich wären\\, wie bspw. einen Text auf dem Telewriter auszugeben. \n"..
   "\n",
   "Die CPU ist in der Lage\\, bis zu 100.000 Befehle pro Sekunde (0.1 MIPS) auszuführen. Dies gilt\\, solange nur interne CPU-Befehle ausgeführt werden. Dabei gibt es folgende Ausnahmen:\n"..
   "\n"..
-  "  - Der 'sys' und der 'in' Befehl \"kosten\" pauschal 1000 Zyklen\\, da hier externer Code ausgeführt wird.\n"..
+  "  - Der 'sys' und der 'in' Befehl \"kosten\" bis zu 1000 Zyklen\\, da hier externer Code ausgeführt wird.\n"..
   "  - Der 'out' Befehl unterbricht die Ausführung für 100 ms\\, sofern sich der Wert am Ausgang ändert und eine externe Aktionen in der Spielwelt durchgeführt werden muss. Anderenfalls sind es auch nur die 1000 Zyklen.\n"..
   "  - Der 'nop' Befehl\\, der für Pausen genutzt werden kann\\, unterbricht die Ausführung auch für 100 ms.\n"..
   "\n"..
@@ -85,9 +90,9 @@ techage.add_to_manual('DE', {
   "\n"..
   "Beide Typen können an einer CPU \"angeschlossen\" sein\\, wobei es pro Typ maximal ein Gerät sein darf\\, also in der Summe maximal zwei.\n"..
   "\n"..
-  "Über das \"tape\" Menü des Telewriters können Programme von Tape zum Rechner (Schalter \"tape -> PDP13\") und vom Rechner auf das Tape (Schalter \"PDP13 -> tape\") kopiert werden. In beiden Fällen muss dazu ein Tape \"eingelegt\" sein. Die CPU muss dazu eingeschaltet (power) und gestoppt sein. Ob die Übertragung geklappt hat\\, wird auf Papier ausgegeben (\"main\" Menü-Register). \n"..
+  "Über das \"tape\" Menü des Telewriters können Programme von Punch Tape zum Rechner (Schalter \"tape -> PDP13\") und vom Rechner auf das Punch Tape (Schalter \"PDP13 -> tape\") kopiert werden. In beiden Fällen muss dazu ein Punch Tape \"eingelegt\" sein. Die CPU muss dazu eingeschaltet (power) und gestoppt sein. Ob die Übertragung geklappt hat\\, wird auf Papier ausgegeben (\"main\" Menü-Register). \n"..
   "\n"..
-  "Über das \"tape\" Menü können auch Demo Programme auf ein Tape kopiert und anschließend in den Rechner geladen werden. Diese Programme zeigen\\, wie man elementare Funktionen des Rechners programmiert.\n"..
+  "Über das \"tape\" Menü können auch Demo Programme auf ein Punch Tape kopiert und anschließend in den Rechner geladen werden. Diese Programme zeigen\\, wie man elementare Funktionen des Rechners programmiert.\n"..
   "\n"..
   "Der Telewriter kann über folgende 'sys' Befehle angesprochen werden:\n"..
   "\n"..
@@ -105,9 +110,9 @@ techage.add_to_manual('DE', {
   "\n"..
   "\n"..
   "\n",
-  "Neben den Demo Tapes mit festen\\, kleinen Programmen gibt es ach die beschreibbaren und editierbaren Tapes. Diese können (im Gegensatz zum Original) mehrfach geschrieben/geändert werden.\n"..
+  "Neben den Demo Tapes mit festen\\, kleinen Programmen gibt es auch die beschreibbaren und editierbaren Punch Tapes. Diese können (im Gegensatz zum Original) mehrfach geschrieben/geändert werden.\n"..
   "\n"..
-  "Die Tapes besitzen ein Menü so dass diese auch von Hand beschrieben werden können. Dies dient dazu:\n"..
+  "Die Punch Tapes besitzen ein Menü so dass diese auch von Hand beschrieben werden können. Dies dient dazu:\n"..
   "\n"..
   "  - dem Tape einen eindeutigen Namen zu geben\n"..
   "  - zu beschreiben\\, wie das Programm genutzt werden kann (Description)\n"..
@@ -139,7 +144,7 @@ techage.add_to_manual('DE', {
   "\n",
   "Dieser Block vervollständigt als 4. Block den Rechneraufbau. Der Block hat ein Inventar für Chips zur Speichererweiterung. Der Rechner hat intern 4 KWords an Speicher (4096 Worte) und kann durch einen 4 K RAM Chip auf 8 KWords erweitert werden. Mit einem zusätzlichen 8 K RAM Chip kann der Speicher dann auf 16 KWords erweitert werden. Theoretisch sind bis zu 64 KWords möglich.\n"..
   "\n"..
-  "In der unteren Reihe kann das Rack bis zu 4 ROM Chips aufnehmen. Diese ROM Chips beinhalten Programme und sind quasi das Betriebssystem des Rechners. ROM Chips kann man nur auf der TA3 Elektronikfabrik produzieren. Das Programm für den Chip muss man dazu auf Tape besitzen\\, welches dann mit Hilfe der Elektronikfabrik auf den Chip \"gebrannt\" wird. An diese Programme kommt man nur\\, wenn man entsprechende Programmieraufgaben gelöst hat (dazu später mehr).\n"..
+  "In der unteren Reihe kann das Rack bis zu 4 ROM Chips aufnehmen. Diese ROM Chips beinhalten Programme und sind quasi das BIOS (basic input/output system) des Rechners. ROM Chips kann man nur auf der TA3 Elektronikfabrik produzieren. Das Programm für den Chip muss man dazu auf Tape besitzen\\, welches dann mit Hilfe der Elektronikfabrik auf den Chip \"gebrannt\" wird. An diese Programme kommt man nur\\, wenn man entsprechende Programmieraufgaben gelöst hat (dazu später mehr).\n"..
   "\n"..
   "Das Inventar des Speicherblocks lässt sich nur in der vorgegebenen Reihenfolge von links nach rechts füllen. Der Rechner muss dazu ausgeschaltet sein.\n"..
   "\n"..
@@ -183,19 +188,76 @@ techage.add_to_manual('DE', {
   "\n"..
   "Das Monitor Programm auf dem Rechner wird durch Eingabe des Kommandos \"mon\" an der CPU gestartet und über die Taste \"stop\" auch wieder gestoppt werden. Alle anderen Tasten der CPU sind im Monitor-Mode nicht aktiv. Die Bedienung erfolgt nur über das Terminal. \n"..
   "\n"..
-  "Das Monitor Programm unterstützt folgende Kommandos\\, die auch mit Eingabe von '?' ausgegeben werden (die folgende Tabelle ist ingame nicht darstellbar):\n"..
+  "Das Monitor Programm unterstützt folgende Kommandos\\, die auch mit Eingabe von '?' am Telewriter ausgegeben werden (die folgende Tabelle ist in der ingame Hilfe nicht darstellbar):\n"..
+  "\n"..
+  "Auf dem \"Terminal Programmer\" läuft die Version 2 des Monitors. Diese bietet folgende zusätzliche Kommandos:\n"..
   "\n"..
   "Alle Kommandos unterstützen die dezimale und hexadezimale Eingabe von Zahlen\\, '100' ist dezimal und entspricht damit '$64' (hexadezimal).\n"..
+  "\n"..
+  "\n"..
+  "\n",
+  "Hat man den Rechner mit dem \"BIOS ROM\" Chip erweitert\\, hat der Rechner Zugriff auf das Terminal und auf das Filesystem des Bandlaufwerks und der Festplatte. Der Rechner kann damit theoretisch von einem der Laufwerke booten\\, wenn er denn eine Betriebssystem hätte\\, aber dazu später mehr.\n"..
+  "\n"..
+  "Zur Verfügung stehen ab sofort bspw. folgende zusätzliche sys-Kommandos (Das Zeichen '@' bedeutet \"Speicheradresse von\"):\n"..
+  "\n"..
+  "Zusätzlich beinhaltet der BIOS ROM Chip eine Selbsttest Routine\\, die beim Einschalten des Rechners ausgeführt und das Ergebnis an der CPU ausgegeben wird (dies dient zur Überprüfung\\, ob man alles korrekt angeschlossen hat):\n"..
+  "\n"..
+  "    RAM=8K   ROM=16K   I/O=8\n"..
+  "    Telewriter..ok  Terminal..ok\n"..
+  "    Tape drive..ok\n"..
+  "\n",
+  "Sofern das BIOS ROM verfügbar ist\\, kann am Rechner auch ein Terminal angeschlossen und angesteuert werden. Auch hier gibt es zwei Typen von Terminals:\n"..
+  "\n"..
+  "  - Terminal Operator für normale Ein-/Ausgaben aus einem laufenden Programm\n"..
+  "  - Terminal Programmer für die Programmierung/Fehlersuche über Assembler (Monitor ROM Chip wird benötigt)\n"..
+  "\n"..
+  "Beide Terminals können an einer CPU angeschlossen sein\\, wobei es pro Typ wieder maximal ein Gerät sein darf\\, also in der Summe maximal zwei. Das Terminal Programmer ersetzt dabei den Telewriter Programmer\\, es kann also nur ein Programmer Gerät genutzt werden.\n"..
+  "\n"..
+  "Das Terminal besitzt quasi 3 Betriebsarten:\n"..
+  "\n"..
+  "  - Editor-Mode (tbd)\n"..
+  "  - Terminal-Mode 1 mit zeilenweise Ausgabe von Texten\n"..
+  "  - Terminal-Mode 2 mit Bildschirmspeicher (48 Zeichen x 16 Zeilen) Hierbei wird immer der komplette Bildschirmspeicher an das Terminal übertragen\n"..
+  "\n"..
+  "Zu allen drei Betriebsarten gibt es Demoprogramme\\, die die Funktionsweise zeigen.\n"..
+  "\n"..
+  "Das Terminal besitzt auch zusätzliche Tasten mit folgenden Codierung:  'ESC' = 27\\, 'F1' = 28\\, 'F2' = 29\\, 'F3' = 30\\, 'F4' = 31\n"..
+  "\n"..
+  "Für das Terminal stehen folgende sys-Kommandos zur Verfügung:\n"..
+  "\n"..
+  "Um die Speicherverwaltung für eine in ASM geschriebene Anwendung bei bestimmten Terminal-Ein-/Ausgaben zu vereinfachen\\, gibt es in Lua einen zusätzlichen Datenpuffer\\, hier als \"shared memory\" bezeichnet. Diesen Puffer verwenden sys-Kommandos\\, um untereinander Daten auszutauschen. Die CPU hat keinen Zugriff auf diesen Speicher.  Dies wird bspw. dazu genutzt\\, die Daten  des \"list files\" Kommando direkt auf dem Terminal auszugeben:\n"..
+  "\n"..
+  "    move  A\\, #TEXT          \\; file name\n"..
+  "    sys   #$57              \\; list files (->SM)\n"..
+  "    sys   #$18              \\; print SM (<-SM)\n"..
+  "\n"..
+  "\n"..
+  "\n",
+  "Das Tape Drive vervollständigt als weitere Block den Rechneraufbau. Damit verfügt der Rechner jetzt über einen echten Massenspeicher\\, auf dem Daten und Programme wiederholt gespeichert und gelesen werden können. Der Rechner ist mit Hilfe des BIOS ROM Chips auch in der Lage\\, von diesem Speichermedium zu booten. \n"..
+  "\n"..
+  "Damit das Tape Drive genutzt werden kann\\, muss es mit einem Magnetic Tape bestückt und über das Menü gestartet werden. Wird das Tape Drive wieder gestoppt\\, kann das Tape mit den Daten auch wieder entnommen werden. Damit dienen Tapes auch der Datensicherung und Weitergabe.\n"..
+  "\n"..
+  "Es kann maximal ein Tape Drive am Rechner angeschlossen werden. Das Tape Drive muss bei der Pfadangabe über 't/'\\, also bspw. 't/myfile.txt' angesprochen werden.\n"..
+  "\n"..
+  "\n"..
+  "\n",
+  "Die Hard Disk vervollständigt als weitere Block den Rechneraufbau. Damit verfügt der Rechner jetzt über einen zweiten Massenspeicher mit mehr Kapazität. Der Rechner ist auch hier mit Hilfe des BIOS ROM Chips in der Lage\\, von diesem Speichermedium zu booten.\n"..
+  "\n"..
+  "Es kann maximal eine Hard Disk am Rechner angeschlossen werden. Der Zugriff auf die Hard Disk erfolgt über 'h/'\\, also bspw. 'h/myfile.txt'\n"..
+  "\n"..
+  "Wird dieser Block abgebaut\\, bleiben die Daten erhalten. Wird der Block zerstört\\, sind die Daten auch weg.\n"..
   "\n"..
   "\n"..
   "\n",
   "Um einen ROM Chip herstellen zu können\\, wird das Programm für den Chip auf Tape benötigt. Diese Aufgabe in echt zu lösen wäre zwar eine Herausforderung\\, aber für 99\\,9 % der Spieler kaum zu lösen.\n"..
   "\n"..
   "Deshalb soll die Programmierung hier simuliert werden\\, in dem man eine (einfache) Programmieraufgabe löst\\, was immer noch nicht ganz einfach ist. Aber man bekommt einen Eindruck\\, wie aufwändig es damals war\\, ein Programm zu schreiben.\n"..
+  "\n"..
+  "\n"..
   "\n",
   "Um das Tape für das PDP-13 Monitor ROM zu erhalten\\, musst du folgende Aufgabe lösen:\n"..
   "\n"..
-  "*Berechne den Abstand zwischen zwei Punkten im Raum\\, wobei der Abstand in Blöcken berechnet werden soll\\, also wie wenn eine Hyperloop-Strecke von pos1 zu pos2 gebaut werden müsste. Die Blöcke für pos1 und pos2 zählen mit. pos1 und pos2 bestehen aus x\\, y\\, z Kordinaten\\, wobei sich alle Werte im Bereich von 0 bis 1000 bewegen\\, Wenn man bspw. von (0\\,0\\,0) nach (1000\\,1000\\,1000) eine Strecke bauen müsste\\, würde man 3001 Blöcke benötigen.*\n"..
+  "*Berechne den Abstand zwischen zwei Punkten im Raum\\, wobei der Abstand in Blöcken berechnet werden soll\\, also wie wenn eine Hyperloop-Strecke von pos1 zu pos2 gebaut werden müsste. Die Blöcke für pos1 und pos2 zählen mit. pos1 und pos2 bestehen aus x\\, y\\, z Koordinaten\\, wobei sich alle Werte im Bereich von 0 bis 1000 bewegen\\, Wenn man bspw. von (0\\,0\\,0) nach (1000\\,1000\\,1000) eine Strecke bauen müsste\\, würde man 3001 Blöcke benötigen.*\n"..
   "\n"..
   "Das Programm muss zuerst die 6 Werte (x1\\, y1\\, z1\\, x2\\, y2\\, z2) über 'sys #300' anfordern und am Ende das Ergebnis wieder über 'sys #301' ausgeben. Wenn die Berechnung passt und im \"Telewriter Operator\" befindet sich ein leeres Tape\\, dann wird bei passendem Ergebnis das Tape geschrieben. In jedem Falle erfolgt eine Chat-Ausgabe über die berechneten Werte. Hier der Rahmen des Programms:\n"..
   "\n"..
@@ -203,7 +265,23 @@ techage.add_to_manual('DE', {
   "    0B00       \\; sys #$300      (die 6 Werte anfordern\\, diese stehen dann in $100-$105)\n"..
   "    ....\n"..
   "    0B01       \\; sys #$301      (das Rechenergebnis muss zuvor in A gespeichert sein)\n"..
-  "    1C00       \\; halt           (wichtig\\, sonst läuft das Programm unkontroliert weiter)\n"..
+  "    1C00       \\; halt           (wichtig\\, sonst läuft das Programm unkontrolliert weiter)\n"..
+  "\n"..
+  "\n"..
+  "\n",
+  "Um das Tape für das PDP-13 BIOS ROM zu erhalten\\, musst du folgende Aufgabe lösen:\n"..
+  "\n"..
+  "*Wandle die übergebenen Wert (0..65535) um in einen String mit der dezimalen Darstellung der Zahl (das was bspw. auch die Lua-Funktion 'tostring()' macht).*\n"..
+  "\n"..
+  "Das Programm muss zuerst den Wert über 'sys #302' anfordern und am Ende das Ergebnis wieder über 'sys #303' ausgeben. Wenn die Umwandlung passt und im \"Telewriter Operator\" befindet sich ein leeres Tape\\, dann wird bei passendem Ergebnis das Tape geschrieben. In jedem Falle erfolgt eine Chat-Ausgabe mit den Strings. Hier der Rahmen des Programms:\n"..
+  "\n"..
+  "    sys #$302      \\; den Werte anfordern\\, dieser stehen dann in A\n"..
+  "    ....\n"..
+  "    move A\\, #$nnn  \\; A mit der String-Adresse laden\n"..
+  "    sys #$303      \\; Ergebnis übergeben\n"..
+  "    halt           \\; wichtig\\, sonst läuft das Programm unkontrolliert weiter\n"..
+  "\n"..
+  "\n"..
   "\n",
 }, {
   "pdp13_cpu",
@@ -219,8 +297,18 @@ techage.add_to_manual('DE', {
   "pdp13_cpu",
   "pdp13_telewriter",
   "",
-  "",
+  "pdp13_terminal",
+  "pdp13_tape_drive",
+  "pdp13_hard_disk",
+  "pdp13_tape",
+  "pdp13_tape",
+  "pdp13_tape",
 }, {
+  "",
+  "",
+  "",
+  "",
+  "",
   "",
   "",
   "",

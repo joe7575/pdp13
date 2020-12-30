@@ -85,6 +85,9 @@ function pdp13.is_h16_file(s)
 	return string.find(s, "%.h16") ~= nil
 end
 
+function pdp13.is_com_file(s)
+	return string.find(s, "%.com") ~= nil
+end
 
 function pdp13.kbyte(val)
 	if val > 0 then

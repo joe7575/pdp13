@@ -51,8 +51,10 @@ end
 
 local function convert_to_numbers(s)
 	local tbl = {}
-	for _,val in ipairs(string.split(s, " ")) do
-		tbl[#tbl+1] = pdp13.string_to_number(val)
+	if s and s ~= "" then
+		for _,val in ipairs(string.split(s, " ")) do
+			tbl[#tbl+1] = pdp13.string_to_number(val)
+		end
 	end
 	return tbl
 end
@@ -70,7 +72,6 @@ Commands["?"] = function(pos, mem, cmd, rest, is_terminal)
 		mem.mstate = nil
 		if is_terminal then
 			return {
-				"?......help",
 				"st.....start            sp.....stop",
 				"rt.....reset            n......next step",
 				"r......register         ad #...set address",
@@ -78,7 +79,7 @@ Commands["?"] = function(pos, mem, cmd, rest, is_terminal)
 				"as #...assemble         di #...disassemble",
 				"br #...set brkpoint     br.....rst brkpoint",
 				"",
-				"di #........disassemble",
+				"ld name.....load a .com/.h16 file",
 				"ct # txt....copy text to mem",
 				"cm # # #....copy mem from to num",
 				"sys # # #...call 'sys num A B'",
@@ -268,7 +269,10 @@ Commands["br"] = function(pos, mem, cmd, rest, is_terminal)
 	if techage.get_nvm(pos).monitor and is_terminal then
 		mem.mstate = nil
 		local words = string.split(rest, " ", true, 1)
-		if #words == 1 then
+		if rest ~= "" and #words == 1 then
+			if mem.brkp_addr then
+				vm16.reset_breakpoint(pos, mem.brkp_addr, mem.brkp_code)
+			end
 			local addr = pdp13.string_to_number(words[1])
 			mem.brkp_addr = addr
 			mem.brkp_code = vm16.set_breakpoint(pos, addr, 0)
@@ -337,6 +341,24 @@ Commands["sys"] = function(pos, mem, cmd, rest, is_terminal)
 	end
 end
 
+-- load file
+Commands["ld"] = function(pos, mem, cmd, rest, is_terminal)
+	if techage.get_nvm(pos).monitor and is_terminal then
+		local sts, resp
+		if pdp13.is_com_file(rest) and pdp13.file_exists(pos, rest) then
+			sts, resp = pcall(pdp13.sys_call, pos, pdp13.LOAD_COM, rest, 0, pdp13.PARAM_BUFF)
+		elseif pdp13.is_h16_file(rest) and pdp13.file_exists(pos, rest) then
+			sts, resp = pcall(pdp13.sys_call, pos, pdp13.LOAD_H16, rest, 0, pdp13.PARAM_BUFF)
+		else
+			return {"error!"}
+		end
+		if sts then
+			return {"result = "..resp}
+		else
+			return {"sys error", resp:sub(1, 48)}
+		end
+	end
+end
 
 -- exit monitor
 Commands["ex"] = function(pos, mem, cmd, rest)
@@ -352,11 +374,11 @@ function pdp13.monitor(cpu_pos, mem, command, is_terminal)
 		local resp
 		
 		if Commands[words[1]] then
-			resp = Commands[words[1]](cpu_pos, mem, words[1], words[2], is_terminal)
+			resp = Commands[words[1]](cpu_pos, mem, words[1], words[2] or "", is_terminal)
 		elseif mem.mstate and Commands[mem.mstate] then
 			resp = Commands[mem.mstate](cpu_pos, mem, "", command, is_terminal)
 		else
-			resp = Commands["?"](cpu_pos, mem, words[1], words[2], is_terminal)
+			resp = Commands["?"](cpu_pos, mem, words[1], words[2] or "", is_terminal)
 		end
 		if command ~= "" then
 			return "[mon]$ "..command, resp

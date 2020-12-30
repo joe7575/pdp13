@@ -224,6 +224,16 @@ Das Monitor Programm unterstützt folgende Kommandos, die auch mit Eingabe von `
 | `cm # # #` | Speicher kopieren. Die drei `#` bedeuten: Quell-Adresse, Ziel-Adresse, Anzahl Worte |
 | `ex`       | Monitor Mode vom Terminal aus beenden                        |
 
+Auf dem "Terminal Programmer" läuft die Version 2 des Monitors. Diese bietet folgende zusätzliche Kommandos:
+
+| Kommando    | Bedeutung                                                    |
+| ----------- | ------------------------------------------------------------ |
+| `ld name`   | Laden einer `.com` oder `.h16` Datei in den Speicher         |
+| `sys # # #` | Aufrufen eines `sys` Kommandos mit Nummer, Wert für Reg A, Wert für Reg B |
+| `br #`      | Setzen eines Breakpoints an der angegebenen Adresse. Es kann nur ein Breakpoint gesetzt werden |
+| `br`        | Löschen des Breakpoints                                      |
+
+
 Alle Kommandos unterstützen die dezimale und hexadezimale Eingabe von Zahlen, `100` ist dezimal und entspricht damit `$64` (hexadezimal).
 
 [pdp13_telewriter|image]
@@ -236,14 +246,14 @@ Zur Verfügung stehen ab sofort bspw. folgende zusätzliche sys-Kommandos (Das Z
 
 | sys # | Bedeutung                          | Parameter in A             | Parameter in B  | Ergebnis in A   |
 | ----- | ---------------------------------- | -------------------------- | --------------- | --------------- |
-| #$50  | file open                          | @file name                 | -               | file reference  |
+| $50   | file open                          | @file name                 | mode `w` / `r`  | file reference  |
 | $51   | file close                         | file reference             | -               | 1=ok, 0=error   |
 | $52   | read file (ins Shared Memory)      | file reference             | -               | 1=ok, 0=error   |
 | $53   | read line                          | file reference             | @destination    | 1=ok, 0=error   |
 | $54   | write file (aus dem Shared Memory) | file reference             | -               | 1=ok, 0=error   |
 | $55   | write line                         | file reference             | @text           | 1=ok, 0=error   |
 | $56   | file size                          | @file name                 | -               | size in bytes   |
-| $57   | list files                         | @file name pattern         | -               | number of files |
+| $57   | list files (ins Shared Memory)     | @file name pattern         | -               | number of files |
 | $58   | remove files                       | @file name pattern         | -               | number of files |
 | $59   | copy file                          | @source file name          | @dest file name | 1=ok, 0=error   |
 | $5A   | move file                          | @source file name          | @dest file name | 1=ok, 0=error   |
@@ -278,17 +288,20 @@ Das Terminal besitzt auch zusätzliche Tasten mit folgenden Codierung:  `ESC` = 
 
 Für das Terminal stehen folgende sys-Kommandos zur Verfügung:
 
-| sys # | Bedeutung                 | Parameter in A | Parameter in B | Ergebnis in A |
-| ----- | ------------------------- | -------------- | -------------- | ------------- |
-| $10   | clear screen              | -              | -              | 1=ok, 0=error |
-| $11   | print char                | char/word      | -              | 1=ok, 0=error |
-| $12   | print number              | number         | base: 10 / 16  | 1=ok, 0=error |
-| $13   | print string              | @text          | -              | 1=ok, 0=error |
-| $14   | print string with newline | @text          | -              | 1=ok, 0=error |
-| $15   | update screen             | @screen memory | -              | 1=ok, 0=error |
-| $16   | start editor (tbd)        | -              | -              | 1=ok, 0=error |
-| $17   | input string              | @destination   | -              | size          |
-| $18   | print from shared memory  | -              | -              | 1=ok, 0=error |
+| sys # | Bedeutung                        | Parameter in A | Parameter in B | Ergebnis in A |
+| ----- | -------------------------------- | -------------- | -------------- | ------------- |
+| $10   | clear screen                     | -              | -              | 1=ok, 0=error |
+| $11   | print char                       | char/word      | -              | 1=ok, 0=error |
+| $12   | print number                     | number         | base: 10 / 16  | 1=ok, 0=error |
+| $13   | print string                     | @text          | -              | 1=ok, 0=error |
+| $14   | print string with newline        | @text          | -              | 1=ok, 0=error |
+| $15   | update screen                    | @text          | -              | 1=ok, 0=error |
+| $16   | start editor (<SM)               | @file name     | -              | 1=ok, 0=error |
+| $17   | input string                     | @destination   | -              | size          |
+| $18   | print from shared memory         | -              | -              | 1=ok, 0=error |
+| $19   | flush stdout (Ausgabe erzwingen) |                |                | 1=ok, 0=error |
+| $1A   | prompt ausgeben                  |                |                | 1=ok, 0=error |
+| $1B   | beep ausgeben                    |                |                | 1=ok, 0=error |
 
 Um die Speicherverwaltung für eine in ASM geschriebene Anwendung bei bestimmten Terminal-Ein-/Ausgaben zu vereinfachen, gibt es in Lua einen zusätzlichen Datenpuffer, hier als "shared memory" bezeichnet. Diesen Puffer verwenden sys-Kommandos, um untereinander Daten auszutauschen. Die CPU hat keinen Zugriff auf diesen Speicher.  Dies wird bspw. dazu genutzt, die Daten  des "list files" Kommando direkt auf dem Terminal auszugeben:
 
@@ -316,7 +329,7 @@ Die Hard Disk vervollständigt als weitere Block den Rechneraufbau. Damit verfü
 
 Es kann maximal eine Hard Disk am Rechner angeschlossen werden. Der Zugriff auf die Hard Disk erfolgt über `h/`, also bspw. `h/myfile.txt`
 
-**Achtung: Wird dieser Block abgebaut, sind die Daten weg! Dieser Block ist daher zur Sicherheit auch nur schwer zu entfernen.**
+Wird dieser Block abgebaut, bleiben die Daten erhalten. Wird der Block zerstört, sind die Daten auch weg.
 
 [pdp13_hard_disk|image]
 

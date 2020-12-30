@@ -417,3 +417,8 @@ pdp13.SharedMemory = SharedMemory
 pdp13.get_uid = get_uid
 -- pdp13.set_uid(pos, drive, uid)
 pdp13.set_uid = set_uid
+
+function pdp13.file_exists(pos, fname)
+	return pdp13.sys_call(pos, pdp13.FILE_SIZE, fname, 0, pdp13.PARAM_BUFF) > 0
+end
+
