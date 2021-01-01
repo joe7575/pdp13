@@ -22,14 +22,11 @@ local MSG_SIZE = 64
 -- val1 = mem address for src_data
 -- val2 = I/O port => remote node number
 local function upd_send(pos, address, val1, val2)
-	print("upd_send1")
-	if M(pos):get_int("rom_size") >= 2 then  -- OS enabled
+	if M(pos):get_int("rom_size") >= 3 then  -- COMM enabled
 		local own_num = M(pos):get_string("node_number")
 		own_num = tonumber(own_num)
 		local rmt_num = pdp13.get_rmt_node_number(own_num, val2)
-	print("upd_send2", own_num, val2, rmt_num)
 		if rmt_num then
-	print("upd_send3")
 			DataStorage[rmt_num] = DataStorage[rmt_num] or {}
 			DataStorage[rmt_num][own_num] = vm16.read_mem(pos, val1, MSG_SIZE)
 			return 1
@@ -41,14 +38,13 @@ end
 -- val1 = mem address for dst_data
 -- val2 = I/O port => remote node number
 local function upd_receive(pos, address, val1, val2)
-	if M(pos):get_int("rom_size") >= 2 then  -- OS enabled
+	if M(pos):get_int("rom_size")  >= 3 then  -- COMM enabled
 		local own_num = M(pos):get_string("node_number")
 		own_num = tonumber(own_num)
 		local rmt_num = pdp13.get_rmt_node_number(own_num, val2)
 		if rmt_num then
 			local msg = DataStorage[own_num] and DataStorage[own_num][rmt_num]
 			if msg then
-				print("upd_receive")
 				vm16.write_mem(pos, val1, msg)
 				DataStorage[own_num][rmt_num] = nil
 				return 1

@@ -16,7 +16,7 @@ pdp13.MAX_FNAME_LEN    = 12
 pdp13.MAX_LINE_LEN     = 64
 
 -- size translation
-pdp13.tROM_SIZE = {[0] = 0, [1] = 8, [2] = 16, [3] = 32}
+pdp13.tROM_SIZE = {[0] = 0, [1] = 8, [2] = 16, [3] = 24, [4] = 32}
 
 -- Terminal
 pdp13.CLS          = 0x10
@@ -47,12 +47,15 @@ pdp13.CHANGE_DIR   = 0x5B
 
 pdp13.COLD_START   = 0x70
 pdp13.WARM_START   = 0x71
-pdp13.LOAD_H16     = 0x72
-pdp13.ROM_SIZE     = 0x73
+pdp13.ROM_SIZE     = 0x72
+pdp13.RAM_SIZE     = 0x73
 pdp13.CURR_DRIVE   = 0x74
-pdp13.LOAD_COM     = 0x75
-pdp13.H16_SIZE     = 0x76
-pdp13.STORE_COM    = 0x77
+pdp13.LOAD_H16     = 0x75
+pdp13.LOAD_COM     = 0x76
+pdp13.H16_SIZE     = 0x77
+pdp13.COM_SIZE     = 0x78
+pdp13.STORE_H16    = 0x79
+pdp13.STORE_COM    = 0x7A
 
 pdp13.TAPE_NUM     = 1
 pdp13.HDD_NUM      = 2

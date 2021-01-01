@@ -72,7 +72,7 @@ Commands["?"] = function(pos, mem, cmd, rest, is_terminal)
 		mem.mstate = nil
 		if is_terminal then
 			return {
-				"st.....start            sp.....stop",
+				"st [#].start            sp.....stop",
 				"rt.....reset            n......next step",
 				"r......register         ad #...set address",
 				"d #....dump memory      en #...enter data",
@@ -88,7 +88,7 @@ Commands["?"] = function(pos, mem, cmd, rest, is_terminal)
 		else
 			return {
 				"?         help",
-				"st        start",
+				"st [#]    start",
 				"sp        stop",
 				"rt        reset",
 				"n         next step",
@@ -109,6 +109,10 @@ end
 -- start
 Commands["st"] = function(pos, mem, cmd, rest)
 	if techage.get_nvm(pos).monitor then
+		if rest ~= "" then
+			local addr = pdp13.string_to_number(rest)
+			vm16.set_pc(pos, addr)
+		end
 		pdp13.start_cpu(pos)
 		mem.mstate = nil
 		return {"running"}
@@ -330,8 +334,11 @@ Commands["sys"] = function(pos, mem, cmd, rest, is_terminal)
 		regB = pdp13.string_to_number(regB) or 0
 		
 		if num then
+			print(5)
 			local sts, resp = pcall(pdp13.sys_call, pos, num, regA, regB)
+			print(6)
 			if sts then
+			print(7)
 				return {"result = "..resp}
 			else
 				return {"sys error", resp:sub(1, 48)}

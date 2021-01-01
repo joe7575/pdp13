@@ -8,89 +8,59 @@
 	AGPL v3
 	See LICENSE.txt for more information
 	
-	PDP-13 Demo tapes
+	PDP-13 Punch Tapes
 
 ]]--
 
-local MAX_SIZE = 80
-
-local HiddenList = {
-	["pdp13:tape_monitor"] = true,
-	["pdp13:tape_bios"] = true,
-	["pdp13:tape_bootdemo"] = true,
-}
-
-local function on_use(itemstack, user)
-	local name = itemstack:get_name()
-	local idef = minetest.registered_craftitems[name] or {}
-	local formspec = "size[10,8.5]"..
-		default.gui_bg..
-		default.gui_bg_img..
-		default.gui_slots..
-		"style_type[label;font=mono]"..
-		"label[0,0;"..idef.text.."]"..
-		"button_exit[3.5,7.8;3,1;exit;Exit]"
-	local player_name = user:get_player_name()
-	minetest.show_formspec(player_name, "pdp13:demotape", formspec)
-	return itemstack
-end
-
-local function register_tape(name, desc, text, code)
-	text = minetest.formspec_escape(text)
-	minetest.register_craftitem(name, {
-		description = desc,
-		text = text,
-		code = code,
-		stack_max = 1,
-		inventory_image = "pdp13_punched_tape.png",
-		groups = {book = 1, flammable = 3, pdp13_ptape = 1},
-		on_use = on_use})
-	if not HiddenList[name] then -- do not publish hidden demos
-		pdp13.register_demotape(name, desc)
-	end
-end
-
-register_tape("pdp13:tape_7seg", "7-Segment Demo", [[
-; 7 segment demo v1.0
+pdp13.tape.register_tape("pdp13:tape_7seg", "Demo: 7-Segment",
+[[; 7 segment demo v1.0
 ; PDP13 7-Segment on port #0
 
-0000: 2010, 0081       move A, #$80    ; value command
-0002: 2030, 0000       move B, #00     ; hex value
-
-                   loop:
-0004: 3030, 0001       add  B, #01
-0006: 4030, 000F       and  B, #$0F    ; values from 0 to 15
-0008: 6580             out #0, A
-0009: 0000             nop
-000A: 0000             nop
-000B: 1200, 0004       jump loop
-]], [[:80000002010008020300000303000014030000F
-:500080065800000000012000004
-:00000FF]])
-
-register_tape("pdp13:tape_color", "Color Lamp Demo", [[
-; Color lamp demo v1.0
-; PDP13 Color Lamp on port #1
-
-0000: 2010, 0080       move A, #$80    ; 'value' command
-0002: 2030, 0000       move B, #00     ; value in B
+0000: 2010, 0080    move A, #$80  ; 'value' command
+0002: 2030, 0000    move B, #00   ; value in B
 
 loop:
-0004: 4030, 003F       and  B, #$3F    ; values from 1 to 64
-0006: 3030, 0001       add  B, #01
-0008: 6600, 0001       out #01, A
-000A: 0000             nop             ; delay
-000B: 1200, 0004       jump loop
-]], [[:800000020100080203000004030003F30300001
+0004: 3030, 0001    add  B, #01
+0006: 4030, 000F    and  B, #$0F  ; values from 0 to 15
+0008: 6600, 0000    out #00, A    ; output to 7-segment
+000A: 0000          nop           ; 100 ms delay
+000B: 0000          nop           ; 100 ms delay
+000C: 1200, 0004    jump loop
+
+]], [[:20000010000000D
+:80000002010008020300000303000014030000F
+:6000800660000000000000012000004
+:00000FF
+]], false)
+
+
+pdp13.tape.register_tape("pdp13:tape_color", "Demo: Color Lamp",
+[[; Color lamp demo v1.0
+; PDP13 Color Lamp on port #1
+
+0000: 2010, 0080    move A, #$80  ; 'value' command
+0002: 2030, 0000    move B, #00   ; value in B
+
+loop:
+0004: 4030, 003F    and  B, #$3F  ; values from 1 to 64
+0006: 3030, 0001    add  B, #01
+0008: 6600, 0001    out #01, A
+000A: 0000          nop           ; delay
+000B: 1200, 0004    jump loop
+
+]], [[:20000010000000C
+:800000020100080203000004030003F30300001
 :500080066000001000012000004
-:00000FF]])
+:00000FF
+]], false)
 
-register_tape("pdp13:tape_tele", "Telewriter Output Demo", [[
-; Hello world for the Telewriter v1.0
 
-0000: 2010, 0004       move    A, #TEXT
-0002: 0800             sys     #0
-0003: 1C00             halt
+pdp13.tape.register_tape("pdp13:tape_tele", "Demo: Telewriter Output",
+[[; Hello world for the Telewriter v1.0
+
+0000: 2010, 0004    move    A, #TEXT
+0002: 0800          sys     #0
+0003: 1C00          halt
 
     .text
 TEXT:
@@ -98,29 +68,32 @@ TEXT:
 0004: 0048, 0065, 006C, 006C, 006F, 0020
     "World\0"
 000A: 0057, 006F, 0072, 006C, 0064, 0000
-]], [[:80000002010000408001C0000480065006C006C
+]], [[:20000010000000F
+:80000002010000408001C0000480065006C006C
 :8000800006F00200057006F0072006C00640000
-:00000FF]])
+:00000FF
+]], false)
 
-register_tape("pdp13:tapetelecolor", "Telewriter Input Demo", [[
-; Input number demo v1.0
-; PDP13 Color Lamp on port #0
+
+pdp13.tape.register_tape("pdp13:tape_inp_num", "Demo: Telewriter Input Number",
+[[; Input number demo v1.0
+; PDP13 Color Lamp on port #1
 
 Start:
-0000: 2010, 0010       move    A, #TEXT1
-0002: 0800             sys     #0
+0000: 2010, 0010    move    A, #TEXT1
+0002: 0800          sys     #0
 
-0003: 0802             sys   #2        ; read number from telewriter
-0004: 5C12, FFFD       bneg  A, -3     ; val >= $8000: branch to loop
+0003: 0802          sys   #2       ; read number from telewriter
+0004: 5C12, FFFD    bneg  A, -3    ; val >= $8000: branch to loop
 
-0006: 2020             move  B, A      ; number to B
-0007: 2010, 0080       move  A, #$80   ; value command to A
-0009: 6600, 0000       out   #00, A    ; send value to color lamp
+0006: 2020          move  B, A     ; number to B
+0007: 2010, 0080    move  A, #$80  ; value command to A
+0009: 6600, 0001    out   #01, A   ; send value to color lamp
 
-000B: 2010, 0024       move    A, #TEXT2
-000D: 0800             sys     #0
+000B: 2010, 0024    move    A, #TEXT2
+000D: 0800          sys     #0
 
-000E: 1200, 0000       jump  Start
+000E: 1200, 0000    jump  Start
 
     .text
 TEXT1:
@@ -133,166 +106,128 @@ TEXT1:
 TEXT2:
     "Color set\0"
 0024: 0043, 006F, 006C, 006F, 0072, 0020, 0073, 0065, 0074, 0000
-]], [[:800000020100010080008025C12FFFD20202010
-:800080000806600000020100024080012000000
+]], [[:20000010000002D
+:800000020100010080008025C12FFFD20202010
+:800080000806600000120100024080012000000
 :80010000045006E00740065007200200063006F
 :8001800006C006F0072002000280031002E002E
 :800200000360034002900000043006F006C006F
 :6002800007200200073006500740000
-:00000FF]])
+:00000FF
+]], false)
 
-register_tape("pdp13:tape_monitor", "PDP13 Monitor Program", [[
-; PDP13 Monitor Program Code
-; Use this tape to produce a PDP-13 Monitor ROM chip
-; on the Fab.
-]], [[:410000020F010001240000C
-:81010001200104B120010581200106B12001089
-:8101800120010AE120010B4698020203C30000A
-:810200020407850000A30500030684020015012
-:8102800FFF4200C6C20214128005032FFFB2C80
-:8103000180069802050000420203C3000107810
-:810380000109410000A30100007301000306800
-:810400020017452FFF1200C6C20214128005032
-:8104800FFFB2C801800200C6600000828004010
-:8105000000F000000000000000000001240FFF4
-:81058002090105E65885152FFFD1C0000480065
-:8106000006C006C006F00200077006F0072006C
-:81068000064000A00002090107A20B000802168
-:81070005152FFFD34B000802225003F200D202C
-:810780008001C0000480065006C006C006F0020
-:81080000057006F0072006C0064002000320021
-:8108800000020900080222C003F2010DEAD1640
-:8109000FF8B215000202010DEAD1640FF9A2150
-:810980000202010BEEF1640FF7F215000202010
-:810A000BEEF1640FF8E21500020349000802224
-:810A800003F0000200D202C08001C0060100010
-:810B000660000181240FFFA600D5412FFFD2090
-:810B8000040615000027412FFFC349000402004
-:810C00020900040658A7412FFFD6590000A1240
-:110C800FFEB
-:00000FF]])
 
-register_tape("pdp13:tape_bios", "PDP13 BIOS Program", [[
-; PDP13 BIOS Program Code
-; Use this tape to produce a PDP-13 BIOS ROM chip
-; on the Fab.
-]], [[:410000020F010001240000C
-:81010001200104B120010581200106B12001089
-:8101800120010AE120010B4698020203C30000A
-:810200020407850000A30500030684020015012
-:8102800FFF4200C6C20214128005032FFFB2C80
-:8103000180069802050000420203C3000107810
-:810380000109410000A30100007301000306800
-:810400020017452FFF1200C6C20214128005032
-:8104800FFFB2C801800200C6600000828004010
-:8105000000F000000000000000000001240FFF4
-:81058002090105E65885152FFFD1C0000480065
-:8106000006C006C006F00200077006F0072006C
-:81068000064000A00002090107A20B000802168
-:81070005152FFFD34B000802225003F200D202C
-:810780008001C0000480065006C006C006F0020
-:81080000057006F0072006C0064002000320021
-:8108800000020900080222C003F2010DEAD1640
-:8109000FF8B215000202010DEAD1640FF9A2150
-:810980000202010BEEF1640FF7F215000202010
-:810A000BEEF1640FF8E21500020349000802224
-:810A800003F0000200D202C08001C0060100010
-:810B000660000181240FFFA600D5412FFFD2090
-:810B8000040615000027412FFFC349000402004
-:810C00020900040658A7412FFFD6590000A1240
-:110C800FFEB
-:00000FF]])
+pdp13.tape.register_tape("pdp13:tape_inp_str", "Demo: Telewriter Input String",
+[[; Input string demo v1.0
 
-register_tape("pdp13:tape_udp_send", "PDP13 UPD Send", [[
-; UDP send v1.0
-; Read string from telewriter and send to remote CPU on port #2
+Start:
+0000: 2010, 0015    move  A, #TEXT1
+0002: 0800          sys   #0        ; output text
 
-start:
-0000: 2010, 0100       move  A, #$100
-0002: 0801             sys   #1        ; read string from telewriter
-0003: 5C10, 0000       bneg  A, start  ; val >= $8000: branch to move
+0003: 2010, 0100    move  A, #$100
+0005: 0801          sys   #1        ; read string from telewriter
+0006: 5C12, FFFB    bneg  A, -5     ; val >= $8000: branch to move
 
-0005: 2030, 0002       move  B, #2     ; port # in B
-0007: 2010, 0100       move  A, #$100  ; addr in A
-0009: 0828             sys   #40       ; udp send
-000A: 1200, 0000       jump  start
-]], [[:80000002010010008015C100000203000022010
-:40008000100082812000000
-:00000FF]])
+0008: 2090, 0100    move  X, #$100  ; src ptr
+000A: 20B0, 002D    move  Y, #TEXT3 ; dst ptr
 
-register_tape("pdp13:tape_udp_recv", "PDP13 UPD Receive", [[
-; UDP receive v1.0
-; Read string from remote CPU on port #2 and write to telewriter
+000C: 216A          move [Y]+, [X]+ ; copy char
+000D: 7412, FFFD    dbnz A, -3
 
-start:
-0000: 2030, 0002       move  B, #2     ; port # in B
-0002: 2010, 0100       move  A, #$100  ; addr in A
-0004: 0829             sys   #41       ; udp recv
-0005: 2C00             dec   A
-0006: 5010, 0000       bnze  A, start  ; 0 => msg received
+000F: 212C          move [Y], #0    ; zero terminated string
 
-0008: 2010, 0100       move  A, #$100
-000A: 0800             sys   #0        ; output string to telewriter
-000B: 1200, 0000       jump  start
-]], [[:8000000203000022010010008292C0050100000
-:500080020100100080012000000
-:00000FF]])
+0010: 2010, 0020    move  A, #TEXT2
+0012: 0800          sys   #0        ; output text
 
-register_tape("pdp13:tape_terminal", "PDP13 Terminal Demo", [[
-Output 
- - title
- - RAM size
- - ROM size
- - tape info 
-see: https://github.com/joe7575/pdp13/blob/main/examples/terminal.asm 
-]], [[:200000100000077
-:800000008102010004008142010DEAD2220FFFF
-:800080020110FFF3410DEAD5010001220100004
-:80010001200002820111FFF3410DEAD5010001C
-:8001800201000081200002820113FFF3410DEAD
-:800200050100026201000101200002820100020
-:80028002030000A081220100059081308732030
-:8003000000A0812201000620814201000690814
-:80038002010006F085708182010007308141C00
+0013: 1200, 0000    jump  Start
+
+    .text
+TEXT1:
+    "Enter "
+0015: 0045, 006E, 0074, 0065, 0072, 0020
+    "text\0"
+001B: 0074, 0065, 0078, 0074, 0000
+TEXT2:
+    "You entered: "
+0020: 0059, 006F, 0075, 0020, 0065, 006E, 0074, 0065, 0072, 0065, 0064, 003A, 0020
+TEXT3:
+]], [[:20000010000002C
+:80000002010001508002010010008015C12FFFB
+:80008002090010020B0002D216A7412FFFD212C
+:8001000201000200800120000000045006E0074
+:800180000650072002000740065007800740000
+:80020000059006F007500200065006E00740065
+:5002800007200650064003A0020
+:00000FF
+]], false)
+
+
+pdp13.tape.register_tape("pdp13:tape_terminal", "Demo: Terminal",
+[[; Demo program for the Terminal v1.0
+; It shows how to use sys commands
+; and output some info on the screen.
+; This demo requires the BIOS ROM chip.
+; see https://github.com/joe7575/pdp13/blob/main/examples/terminal.asm
+]], [[:20000010000006D
+:800000008723410000A5C10003F081020100040
+:800080008142010DEAD22207FFF20110FFF3410
+:8001000DEAD50100017201000041200002D2011
+:80018001FFF3410DEAD50100021201000081200
+:8002000002D20113FFF3410DEAD5010002B2010
+:800280000101200002D201000202030000A0812
+:800300020100059081308732030000A08122010
+:800380000610814081B2010006708141C00FFFF
 :80040000023002300230020005400650072006D
 :80048000069006E0061006C002000440065006D
 :8005000006F0020007600310020002300230023
-:800580000000020004B002000520041004D0020
-:8006000002000000020004B00200052004F004D
-:80068000000007400240020006C007300000074
-:8007000002F002A0000007400240020005F0000
-:00000FF]])
-
-register_tape("pdp13:tape_bootdemo", "PDP13 Boot Demo", [[
-Generate files:
- - 'boot'
- - 'demo.h16'
-Output file list
-see: https://github.com/joe7575/pdp13/blob/main/examples/boot_demo.asm 
-]], [[:800000012000019686068802081682020300077
-:8000800085020606C2020030855200108223020
-:800100028207450000B2003085120046C806C60
-:8001800180008102010003708142010009B2030
-:800200000A2204D16000002201000A22030004C
-:80028002050000316000002201000AD08142010
-:800300000B308570818201000B708141C000023
-:80038000023002300200042006F006F00740020
-:800400000440065006D006F0020007600310020
-:80048000023002300230000003A003800300030
-:800500000300030003000300032003000310030
-:800580000300030003800300032003000330030
-:800600000300030003000300034003000330030
-:800680000300030003300460033003000330030
-:800700000300030003000310000003A00350030
-:800780000300030003800300030003600360030
-:800800000300030003000300030003000300030
-:800880000300031003200300030003000300030
-:800900000340000003A00300030003000300030
-:80098000046004600000074002F0062006F006F
-:800A000007400000074002F00640065006D006F
-:800A800002E0068003100360000005400610070
-:800B0000065003A00000074002F002A00000052
-:600B8000065006100640079002E0000
-:00000FF]])
+:80058000000004B002000520041004D00200020
+:80060000000004B00200052004F004D00000052
+:60068000065006100640079002E0000
+:00000FF
+]], false)
 
 
+pdp13.tape.register_tape("pdp13:tape_udp_send", "Demo: Comm Send",
+[[; UDP send v1.0
+; Read string from telewriter and send
+; to remote CPU on port #2.
+; This demo requires the COMM ROM chip.
+
+start:
+0000: 2010, 0100    move  A, #$100
+0002: 0801          sys   #1        ; read string from telewriter
+0003: 5C10, 0000    bneg  A, start  ; val >= $8000: -> start
+
+0005: 2030, 0002    move  B, #2     ; port # in B
+0007: 2010, 0100    move  A, #$100  ; addr in A
+0009: 0828          sys   #40       ; udp send
+000A: 1200, 0000    jump  start
+]], [[:20000010000000B
+:80000002010010008015C100000203000022010
+:40008000100082812000000
+:00000FF
+]], false)
+
+
+pdp13.tape.register_tape("pdp13:tape_udp_recv", "Demo: Comm Receive",
+[[; UDP receive v1.0
+; Read string from remote CPU on port #2
+; and write to telewriter.
+; This demo requires the COMM ROM chip.
+
+start:
+0000: 2030, 0002    move  B, #2     ; port # in B
+0002: 2010, 0100    move  A, #$100  ; addr in A
+0004: 0829          sys   #41       ; udp recv
+0005: 2C00          dec   A
+0006: 5010, 0000    bnze  A, start  ; 0 => msg received
+
+0008: 2010, 0100    move  A, #$100
+000A: 0800          sys   #0        ; output string to telewriter
+000B: 1200, 0000    jump  start
+
+]], [[:20000010000000C
+:8000000203000022010010008292C0050100000
+:500080020100100080012000000
+:00000FF
+]], false)

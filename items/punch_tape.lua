@@ -26,15 +26,15 @@ local function on_use(itemstack, user)
 	desc = minetest.formspec_escape(desc)
 	code = minetest.formspec_escape(code)
 	
-	local formspec = "size[10,8.5]"..
+	local formspec = "size[11,8.5]"..
 		default.gui_bg..
 		default.gui_bg_img..
 		default.gui_slots..
-		"field[0.3,0.5;10,1;name;Name:;"..name.."]"..
-		"textarea[0.3,1.6;10,1.8;desc;Description:;"..desc.."]"..
+		"field[0.3,0.5;11,1;name;Name:;"..name.."]"..
+		"textarea[0.3,1.6;11,1.8;desc;Description:;"..desc.."]"..
 		"style_type[textarea,table;font=mono]"..
-		"textarea[0.3,3.6;10,5;code;Code:;"..code.."]"..
-		"button_exit[3.5,7.8;3,1;save;Save]"
+		"textarea[0.3,3.6;11,5;code;Code:;"..code.."]"..
+		"button_exit[4,7.8;3,1;save;Save]"
 	
 	local player_name = user:get_player_name()
 	minetest.show_formspec(player_name, "pdp13:punch_tape", formspec)

@@ -463,6 +463,7 @@ minetest.register_node("pdp13:telewriter_prog", {
 
 techage.register_node({"pdp13:telewriter", "pdp13:telewriter_prog"}, {
 	on_recv_message = function(pos, src, topic, payload)
+	--print("Telewriter on_recv_message", topic, payload)
 		if topic == "println" then
 			payload = tostring(payload) or ""
 			local mem = techage.get_nvm(pos)
@@ -501,6 +502,19 @@ techage.register_node({"pdp13:telewriter", "pdp13:telewriter_prog"}, {
 			mem.reader = true
 			gen_rom_tape(pos, payload)
 			return true
+		elseif topic == "read_tape" then  -- provide the tape string
+			local mem = techage.get_nvm(pos)
+			if not mem.reader then
+				return get_tape_code(pos)
+			end			
+		elseif topic == "write_tape" then  -- write string to tape
+			local mem = techage.get_nvm(pos)
+			if not mem.writer then
+				if write_tape_code(pos, payload) then
+					return 1
+				end
+			end			
+			return 0
 		end
 	end,
 })	

@@ -35,6 +35,11 @@ minetest.register_craftitem("pdp13:bios_rom", {
 	inventory_image = "pdp13_rom.png",
 })
 
+minetest.register_craftitem("pdp13:comm_rom", {
+	description = "PDP-13 COMM ROM",
+	inventory_image = "pdp13_rom.png",
+})
+
 minetest.register_craftitem("pdp13:ic1", {
 	description = "PDP-13 IC small",
 	inventory_image = "pdp13_ic1.png",
@@ -79,7 +84,7 @@ techage.recipes.add("ta3_electronic_fab", {
 	output = "pdp13:mon_rom 1",
 	input = {
 		"pdp13:ic1 8", 
-		"pdp13:tapemonitor 1",
+		"pdp13:tape_monitor 1",
 	}
 })
 
@@ -87,9 +92,16 @@ techage.recipes.add("ta3_electronic_fab", {
 	output = "pdp13:bios_rom 1",
 	input = {
 		"pdp13:ic1 8", 
-		"pdp13:tapebios 1",
+		"pdp13:tape_bios 1",
 	}
 })
 
+techage.recipes.add("ta3_electronic_fab", {
+	output = "pdp13:comm_rom 1",
+	input = {
+		"pdp13:ic1 8", 
+		"pdp13:tape_comm 1",
+	}
+})
 
 minetest.register_alias("pdp13:os_rom", "pdp13:bios_rom")

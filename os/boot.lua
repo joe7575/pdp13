@@ -66,6 +66,9 @@ end
 local function cold_start(pos, address, val1, val2)
 	print("cold_start")
 	
+	pdp13.sys_call(pos, 2, 0x0000, 0)  -- Flush Telewriter input
+	pdp13.sys_call(pos, pdp13.INPUT, 0x0000, 0)  -- Flush Terminal input
+	
 	local addr_fname = 0x0000
 	local addr_dest  = 0x0040
 	local fname = read_first_file_line(pos, "t/boot", addr_dest, addr_fname) or 
@@ -98,6 +101,13 @@ local function get_rom_size(pos, address, val1, val2)
 	return pdp13.tROM_SIZE[rom_size]
 end
 
+local function get_ram_size(pos, address, val1, val2)
+	print("get_ram_size")
+	local ram_size = M(pos):get_int("ram_size")
+	
+	return ram_size
+end
+
 local function get_current_drive(pos, address, val1, val2)
 	print("get_current_drive")
 	local mem = techage.get_mem(pos)
@@ -124,6 +134,7 @@ local function load_comfile(pos, address, val1, val2)
 end
 
 local function h16_size(pos, address, val1, val2)
+	print("h16_size")
 	local s = read_first_file_line(pos, val1, val2)
 	
 	if s and s ~= "" then
@@ -132,11 +143,16 @@ local function h16_size(pos, address, val1, val2)
 		local addrmin = tonumber(s:sub(9,12), 16)
 		local addrmax = tonumber(s:sub(13,16), 16)
 		
-		if rowtype == 1 and addrmin == pdp13.START_ADDR and addrmax then
+		if rowtype == 1 and addrmin and addrmax then
 			return addrmax - addrmin + 1
 		end
 	end
 	return 0
+end
+
+local function com_size(pos, address, val1, val2)
+	print("com_size")
+	return pdp13.sys_call(pos, pdp13.FILE_SIZE, val1, val2)
 end
 
 -- Fileame via A Reg
@@ -155,24 +171,45 @@ local function store_as_com(pos, address, val1, val2)
 	return 0
 end
 
+-- Fileame via A Reg
+local function store_as_h16(pos, address, val1, val2)
+	print("store_as_h16")
+	local number = M(pos):get_string("node_number")
+	number = tonumber(number)
+	pdp13.SharedMemory[number] = vm16.read_h16(pos. pdp13.START_ADDR, val2)
+	local fp = pdp13.sys_call(pos, pdp13.FOPEN, val1, pdp13.WR)
+	if fp then
+		pdp13.sys_call(pos, pdp13.WRITE_FILE, fp, 0)
+		pdp13.sys_call(pos, pdp13.FCLOSE, fp, 0)
+		return 1
+	end
+	return 0
+end
+
 local help = [[+-----+----------------+-------------+------+
 |sys #| Boot           | A    | B    | rtn  |
 +-----+----------------+-------------+------+
  $70   cold start        -      -     NO RET
  $71   warm start        -      -     NO RET
- $72   load .h16 file   @fname  -     1=ok
- $73   ROM size          -      -     size K
+ $72   ROM size          -      -     size K
+ $73   RAM size          -      -     size K
  $74   current drive     -      -     drive
- $75   load .com file   @fname  -     1=ok
- $76   size .h16 file   @fname  -     size
- $77   store .com file  @fname  size  1=ok]]
-
+ $75   load .h16 file   @fname  -     1=ok
+ $76   load .com file   @fname  -     1=ok
+ $77   size .h16 file   @fname  -     size
+ $78   size .com file   @fname  -     size
+ $79   store .h16 file  @fname  size  1=ok
+ $7A   store .com file  @fname  size  1=ok]]
+ 
 pdp13.register_SystemHandler(0x70, cold_start, help)
 pdp13.register_SystemHandler(0x71, warm_start)
-pdp13.register_SystemHandler(0x72, load_h16file)
-pdp13.register_SystemHandler(0x73, get_rom_size)
+pdp13.register_SystemHandler(0x72, get_rom_size)
+pdp13.register_SystemHandler(0x73, get_ram_size)
 pdp13.register_SystemHandler(0x74, get_current_drive)
-pdp13.register_SystemHandler(0x75, load_comfile)
-pdp13.register_SystemHandler(0x76, h16_size)
-pdp13.register_SystemHandler(0x77, store_as_com)
+pdp13.register_SystemHandler(0x75, load_h16file)
+pdp13.register_SystemHandler(0x76, load_comfile)
+pdp13.register_SystemHandler(0x77, h16_size)
+pdp13.register_SystemHandler(0x78, com_size)
+pdp13.register_SystemHandler(0x79, store_as_h16)
+pdp13.register_SystemHandler(0x7A, store_as_com)
 

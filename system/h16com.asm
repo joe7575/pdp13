@@ -32,13 +32,13 @@ main:
 
     ;=== load h16 file ===
     move  A, #buff1
-    sys   #$72
+    sys   #$75
     bze   A, error
 
     ;=== determine addr min/max ===
-    move  A, #buff3
-    sys   #$76
-    bze   A, error
+    ;move  A, #buff3
+    ;sys   #$76
+    ;bze   A, error
     
     ;=== add .com ===
     move  X, C
@@ -50,7 +50,7 @@ main:
     ;=== store as com ===
     move  A, #buff3
     move  B, #buff4
-    sys   #$77
+    sys   #$7A
     bze   A, error
     jump  ready
 

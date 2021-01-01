@@ -1,14 +1,10 @@
-; Shell program for the Terminal v1.0 (part1)
-; Resides below address $100
-BUFF1 = $00C0     ; 64 chars
+; J/OS Shell2 v1.0
+; Copy file to Tape Drive and convert
+; to .com file via 'h16com.h16'
+; File name: shell2.com
+;--------------------------------------
+; Resides above address $100
 
-; Variables ($E8 - $EF)
-CMDLEN = $E8
-FNAME  = $EA ; @fname
-
-; Used:
-; C = num strings
-; D = tmp
     .org $100
     .code
 Prompt:
@@ -17,94 +13,99 @@ Prompt:
 
     ;=== Input ===
 Input:
-    move  A, #BUFF1
+    move  A, #CSBUF
     sys   #$17              ; input string (len->A)
+    move  CSLEN, A          ; command length
     nop
     bze   A, Input
     inc   A                 ; no terminal?
     bze   A, Input
-    dec   A
-    move  CMDLEN, A         ; command length
 
     ;=== Prompt 2 ===
-    move  A, #BUFF1
+    move  A, #CSBUF
     sys   #$14              ; println command
 
     ;=== Process command ===
-    move  A, #BUFF1
-    move  B, #32
-    call  Strsplit          ; A <- num strings
-    move  C, A              ; C <- num strings
+    call  CSprocess
     
     ;=== cmd ls ===
 cmd_ls:
-    move  A, #BUFF1
+    move  A, #CSBUF
     move  B, #CMD_LS
     call  Strcmp            ; 0=match
     bnze  A, cmd_ed
-    move  A, #BUFF1         ; search param1
-    move  B, CMDLEN         ; B <- command length
-    call  Nextstr           ; A <- file pattern
+
+    call  CSnext            ; A <- 1=param
+    bnze  A, +4
+    move  A, #PAR_WC        ; use default wc
+    move  CSPOS, A
+
+    move  A, CSPOS          ; a <- @wildcard
     sys   #$57              ; list files (->SM)
     sys   #$18              ; print SM (<-SM)
     jump  Prompt
 
     ;=== cmd ed ===
 cmd_ed:
-    move  A, #BUFF1
+    move  A, #CSBUF
     move  B, #CMD_ED
     call  Strcmp            ; 0=match
     bnze  A, cmd_cls
-    skeq  C, #2
-    jump  Error
-    move  A, #BUFF1         ; search param1
-    move  B, CMDLEN         ; B <- command length
-    call  Nextstr           ; A <- file pattern
-    move  FNAME, A          
+    
+    call  CSnext            ; A <- 1=param
+    bze   A, Error
+
+    move  A, CSPOS          ; @fname
     move  B, #0             ; RD
     sys   #$50              ; open file (A <- fref)
     move  D, A              ; D <- fref
     sys   #$52              ; read file (->SM)
     move  A, D              ; A <- fref
     sys   #$51              ; close file
-    move  A, FNAME
+    
+    move  A, CSPOS          ; @fname
     sys   #$16              ; start editor (<-SM)
     jump  Input
 
     ;=== cmd cls ===
 cmd_cls:
-    move  A, #BUFF1
+    move  A, #CSBUF
     move  B, #CMD_CLS
     call  Strcmp            ; 0=match
     bnze  A, load_com
+    
     sys   #$10              ; clear screen
     jump  Prompt
 
-    ;=== load com ===
+    ;=== check for .com com ===
 load_com:
-    move  A, #BUFF1
+    move  A, #CSBUF
     sys   #$56              ; file size (A <- size)
     bze   A, Prompt         ; file does not exist
-    move  A, #BUFF1
+    
+    move  A, #CSBUF
     move  B, #DCOM
-    call  Strrstr
+    call  Strrstr           ; check ext
     skeq  A, #1             ; com file?
-    jump  Prompt  ;dh16
+    jump  dh16              ; try .h16
 
     ;=== load .com file ===
     jump  $4                ; routine resides before $100
     
-    ;=== load .h16 file ===
+    ;=== check for .h16 file ===
 dh16:
-    move  A, #BUFF1
+    move  A, #CSBUF
+    sys   #$56              ; file size (A <- size)
+    bze   A, Prompt         ; file does not exist
+    
+    move  A, #CSBUF
     move  B, #DH16
-    call  Strrstr
+    call  Strrstr           ; check ext
     skeq  A, #1             ; h16 file?
     jump  Error
-    move  A, #BUFF1
-    sys   #$72              ; load h16 file
-    move  SP, #0
-    jump  $100              ; start of program on $100
+
+    ;=== load .h16 file ===
+    jump  $0C               ; routine resides before $100
 
     ;=== error ===
 Error:
@@ -116,6 +117,8 @@ Error:
     .text
 CMD_LS:
     "ls\0"
+PAR_WC:
+    "*\0"
 CMD_ED:
     "ed\0"
 CMD_CLS:
@@ -127,6 +130,7 @@ DCOM:
 DH16:
     ".h16\0"
 
+$include "cmdstr.asm"
 $include "strstrip.asm"
 $include "strsplit.asm"
 $include "strcmp.asm"

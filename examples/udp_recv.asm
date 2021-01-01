@@ -1,5 +1,7 @@
 ; UDP receive v1.0
-; Read string from remote CPU on port #2 and write to telewriter
+; Read string from remote CPU on port #2
+; and write to telewriter.
+; This demo requires the COMM ROM chip.
 
 start:
     move  B, #2     ; port # in B

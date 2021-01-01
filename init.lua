@@ -32,12 +32,9 @@ dofile(MP.."/os/disassemble.lua")
 dofile(MP.."/os/monitor.lua")
 dofile(MP.."/os/telewriter.lua")
 dofile(MP.."/os/terminal.lua")
-dofile(MP.."/os/std_lib.lua")
 dofile(MP.."/os/comm.lua")
 dofile(MP.."/os/filesystem.lua")
 dofile(MP.."/os/boot.lua")
---dofile(MP.."/os/shell.lua")
-
 
 -- PDP-13
 dofile(MP.."/pdp13/cpu.lua")
@@ -56,7 +53,10 @@ dofile(MP.."/io/terminal.lua")
 -- Items
 dofile(MP.."/items/punch_tape.lua")
 dofile(MP.."/items/magnetic_tape.lua")
+dofile(MP.."/items/tapes.lua")
 dofile(MP.."/items/demo_tapes.lua")
+dofile(MP.."/items/os_tapes.lua")
+dofile(MP.."/items/exam_tapes.lua")
 dofile(MP.."/items/chips.lua")
 
 -- Exams

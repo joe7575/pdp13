@@ -21,12 +21,14 @@ local NUM_CHARS = pdp13.MAX_LINE_LEN
 local SCREENBUFFER_SIZE = 48*16
 
 local function send_terminal_command(cpu_pos, mem, cmnd, payload)
-	mem.term_pos = mem.term_pos or S2P(M(cpu_pos):get_string("terminal_pos"))
-	return pdp13.send(cpu_pos, mem.term_pos, nil, cmnd, payload)
+	if M(cpu_pos):get_int("rom_size") >= 2 then  -- BIOS enabled
+		mem.term_pos = mem.term_pos or S2P(M(cpu_pos):get_string("terminal_pos"))
+		return pdp13.send(cpu_pos, mem.term_pos, nil, cmnd, payload)
+	end
+	return 65535
 end
 
 local function sys_clear_screen(cpu_pos)
-	print("clear_screen")
 	local mem = techage.get_nvm(cpu_pos)
 	
 	mem.stdout = ""
@@ -35,7 +37,6 @@ local function sys_clear_screen(cpu_pos)
 end
 
 local function sys_print_char(cpu_pos, address, val1)
-	print("print_char")
 	local mem = techage.get_nvm(cpu_pos)
 	
 	if val1 > 255 then
@@ -50,7 +51,6 @@ local function sys_print_char(cpu_pos, address, val1)
 end
 
 local function sys_print_number(cpu_pos, address, val1, val2)
-	print("print_number")
 	local mem = techage.get_nvm(cpu_pos)
 	
 	if val2 == 16 then
@@ -62,7 +62,6 @@ local function sys_print_number(cpu_pos, address, val1, val2)
 end
 
 local function sys_print_string(cpu_pos, address, val1)
-	print("print_string")
 	local mem = techage.get_nvm(cpu_pos)
 	
 	local s = vm16.read_ascii(cpu_pos, val1, NUM_CHARS)
@@ -71,7 +70,6 @@ local function sys_print_string(cpu_pos, address, val1)
 end
 
 local function sys_print_string_ln(cpu_pos, address, val1)
-	print("print_string_ln")
 	local mem = techage.get_nvm(cpu_pos)
 	
 	local s = vm16.read_ascii(cpu_pos, val1, NUM_CHARS)
@@ -82,14 +80,12 @@ local function sys_print_string_ln(cpu_pos, address, val1)
 end
 
 local function sys_flush_stdout(cpu_pos, address, val1)
-	print("flush_stdout")
 	local mem = techage.get_nvm(cpu_pos)
 	send_terminal_command(cpu_pos, mem, "print", mem.stdout)
 	mem.stdout = ""
 end
 
 local function sys_update_screen(cpu_pos, address, val1)
-	print("update_screen")
 	local s = vm16.read_ascii(cpu_pos, val1, SCREENBUFFER_SIZE)
 	local mem = techage.get_nvm(cpu_pos)
 	send_terminal_command(cpu_pos, mem, "update", s)
@@ -97,7 +93,6 @@ local function sys_update_screen(cpu_pos, address, val1)
 end
 
 local function sys_editor_start(cpu_pos, address, val1)
-	print("edit_start")
 	local fname = vm16.read_ascii(cpu_pos, val1, pdp13.MAX_FNAME_LEN)
 	local number = M(cpu_pos):get_string("node_number")
 	number = tonumber(number)
@@ -108,7 +103,6 @@ local function sys_editor_start(cpu_pos, address, val1)
 end
 
 local function sys_input_string(cpu_pos, address, val1)
-	--print("input_string")
 	local mem = techage.get_nvm(cpu_pos)
 	local s = send_terminal_command(cpu_pos, mem, "input")
 	if s and vm16.write_ascii(cpu_pos, val1, s.."\000") then
@@ -122,7 +116,6 @@ local function sys_print_shared_mem(cpu_pos, address, val1)
 	local number = M(cpu_pos):get_string("node_number")
 	number = tonumber(number)
 	local sm = pdp13.SharedMemory[number]
-	print("print_shared mem", dump(sm))
 	if type(sm) == "string" then
 		for s in sm:gmatch("[^\n]+") do
 			send_terminal_command(cpu_pos, mem, "println", s)
@@ -138,7 +131,6 @@ local function sys_print_shared_mem(cpu_pos, address, val1)
 end
 
 local function sys_prompt(cpu_pos, address, val1)
-	print("prompt")
 	local mem = techage.get_nvm(cpu_pos)
 	local drive = mem.current_drive or 't'
 	send_terminal_command(cpu_pos, mem, "print", drive..">")
@@ -147,7 +139,6 @@ local function sys_prompt(cpu_pos, address, val1)
 end
 
 local function sys_beep(cpu_pos, address, val1)
-	print("beep")
 	local mem = techage.get_nvm(cpu_pos)
 	mem.term_pos = mem.term_pos or S2P(M(cpu_pos):get_string("terminal_pos"))
 	minetest.sound_play("pdp13_beep", {
@@ -157,7 +148,7 @@ local function sys_beep(cpu_pos, address, val1)
 	return 1
 end
 
-local help = [[+-----+-----------------+------------+------+
+local help = [[+-----+----------------+-------------+------+
 |sys #| Terminal       | A    | B    | rtn  |
 +-----+----------------+-------------+------+
  $10   clear screen      -      -     1=ok

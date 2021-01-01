@@ -34,7 +34,7 @@ local function read_screenbuffer(mem)
 	for _ = NUM_LINES, ln, 1 do
 		table.remove(t, 1)
 	end
-	print(table.concat(t, "\n"))
+	--print(table.concat(t, "\n"))
 	return COLOR..table.concat(t, NEWLINE)
 end
 
@@ -59,7 +59,7 @@ local function add_lines(mem, lines)
 	mem.lLines = mem.lLines or {""}
 	local t = mem.lLines
 	
-	add_text(mem, lines[1])
+	add_text(mem, minetest.formspec_escape(lines[1] or ""))
 	
 	for i = 2, #lines do
 		local line = string.sub(lines[i], 1, NUM_CHARS)
@@ -291,7 +291,7 @@ local function on_receive_fields(pos, formname, fields, player)
 end
 
 local function pdp13_on_receive(pos, src_pos, cmnd, data)
-	print("pdp13_on_receive", cmnd)
+	--print("pdp13_on_receive", cmnd)
 	local mem = techage.get_nvm(pos)
 	if cmnd == "input" then
 		if mem.input then

@@ -1,77 +1,85 @@
 ; Demo program for the Terminal v1.0
+; It shows how to use sys commands
+; and output some info on the screen.
+; This demo requires the BIOS ROM chip.
+; see https://github.com/joe7575/pdp13/blob/main/examples/terminal.asm
+;-----------------------------------
 
+    ;=== Check ROM ===
+    sys   #$72              ; ROM size (->A)
+    sub   A, #10            ; 16K is required
+    bneg  A, error
+    
     ;=== Wellcome === 
     sys   #$10              ; clear screen
-    move  A, #TEXT1
+    move  A, #TITLE
     sys   #$14              ; println
 
-    ;=== RAM size ===
-    move  A, #$DEAD
-    move  $FFFF, A
+    ;=== calc RAM size ===
+    move  A, #$DEAD         ; Use this pattern...
+    move  $7FFF, A          ; at last RAM addr.
 
 t4k:
-    move  A, $0FFF
-    sub   A, #$DEAD
+    move  A, $0FFF          ; Check if it...
+    sub   A, #$DEAD         ; mirrors at $0FFF.
     bnze  A, t8k
-    move  A, #4
+    move  A, #4             ; 4K RAM size
     jump  ram_size
     
 t8k:
-    move  A, $1FFF
-    sub   A, #$DEAD
+    move  A, $1FFF          ; Check if it...
+    sub   A, #$DEAD         ; mirrors at $1FFF.
     bnze  A, t16k
-    move  A, #8
+    move  A, #8             ; 8K RAM size
     jump  ram_size
 
 t16k:
-    move  A, $3FFF
-    sub   A, #$DEAD
+    move  A, $3FFF          ; Check if it...
+    sub   A, #$DEAD         ; mirrors at $3FFF.
     bnze  A, t32k
-    move  A, #16
+    move  A, #16            ; 16K RAM size
     jump  ram_size
 
 t32k:
-    move  A, #32
+    move  A, #32            ; 32K RAM size
 
 ram_size:                   ; size in A
     move  B, #10            ; base 10
     sys   #$12              ; print size
 
-    move  A, #TEXT2
+    move  A, #RAM
     sys   #$13              ; print text
 
-    ;=== ROM size ===
+    ;=== read ROM size ===
 rom_size: 
     sys   #$73              ; ROM size (->A)
     move  B, #10            ; base 10
     sys   #$12              ; print size
     
-    move  A, #TEXT3
+    move  A, #ROM
     sys   #$14              ; println text
 
-    ;=== ls tape ===
-    move  A, #TEXT4
-    sys   #$14              ; println
+    ;=== beep ===
+    sys   #$1B
 
-    move  A, #TEXT5         ; file name
-    sys   #$57              ; list files (->SM)
-    sys   #$18              ; print SM (<-SM)
+    ;=== finished ===
+    move  A, #READY
+    sys   #$14              ; println text
     
-    ;=== Prompt ===
-    move  A, #TEXT6
-    sys   #$14              ; println
     halt
 
+    ;=== force CPU exception ===
+error:
+    .data
+    $FFFF                   ; illegal opcode
+
     .text
-TEXT1:
+TITLE:
     "### Terminal Demo v1 ###\0"
-TEXT2:
-    " K RAM  \0"
-TEXT3:
-    " K ROM\0"
-TEXT4:
-    "t$ ls\0"
-TEXT5:
-    "t/*\0"
-TEXT6:
-    "t$ _\0"
+RAM:
+    "K RAM  \0"
+ROM:
+    "K ROM\0"
+READY:
+    "Ready.\0"
+

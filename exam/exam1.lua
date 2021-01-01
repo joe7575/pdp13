@@ -50,6 +50,7 @@ end
 
 local s1 = [[+-----+----------------+-------------+------+
 |sys #| Exam1          | A    | B    | rtn  |
++-----+----------------+-------------+------+
  $300  request pos1/2   addr    -     1=ok]]
 
 local s2 = " $301  provide dist     result  -     1=ok"

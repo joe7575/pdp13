@@ -14,9 +14,9 @@
 
 function pdp13.max_num_files(drive)
 	if drive == "h" then
-		return 256
+		return 512
 	else
-		return 32
+		return 64
 	end
 end
 	
@@ -90,8 +90,9 @@ function pdp13.is_com_file(s)
 end
 
 function pdp13.kbyte(val)
-	if val > 0 then
-		return math.floor(val / 1024) + 1
+	if val > 9999 then
+		return tostring(math.floor(val / 1024) + 1).."K"
+	else
+		return tostring(val)
 	end
-	return 0
 end

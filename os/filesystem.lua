@@ -135,8 +135,10 @@ local function fopen(pos, address, val1, val2)
 	if mounted and Files[uid] then
 		if val2 == 119 then -- 'w' for write
 			Files[uid][fname] = ""
-		else
+		elseif Files[uid][fname] then
 			Files[uid][fname] = read_file_real(uid, fname) or ""
+		else
+			return 0
 		end
 		if not OpenFiles[OpenFilesRef] then
 			OpenFiles[OpenFilesRef] = {fpos = 1, uid = uid, drive = drive, fname = fname}
@@ -166,7 +168,7 @@ local function fclose(pos, address, val1)
 	return 0
 end
 
--- Read into shared memory for to be used by other sys commands
+-- Read into shared memory to be used by other sys commands
 local function read_file(pos, address, val1, val2)
 	local number = M(pos):get_string("node_number")
 	number = tonumber(number)
@@ -262,13 +264,13 @@ local function list_files(pos, address, val1, val2)
 		local pattern = gen_filepattern(fname)
 		
 		for name,str in pairs(Files[uid]) do
-			local size = string.len(str)
+			local size = tonumber(str) or 0
 			total_size = total_size + size
 			if fmatch(name, pattern) then
-				t[#t+1] = string.format("%-12s  %5u", name, kbyte(size))
+				t[#t+1] = string.format("%-12s  %4s", name, kbyte(size))
 			end
 		end
-		t[#t+1] = string.format("%u/%u files  %u/%u K", 
+		t[#t+1] = string.format("%u/%u files  %u/%uK", 
 				#t, max_num_files(drive), kbyte(total_size), max_fs_size(drive))
 		SharedMemory[number] = t
 		return #t - 1

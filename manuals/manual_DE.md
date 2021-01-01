@@ -107,6 +107,31 @@ sys     #2          ; Einlesen Zahl vom Telewriter, das Ergebnis steht in A
 
 [pdp13_telewriter|image]
 
+## Demo Punch Tapes
+
+Es gibt mehrere Demo Punch Tapes, die mit Hilfe des Telewrites "gestanzt" werden können. Diese Tapes zeigen grundlegende Programmierbeispiele. Wenn man ein Tape wie ein Buch nutzt, also in die Luft klickt, wird der Code des Tapes angezeigt. Hier das Beispiel zum "Demo: 7-Segment":
+
+```assembly
+0000: 2010, 0080    move A, #$80  ; 'value' command
+0002: 2030, 0000    move B, #00   ; value in B
+
+loop:
+0004: 3030, 0001    add  B, #01
+0006: 4030, 000F    and  B, #$0F  ; values from 0 to 15
+0008: 6600, 0000    out #00, A    ; output to 7-segment
+000A: 0000          nop           ; 100 ms delay
+000B: 0000          nop           ; 100 ms delay
+000C: 1200, 0004    jump loop
+```
+
+Die Ausgabe erfolgt immer nach folgendem Schema:
+
+```assembly
+<addr>: <opcodes>   <asm code>    ; <comment>
+```
+
+[pdp13_tape|image]
+
 ## PDP13 Punch Tape
 
 Neben den Demo Tapes mit festen, kleinen Programmen gibt es auch die beschreibbaren und editierbaren Punch Tapes. Diese können (im Gegensatz zum Original) mehrfach geschrieben/geändert werden.

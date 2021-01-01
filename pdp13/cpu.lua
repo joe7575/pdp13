@@ -58,6 +58,7 @@ local function leds(address, opcode, operand)
 end
 
 local function vm_state(mem)
+	if mem.state == vm16.ERROR then return "" end
 	if mem.started            then return "image[2.2,0.4;0.4,0.4;pdp13_led_form.png]" end
 	if mem.monitor            then return "image[3.7,0.4;0.4,0.4;pdp13_led_form.png]" end
 	if mem.state == vm16.STOP then return "" end
@@ -65,6 +66,7 @@ local function vm_state(mem)
 	if mem.state == vm16.OUT  then return "image[5.2,0.4;0.4,0.4;pdp13_led_form.png]" end
 	if mem.state == vm16.BREAK then return "image[6.7,0.4;0.4,0.4;pdp13_led_form.png]" end
 	if mem.state == vm16.SYS  then return "image[8.2,0.4;0.4,0.4;pdp13_led_form.png]" end
+	if mem.state == vm16.ERROR then return "image[8.2,0.4;0.4,0.4;pdp13_led_form.png]" end
 	return ""
 end
 
@@ -234,7 +236,15 @@ local function fs_cpu_stopped(pos, mem, cpu, resp)
 			mem.state = resp or vm16.STOP
 			mem.cmnd1 = " "
 			mem.cmnd2 = " "
-			mem.cmnd3 = string.format(">%04X: %04X %s", cpu.PC, cpu.mem0, operand)
+			if resp == vm16.ERROR then
+				mem.cmnd3 = string.format(">%04X: %s", cpu.PC-1, "illegal opcode!")
+				minetest.sound_play("pdp13_beep", {
+					pos = pos, 
+					gain = 1,
+					max_hear_distance = 5})
+			else
+				mem.cmnd3 = string.format(">%04X: %04X %s", cpu.PC, cpu.mem0, operand)
+			end
 			update_formspec(pos, mem, cpu)
 		end
 	end
@@ -342,9 +352,10 @@ local function add_periphery_settings(pos, meta, cmnd, data)
 end
 
 
-local function selftest(pos, mem, number, ram_size)
+local function selftest(pos, mem, number)
 	if pos and mem then
 		local rom_size = pdp13.tROM_SIZE[M(pos):get_int("rom_size")]
+		local ram_size = M(pos):get_int("ram_size")
 		local io_size = (mem.num_ioracks or 0) * 8
 		local telewriter = M(pos):get_string("telewriter_number") ~= "" and "Telewriter..ok  " or ""
 		local terminal   = M(pos):get_string("terminal_pos") ~= "" and "Terminal..ok" or ""
@@ -380,7 +391,7 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 			end
 			local number = meta:get_string("node_number")
 			pdp13.io_store(pos, number)
-			selftest(pos, mem, number, ram_size)
+			selftest(pos, mem, number)
 			local has_tape = meta:get_int("has_tape") == 1 and rom_size >= 2
 			local has_hdd = meta:get_int("has_hdd") == 1 and rom_size >= 3
 			pdp13.init_filesystem(pos, has_tape, has_hdd)
