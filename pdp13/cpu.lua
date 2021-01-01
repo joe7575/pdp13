@@ -23,7 +23,6 @@ local CYCLE_TIME = 0.1
 local function programmer_cmnd(pos, cmd, payload)
 	local dst_num = M(pos):get_string("programmer_number")
 	local own_num = M(pos):get_string("node_number")
-	print("programmer_cmnd", own_num, dst_num, cmd, payload)
 	return techage.send_single(own_num, dst_num, cmd, payload)
 end
 

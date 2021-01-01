@@ -4,11 +4,20 @@
 ; This demo requires the COMM ROM chip.
 
 start:
+    move  A, #TEXT
+    sys   #0        ; output text
+
+loop:
     move  A, #$100
     sys   #1        ; read string from telewriter
-    bneg  A, start  ; val >= $8000: -> start
+    bneg  A, loop  ; val >= $8000: -> loop
 
     move  B, #2     ; port # in B
     move  A, #$100  ; addr in A
-    sys   #40       ; udp send
+    sys   #$40      ; udp send
     jump  start
+
+   .text
+TEXT:
+    "Enter "
+    "text\0"

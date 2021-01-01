@@ -8,41 +8,53 @@
 	AGPL v3
 	See LICENSE.txt for more information
 	
-	PDP-13 Exam 2 (to get the OS ROM)
+	PDP-13 Exam 2 (to get the BIOS ROM)
 
 ]]--
 
 -- for lazy programmers
 local M = minetest.get_meta
 
-local function exam2_provide_positions(pos, address, val1, val2)
-	local val = math.floor(math.random() * 65535)
+local function exam_provide_positions(pos, address, val1, val2)
+	local x1 = math.floor(math.random() * 1000)
+	local y1 = math.floor(math.random() * 1000)
+	local z1 = math.floor(math.random() * 1000)
+	local x2 = math.floor(math.random() * 1000)
+	local y2 = math.floor(math.random() * 1000)
+	local z2 = math.floor(math.random() * 1000)
 
 	local mem = techage.get_nvm(pos)
-	mem.exam2_res = tostring(val)
-	return val
+	mem.exam2_res = math.abs(x2 - x1) + math.abs(y2 - y1) + math.abs(z2 - z1) + 1
+
+	vm16.poke(pos, val1 + 0, x1)
+	vm16.poke(pos, val1 + 1, y1)
+	vm16.poke(pos, val1 + 2, z1)
+	vm16.poke(pos, val1 + 3, x2)
+	vm16.poke(pos, val1 + 4, y2)
+	vm16.poke(pos, val1 + 5, z2)
+	return 1
 end
 
-local function exam2_check_result(pos, address, val1, val2)
+local function exam_check_result(pos, address, val1, val2)
 	local mem = techage.get_nvm(pos)
 	local meta = M(pos)
 	local owner = meta:get_string("owner")
-	
-	local s = vm16.read_ascii(pos, val1, 6)
-	minetest.chat_send_player(owner, "[PDP13] Exam2 result: '"..mem.exam2_res.. "' expected, '"..s.. "' received")
-	if mem.exam2_res == s then
+
+	minetest.chat_send_player(owner,
+        "[PDP13] Exam2 result: "..mem.exam2_res.. " expected, "..val1.. " received")
+	if mem.exam2_res == val1 then
 		minetest.chat_send_player(owner, "***### !!! Congratulations !!! ###***")
-		pdp13.operator_cmnd(pos, "punch", "pdp13:tapeos")
+		pdp13.operator_cmnd(pos, "punch", "pdp13:tape_bios")
+		return 1
 	end
-	return mem.exam2_res == s and 1 or 0
+	return 0
 end
 
 local help = [[+-----+----------------+-------------+------+
 |sys #| Exam2          | A    | B    | rtn  |
 +-----+----------------+-------------+------+
- $302  request number    -      -     number
- $303  provide string   addr    -     1=ok]]
+ $302  request pos1/2   @pos    -     1=ok
+ $303  provide dist     @result -     1=ok]]
 
-pdp13.register_SystemHandler(0x0302, exam2_provide_positions, help)
-pdp13.register_SystemHandler(0x0303, exam2_check_result)
-
+pdp13.register_SystemHandler(0x0302, exam_provide_positions, help)
+pdp13.register_SystemHandler(0x0303, exam_check_result)

@@ -12,7 +12,29 @@
 
 ]]--
 
-pdp13.tape.register_tape("pdp13:tape_boot", "System File 1: boot",
+pdp13.tape.register_tape("pdp13:tape_install", "System File 1: OS install",
+[[; J/OS Install Tape v1.0
+; Write tape to RAM and start
+; program at address 0
+]], [[:200000100000063
+:800000008102010002008142010003408140873
+:80008002030000A081220100035081308722030
+:8001000000A08122010003E0814201000450876
+:80018005410001C120001002010005208141C00
+:8002000004A002F004F0053002000760030002E
+:8002800003100200043006F006C006400200042
+:8003000006F006F0074000000000020004B0020
+:800380000520041004D0020002000000020004B
+:800400000200052004F004D00000074002F0073
+:800480000680065006C006C0032002E0063006F
+:8005000006D0000005300680065006C006C0020
+:8005800006C006F006100640020006500720072
+:4006000006F007200210000
+:00000FF
+]], false)
+
+
+pdp13.tape.register_tape("pdp13:tape_boot", "System File 2: boot",
 [[; J/OS Boot File
 ; Copy file to Tape Drive
 ; File name: boot
@@ -23,7 +45,7 @@ pdp13.tape.register_tape("pdp13:tape_boot", "System File 1: boot",
 ]], false)
 
 
-pdp13.tape.register_tape("pdp13:tape_shell1", "System File 2: shell1",
+pdp13.tape.register_tape("pdp13:tape_shell1", "System File 3: shell1",
 [[; J/OS Shell1 v1.0
 ; Copy file to Tape Drive
 ; File name: shell1.h16
@@ -48,7 +70,7 @@ pdp13.tape.register_tape("pdp13:tape_shell1", "System File 2: shell1",
 ]], false)
 
 
-pdp13.tape.register_tape("pdp13:tape_shell2", "System File 3: shell2",
+pdp13.tape.register_tape("pdp13:tape_shell2", "System File 4: shell2",
 [[; J/OS Shell2 v1.0
 ; Copy file to Tape Drive and convert
 ; to .com file via 'h16com.h16'

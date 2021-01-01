@@ -194,17 +194,30 @@ pdp13.tape.register_tape("pdp13:tape_udp_send", "Demo: Comm Send",
 ; This demo requires the COMM ROM chip.
 
 start:
-0000: 2010, 0100    move  A, #$100
-0002: 0801          sys   #1        ; read string from telewriter
-0003: 5C10, 0000    bneg  A, start  ; val >= $8000: -> start
+0000: 2010, 000F    move  A, #TEXT
+0002: 0800          sys   #0        ; output text
 
-0005: 2030, 0002    move  B, #2     ; port # in B
-0007: 2010, 0100    move  A, #$100  ; addr in A
-0009: 0828          sys   #40       ; udp send
-000A: 1200, 0000    jump  start
-]], [[:20000010000000B
-:80000002010010008015C100000203000022010
-:40008000100082812000000
+loop:
+0003: 2010, 0100    move  A, #$100
+0005: 0801          sys   #1        ; read string from telewriter
+0006: 5C10, 0003    bneg  A, loop  ; val >= $8000: -> loop
+
+0008: 2030, 0002    move  B, #2     ; port # in B
+000A: 2010, 0100    move  A, #$100  ; addr in A
+000C: 0840          sys   #$40      ; udp send
+000D: 1200, 0000    jump  start
+
+   .text
+TEXT:
+    "Enter "
+000F: 0045, 006E, 0074, 0065, 0072, 0020
+    "text\0"
+0015: 0074, 0065, 0078, 0074, 0000
+]], [[:200000100000019
+:80000002010000F08002010010008015C100003
+:800080020300002201001000840120000000045
+:8001000006E0074006500720020007400650078
+:200180000740000
 :00000FF
 ]], false)
 
@@ -216,18 +229,39 @@ pdp13.tape.register_tape("pdp13:tape_udp_recv", "Demo: Comm Receive",
 ; This demo requires the COMM ROM chip.
 
 start:
-0000: 2030, 0002    move  B, #2     ; port # in B
-0002: 2010, 0100    move  A, #$100  ; addr in A
-0004: 0829          sys   #41       ; udp recv
-0005: 2C00          dec   A
-0006: 5010, 0000    bnze  A, start  ; 0 => msg received
+0000: 2030, 0002    move  B, #2      ; port # in B
+0002: 2010, 0100    move  A, #$100   ; addr in A
+0004: 0841          sys   #$41       ; udp recv (A <- num)
+0005: 0000          nop
+0006: 5C10, 0017    bneg  A, exit    ; A < 0: exit
+0008: 5410, 0000    bze   A, start   ; 0 => no msg received
 
-0008: 2010, 0100    move  A, #$100
-000A: 0800          sys   #0        ; output string to telewriter
-000B: 1200, 0000    jump  start
+000A: 2090, 0100    move  X, #$100   ; src ptr
+000C: 20B0, 0022    move  Y, #TEXT2  ; dst ptr
 
-]], [[:20000010000000C
-:8000000203000022010010008292C0050100000
-:500080020100100080012000000
+000E: 216A          move  [Y]+, [X]+ ; copy char
+000F: 7412, FFFD    dbnz  A, -3
+
+0011: 212C          move  [Y], #0    ; end-of-str
+
+0012: 2010, 0018    move  A, #TEXT1
+0014: 0800          sys   #$0        ; output text
+
+0015: 1200, 0000    jump  start
+
+exit:
+0017: 1C00          halt
+
+    .text
+TEXT1:
+    "Received: "
+0018: 0052, 0065, 0063, 0065, 0069, 0076, 0065, 0064, 003A, 0020
+TEXT2:
+]], [[:200000100000021
+:80000002030000220100100084100005C100017
+:8000800541000002090010020B00022216A7412
+:8001000FFFD212C201000180800120000001C00
+:800180000520065006300650069007600650064
+:2002000003A0020
 :00000FF
 ]], false)

@@ -158,17 +158,24 @@ minetest.register_node("pdp13:mem_rack", {
 		if listname == "ram" and index == 1 and stack:get_name() == "pdp13:ram4k" then
 			return 1
 		end
-		if listname == "ram" and index == 2 and stack:get_name() == "pdp13:ram8k" then
+		if listname == "ram" and index == 2 and stack:get_name() == "pdp13:ram8k" 
+				and not inv:get_stack(listname, 1):is_empty() then
+			return 1
+		end
+		if listname == "ram" and index == 3 and stack:get_name() == "pdp13:ram16k" 
+				and not inv:get_stack(listname, 2):is_empty() then
 			return 1
 		end
 		if listname == "rom" and index == 1 and stack:get_name() == "pdp13:mon_rom" then
 			return 1
 		end
-		if listname == "rom" and index == 2 and stack:get_name() == "pdp13:bios_rom" 
-				or stack:get_name() == "pdp13:os_rom" then
+		if listname == "rom" and index == 2 and (stack:get_name() == "pdp13:bios_rom" 
+				or stack:get_name() == "pdp13:os_rom") 
+				and not inv:get_stack(listname, 1):is_empty() then
 			return 1
 		end
-		if listname == "rom" and index == 3 and stack:get_name() == "pdp13:comm_rom" then
+		if listname == "rom" and index == 3 and stack:get_name() == "pdp13:comm_rom" 
+				and not inv:get_stack(listname, 2):is_empty() then
 			return 1
 		end
 		return 0

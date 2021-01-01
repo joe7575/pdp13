@@ -82,7 +82,7 @@ Commands["?"] = function(pos, mem, cmd, rest, is_terminal)
 				"ld name.....load a .com/.h16 file",
 				"ct # txt....copy text to mem",
 				"cm # # #....copy mem from to num",
-				"sys # # #...call 'sys num A B'",
+				"sy # # #....call 'sys num A B'",
 				"ex..........exit monitor",
 			}
 		else
@@ -325,7 +325,7 @@ Commands["cm"] = function(pos, mem, cmd, rest)
 end
 
 -- sys command
-Commands["sys"] = function(pos, mem, cmd, rest, is_terminal)
+Commands["sy"] = function(pos, mem, cmd, rest, is_terminal)
 	if techage.get_nvm(pos).monitor and is_terminal then
 		mem.mstate = nil
 		local num, regA, regB = unpack(string.split(rest, " ", false, 2))

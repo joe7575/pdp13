@@ -78,19 +78,19 @@ function pdp13.disassemble(cpu, mem)
 			star = "*"
 		end
 		if opc1 == "sys" and opc2 == "CNST" then
-			return 1, string.format("%s %s%-4s #$%X", s, star, opc1, cpu.mem0 % 1024)
+			return 1, string.format("%s  %s%-4s #$%X", s, star, opc1, cpu.mem0 % 1024)
 		elseif opc1 == "brk" and opc2 == "CNST" then
-			return 1, string.format("%s %sbreak %u", s, star, cpu.mem0 % 1024)
+			return 1, string.format("%s  %sbreak %u", s, star, cpu.mem0 % 1024)
 		else
 			opc2 = operand(opc2, pdp13.VM13Operands[idx2], cpu.mem1)
 			opc3 = operand(opc3, pdp13.VM13Operands[idx3], cpu.mem1)
 			
 			if opc2 and opc3 then
-				return num, string.format("%s %s%-4s %s, %s", s, star, opc1, opc2, opc3)
+				return num, string.format("%s  %s%-4s %s, %s", s, star, opc1, opc2, opc3)
 			elseif opc2 then
-				return num, string.format("%s %s%-4s %s", s, star, opc1, opc2)
+				return num, string.format("%s  %s%-4s %s", s, star, opc1, opc2)
 			else
-				return num, string.format("%s %s%s", s, star, opc1)
+				return num, string.format("%s  %s%s", s, star, opc1)
 			end
 		end
 	end

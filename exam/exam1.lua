@@ -15,45 +15,47 @@
 -- for lazy programmers
 local M = minetest.get_meta
 
-local function exam1_provide_positions(pos, address, val1, val2)
-	local x1 = math.floor(math.random() * 1000)
-	local y1 = math.floor(math.random() * 1000)
-	local z1 = math.floor(math.random() * 1000)
-	local x2 = math.floor(math.random() * 1000)
-	local y2 = math.floor(math.random() * 1000)
-	local z2 = math.floor(math.random() * 1000)
+local function exam_provide_numbers(pos, address, val1, val2)
+	local n1lw = math.floor(math.random() * 3000)
+	local n1hw = math.floor(math.random() * 3000)
+	local n2lw = math.floor(math.random() * 3000)
+	local n2hw = math.floor(math.random() * 3000)
 
 	local mem = techage.get_nvm(pos)
-	mem.exam1_dist = math.abs(x2 - x1) + math.abs(y2 - y1) + math.abs(z2 - z1) + 1
+	mem.exam1_res = (n1lw + (n1hw * 0x10000)) + (n2lw + (n2hw * 0x10000))
 
-	vm16.poke(pos, val1 + 0, x1)
-	vm16.poke(pos, val1 + 1, y1)
-	vm16.poke(pos, val1 + 2, z1)
-	vm16.poke(pos, val1 + 3, x2)
-	vm16.poke(pos, val1 + 4, y2)
-	vm16.poke(pos, val1 + 5, z2)
+	vm16.poke(pos, val1 + 0, n1lw)
+	vm16.poke(pos, val1 + 1, n1hw)
+	vm16.poke(pos, val1 + 2, n2lw)
+	vm16.poke(pos, val1 + 3, n2hw)
 	return 1
 end
 
-local function exam1_check_result(pos, address, val1, val2)
+local function exam_check_result(pos, address, val1, val2)
 	local mem = techage.get_nvm(pos)
 	local meta = M(pos)
 	local owner = meta:get_string("owner")
 	
-	minetest.chat_send_player(owner, "[PDP13] Exam1 result: "..mem.exam1_dist.. " expected, "..val1.. " received")
-	if mem.exam1_dist == val1 then
+	local reslw = vm16.peek(pos, val1 + 0)
+	local reshw = vm16.peek(pos, val1 + 1)
+	local res = reslw + (reshw * 0x10000)
+
+	minetest.chat_send_player(owner, 
+	"[PDP13] Exam1 result: "..mem.exam1_res.. " expected, "..res.. " received")
+	if mem.exam1_res == res then
 		minetest.chat_send_player(owner, "***### !!! Congratulations !!! ###***")
-		pdp13.operator_cmnd(pos, "punch", "pdp13:tapemonitor")
+		pdp13.operator_cmnd(pos, "punch", "pdp13:tape_monitor")
+		return 1
 	end
-	return mem.exam1_dist == val1 and 1 or 0
+	return 0
 end
 
-local s1 = [[+-----+----------------+-------------+------+
+local help = [[+-----+----------------+-------------+------+
 |sys #| Exam1          | A    | B    | rtn  |
 +-----+----------------+-------------+------+
- $300  request pos1/2   addr    -     1=ok]]
+ $300  request numbers  @num    -     1=ok
+ $301  provide sum      @result -     1=ok]]
 
-local s2 = " $301  provide dist     result  -     1=ok"
-pdp13.register_SystemHandler(0x0300, exam1_provide_positions, s1)
-pdp13.register_SystemHandler(0x0301, exam1_check_result, s2)
+pdp13.register_SystemHandler(0x0300, exam_provide_numbers, help)
+pdp13.register_SystemHandler(0x0301, exam_check_result)
 

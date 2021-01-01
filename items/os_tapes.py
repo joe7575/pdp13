@@ -56,9 +56,10 @@ def generate_h16(path, file_name, item_name, item_desc, hidden):
 ## System Files
 ################################################################################
 SystemFiles = [
-    ("boot",        "pdp13:tape_boot",      "System File 1: boot"),
-    ("shell1",      "pdp13:tape_shell1",    "System File 2: shell1"),
-    ("shell2",      "pdp13:tape_shell2",    "System File 3: shell2"),
+    ("install",     "pdp13:tape_install",   "System File 1: OS install"),
+    ("boot",        "pdp13:tape_boot",      "System File 2: boot"),
+    ("shell1",      "pdp13:tape_shell1",    "System File 3: shell1"),
+    ("shell2",      "pdp13:tape_shell2",    "System File 4: shell2"),
 ]
 
 lOut = []
