@@ -39,7 +39,7 @@ for i = 0,16 do
 		groups = {cracky=2, crumbly=2, choppy=2}
 	end
 	minetest.register_node("pdp13:7segment"..c, {
-		description = "PDP13 7-Segment",
+		description = "PDP-13 7-Segment",
 		drawtype = "nodebox",
 		paramtype = "light",
 		node_box = {
@@ -58,8 +58,8 @@ for i = 0,16 do
 			"pdp13_7segment_"..c..".png^pdp13_7segment_mask.png",
 		},
 		after_place_node = function(pos, placer)
-			logic.after_place_node(pos, placer, "pdp13:7segment"..c, "PDP13 7-Segment")
-			logic.infotext(M(pos), "PDP13 7-Segment")
+			logic.after_place_node(pos, placer, "pdp13:7segment"..c, "PDP-13 7-Segment")
+			logic.infotext(M(pos), "PDP-13 7-Segment")
 		end,
 		after_dig_node = function(pos, oldnode, oldmetadata)
 			techage.remove_node(pos, oldnode, oldmetadata)

@@ -89,8 +89,9 @@ def copy_file(src_path, dst_path, file_type, file_name, uid):
 SystemFiles = [
     ("h16", "install",   "pdp13:tape_install",   "System File 1: OS install"),
     ("",    "boot",      "pdp13:tape_boot",      "System File 2: boot"),
-    ("h16", "shell1",    "pdp13:tape_shell1",    "System File 3: shell1"),
-    ("h16", "shell2",    "pdp13:tape_shell2",    "System File 4: shell2"),
+    ("h16", "h16com",    "pdp13:tape_h16com",    "System File 3: h16com"),
+    ("h16", "shell1",    "pdp13:tape_shell1",    "System File 4: shell1"),
+    ("h16", "shell2",    "pdp13:tape_shell2",    "System File 5: shell2"),
 ]
 
 lOut = []
@@ -124,6 +125,7 @@ CopyFiles = [
     ("",    "boot",),
     ("h16", "shell1"),
     ("com", "shell2"),
+    ("h16", "h16com"),
 ]
 
 lOut = []

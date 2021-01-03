@@ -44,7 +44,6 @@ local function after_place_node(pos, placer, itemstack)
 		local stack_meta = itemstack:get_meta()
 		if stack_meta then
 			pdp13.set_uid(pos, "h", stack_meta:get_string("uid_h"))
-			print(meta:get_string("uid_h"), stack_meta:get_string("uid_h"))
 			return
 		end
 	end
@@ -104,8 +103,8 @@ minetest.register_node("pdp13:hard_disk", {
 minetest.register_craft({
 	output = "pdp13:hard_disk",
 	recipe = {
-		{"", "pdp13:chassis", ""},
-		{"pdp13:ic1", "basic_materials:gold_wire", "pdp13:ic1"},
+		{"pdp13:ic1", "pdp13:chassis", "pdp13:ic1"},
+		{"pdp13:ram4k", "basic_materials:gold_wire", "pdp13:disk_rom"},
 		{"basic_materials:plastic_sheet", "basic_materials:motor", "basic_materials:plastic_sheet"},
 	},
 })

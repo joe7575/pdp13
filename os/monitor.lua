@@ -53,17 +53,17 @@ local function convert_to_numbers(s)
 	local tbl = {}
 	if s and s ~= "" then
 		for _,val in ipairs(string.split(s, " ")) do
-			tbl[#tbl+1] = pdp13.string_to_number(val)
+			tbl[#tbl+1] = pdp13.string_to_number(val, true)
 		end
 	end
 	return tbl
 end
 
 local function patch_breakpoint(cpu, mem)
-	if cpu.mem0 == 0x400 and mem.brkp_code then
+	if cpu.mem0 == 0x400 and mem.brkp_addr == cpu.PC then
 		cpu.mem0 = mem.brkp_code
 	end
-	return cpu
+	return cpu, mem.brkp_addr == cpu.PC
 end
 
 -- st(art)  s(to)p  r(ese)t  n(ext)  r(egister)  ad(dress)  d(ump)  en(ter)
@@ -110,8 +110,12 @@ end
 Commands["st"] = function(pos, mem, cmd, rest)
 	if techage.get_nvm(pos).monitor then
 		if rest ~= "" then
-			local addr = pdp13.string_to_number(rest)
+			local addr = pdp13.string_to_number(rest, true)
 			vm16.set_pc(pos, addr)
+		end
+		if mem.bp_val then
+			vm16.breakpoint_step2(pos, mem.brkp_addr, mem.bp_val)
+			mem.bp_val = nil
 		end
 		pdp13.start_cpu(pos)
 		mem.mstate = nil
@@ -124,9 +128,9 @@ Commands["sp"] = function(pos, mem, cmd, rest)
 	if techage.get_nvm(pos).monitor then
 		pdp13.stop_cpu(pos)
 		mem.mstate = nil
-		local cpu = vm16.get_cpu_reg(pos)
-		cpu = patch_breakpoint(cpu, mem)
-		local num, s = pdp13.disassemble(cpu, mem)
+		local cpu, sts = vm16.get_cpu_reg(pos), false
+		cpu, sts = patch_breakpoint(cpu, mem)
+		local num, s = pdp13.disassemble(cpu, mem, sts)
 		return {s}
 	end
 end
@@ -136,9 +140,9 @@ Commands["rt"] = function(pos, mem, cmd, rest)
 	if techage.get_nvm(pos).monitor then
 		vm16.set_pc(pos, 0) 
 		mem.mstate = nil
-		local cpu = vm16.get_cpu_reg(pos)
-		cpu = patch_breakpoint(cpu, mem)
-		local num, s = pdp13.disassemble(cpu, mem)
+		local cpu, sts = vm16.get_cpu_reg(pos), false
+		cpu, sts = patch_breakpoint(cpu, mem)
+		local num, s = pdp13.disassemble(cpu, mem, sts)
 		return {s}
 	end
 end
@@ -146,11 +150,15 @@ end
 -- next step
 Commands["n"] = function(pos, mem, cmd, rest)
 	if techage.get_nvm(pos).monitor then
-		pdp13.single_step_cpu(pos)
+		if mem.bp_val then
+			mem.bp_val = vm16.breakpoint_step2(pos, mem.brkp_addr, mem.bp_val)
+		else
+			pdp13.single_step_cpu(pos)
+		end
 		mem.mstate = 'n'
-		local cpu = vm16.get_cpu_reg(pos)
-		cpu = patch_breakpoint(cpu, mem)
-		local num, s = pdp13.disassemble(cpu, mem)
+		local cpu, sts = vm16.get_cpu_reg(pos), false
+		cpu, sts = patch_breakpoint(cpu, mem)
+		local num, s = pdp13.disassemble(cpu, mem, sts)
 		return {s}
 	end
 end
@@ -177,12 +185,12 @@ end
 -- set address
 Commands["ad"] = function(pos, mem, cmd, rest)
 	if techage.get_nvm(pos).monitor then
-		local addr = pdp13.string_to_number(rest)
+		local addr = pdp13.string_to_number(rest, true)
 		mem.mstate = nil
 		vm16.set_pc(pos, addr) 
-		local cpu = vm16.get_cpu_reg(pos)
-		cpu = patch_breakpoint(cpu, mem)
-		local num, s = pdp13.disassemble(cpu, mem)
+		local cpu, sts = vm16.get_cpu_reg(pos), false
+		cpu, sts = patch_breakpoint(cpu, mem)
+		local num, s = pdp13.disassemble(cpu, mem, sts)
 		return {s}
 	end
 end
@@ -192,13 +200,13 @@ Commands["d"] = function(pos, mem, cmd, rest, is_terminal)
 	if techage.get_nvm(pos).monitor then
 		if cmd == "d" then
 			mem.mstate = "d"
-			mem.maddr = pdp13.string_to_number(rest)
+			mem.maddr = pdp13.string_to_number(rest, true)
 		else
 			mem.maddr = mem.maddr or 0
 		end
-		local dump = vm16.read_mem(pos, mem.maddr, 32)
+		local dump = vm16.read_mem(pos, mem.maddr, 16)
 		local addr = mem.maddr
-		mem.maddr = mem.maddr + 32
+		mem.maddr = mem.maddr + 16
 		if dump then
 			return mem_dump(pos, addr, dump, is_terminal)
 		end
@@ -211,7 +219,7 @@ Commands["en"] = function(pos, mem, cmd, rest)
 	if techage.get_nvm(pos).monitor then
 		if cmd == "en" then
 			mem.mstate = "en"
-			mem.maddr = pdp13.string_to_number(rest)
+			mem.maddr = pdp13.string_to_number(rest, true)
 			return {string.format("%04X: ", mem.maddr)}
 		else
 			local tbl = convert_to_numbers(rest)
@@ -228,7 +236,7 @@ Commands["as"] = function(pos, mem, cmd, rest)
 	if techage.get_nvm(pos).monitor then
 		if cmd == "as" then
 			mem.mstate = "as"
-			mem.maddr = pdp13.string_to_number(rest)
+			mem.maddr = pdp13.string_to_number(rest, true)
 			return {string.format("%04X: ", mem.maddr)}
 		else
 			local tbl = pdp13.assemble(rest)
@@ -249,17 +257,18 @@ Commands["di"] = function(pos, mem, cmd, rest)
 	if techage.get_nvm(pos).monitor then
 		if cmd == "di" then
 			mem.mstate = "di"
-			mem.maddr = pdp13.string_to_number(rest)
+			mem.maddr = pdp13.string_to_number(rest, true)
 		else
 			mem.maddr = mem.maddr or 0
 		end
-		local dump = vm16.read_mem(pos, mem.maddr, 16)
+		local dump = vm16.read_mem(pos, mem.maddr, 8)
 		local tbl = {}
 		local offs = 1
-		for i = 1, 8 do
+		for i = 1, 4 do
 			local cpu = {PC = mem.maddr + offs - 1, mem0 = dump[offs], mem1 = dump[offs+1]}
-			cpu = patch_breakpoint(cpu, mem)
-			local num, s = pdp13.disassemble(cpu, mem)
+			local sts
+			cpu, sts = patch_breakpoint(cpu, mem)
+			local num, s = pdp13.disassemble(cpu, mem, sts)
 			offs = offs + num
 			tbl[#tbl+1] = s
 		end
@@ -277,7 +286,7 @@ Commands["br"] = function(pos, mem, cmd, rest, is_terminal)
 			if mem.brkp_addr then
 				vm16.reset_breakpoint(pos, mem.brkp_addr, mem.brkp_code)
 			end
-			local addr = pdp13.string_to_number(words[1])
+			local addr = pdp13.string_to_number(words[1], true)
 			mem.brkp_addr = addr
 			mem.brkp_code = vm16.set_breakpoint(pos, addr, 0)
 			return {"breakpoint set"}
@@ -297,7 +306,7 @@ Commands["ct"] = function(pos, mem, cmd, rest)
 		mem.mstate = nil
 		local words = string.split(rest, " ", true, 1)
 		if #words == 2 then
-			local addr = pdp13.string_to_number(words[1])
+			local addr = pdp13.string_to_number(words[1], true)
 			vm16.write_ascii(pos, addr, words[2].."\000")
 			return {"text copied"}
 		end
@@ -311,9 +320,9 @@ Commands["cm"] = function(pos, mem, cmd, rest)
 		mem.mstate = nil
 		local words = string.split(rest, " ", false, 2)
 		if #words == 3 then
-			local src_addr = pdp13.string_to_number(words[1])
-			local dst_addr = pdp13.string_to_number(words[2])
-			local number = pdp13.string_to_number(words[3])
+			local src_addr = pdp13.string_to_number(words[1], true)
+			local dst_addr = pdp13.string_to_number(words[2], true)
+			local number = pdp13.string_to_number(words[3], true)
 			if src_addr and dst_addr and number then
 				local tbl = vm16.read_mem(pos, src_addr, number)
 				vm16.write_mem(pos, dst_addr, tbl)
@@ -329,16 +338,13 @@ Commands["sy"] = function(pos, mem, cmd, rest, is_terminal)
 	if techage.get_nvm(pos).monitor and is_terminal then
 		mem.mstate = nil
 		local num, regA, regB = unpack(string.split(rest, " ", false, 2))
-		num = pdp13.string_to_number(num)
-		regA = pdp13.string_to_number(regA) or 0
-		regB = pdp13.string_to_number(regB) or 0
+		num = pdp13.string_to_number(num, true)
+		regA = pdp13.string_to_number(regA, true) or 0
+		regB = pdp13.string_to_number(regB, true) or 0
 		
 		if num then
-			print(5)
 			local sts, resp = pcall(pdp13.sys_call, pos, num, regA, regB)
-			print(6)
 			if sts then
-			print(7)
 				return {"result = "..resp}
 			else
 				return {"sys error", resp:sub(1, 48)}
@@ -374,6 +380,13 @@ Commands["ex"] = function(pos, mem, cmd, rest)
 	return {"finished."}
 end
 
+function pdp13.monitor_init(pos, mem)
+	mem.mstate = nil
+	mem.brkp_addr = nil
+	mem.brkp_code = nil
+	mem.bp_val = nil
+	mem.maddr = nil
+end	
 
 function pdp13.monitor(cpu_pos, mem, command, is_terminal)
 	if cpu_pos and mem and command then
@@ -396,11 +409,14 @@ function pdp13.monitor(cpu_pos, mem, command, is_terminal)
 end
 
 function pdp13.monitor_stopped(cpu_pos, mem, resp, is_terminal)
-	if is_terminal and resp == vm16.BREAK and mem.brkp_addr then
-		vm16.breakpoint_step(cpu_pos, mem.brkp_addr, mem.brkp_code)
-		local cpu = vm16.get_cpu_reg(cpu_pos)
-		cpu = patch_breakpoint(cpu, mem)
-		local num, s = pdp13.disassemble(cpu, mem)
+	if is_terminal and resp == vm16.BREAK then
+		local cpu, sts = vm16.get_cpu_reg(cpu_pos), false
+		if mem.brkp_addr and mem.brkp_addr + 1 == cpu.PC then 
+			mem.bp_val = vm16.breakpoint_step1(cpu_pos, mem.brkp_addr, mem.brkp_code)
+		end
+		cpu = vm16.get_cpu_reg(cpu_pos)
+		cpu, sts = patch_breakpoint(cpu, mem)
+		local num, s = pdp13.disassemble(cpu, mem, sts)
 		return {s}
 	elseif not mem.mstate then
 		return {"stopped: "..(vm16.CallResults[resp] or "")}

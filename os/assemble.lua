@@ -46,10 +46,12 @@ local function get_symbol(addr)
 	return "???"
 end
 
-local function value(s)
+local function value(s, is_hex)
 	if s then
 		if string.sub(s, 1, 1) == "$" then
 			return tonumber(string.sub(s, 2, -1), 16) or 0
+		elseif is_hex then
+			return tonumber(s, 16) or 0
 		else
 			return tonumber(s, 10) or 0
 		end
@@ -237,5 +239,5 @@ function pdp13.assemble2(text)
 	return table_to_h16(code)
 end
 
--- pdp13.string_to_number(s): returns number  -- suports dec and hex $...
+-- pdp13.string_to_number(s, is_hex): returns number  -- suports dec and hex $...
 pdp13.string_to_number = value

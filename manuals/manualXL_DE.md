@@ -56,6 +56,8 @@ Hier werden Kommandos aber über die 6 Tasten links und Maschinenbefehle über d
 - Über die Taste "address" kann der Program Counter auf einen Wert gesetzt werden.
 - Über die Taste "dump" wird ein Speicherbereich ausgegeben. Die Startadresse muss zuvor über die Taste "address" eingegeben worden sein.
 
+**Alle Zahlenangaben sind in hexadezimaler Form  einzugeben!**
+
 Das "help" Register zeigt die wichtigsten Assemblerbefehle und jeweils den Maschinencode dazu. Mit diesem Subset an Befehlen kann man bereits arbeiten. Weitere Informationen zum Befehlssatz findest du [hier](https://github.com/joe7575/vm16/blob/master/doc/introduction.md) und [hier](https://github.com/joe7575/vm16/blob/master/doc/opcodes.md).
 
 Am Ende der Tabelle werden die System-Kommandos aufgeführt. Dies sind quasi Betriebssystemtaufrufe, welche zusätzliche Befehle ausführen, die sonst nicht möglich wären, wie bspw. einen Text auf dem Telewriter auszugeben. 
@@ -258,8 +260,13 @@ Auf dem "Terminal Programmer" läuft die Version 2 des Monitors. Diese bietet fo
 | `br #`     | Setzen eines Breakpoints an der angegebenen Adresse. Es kann nur ein Breakpoint gesetzt werden |
 | `br`       | Löschen des Breakpoints                                      |
 
+**Alle Zahlenangaben sind in hexadezimaler Form  einzugeben!**
 
-Alle Kommandos unterstützen die dezimale und hexadezimale Eingabe von Zahlen, `100` ist dezimal und entspricht damit `$64` (hexadezimal).
+#### Breakpoints
+
+Das Monitor Programm V2 (Terminal) unterstützt einen Software Breakpoint. Dies bedeutet, dass bei Eingabe von bspw. `br 100` an der Adresse $100 der Code mit dem neuen Wert $0400 (`brk #0`) überschrieben wird. Mit `br` (Breakpoint löschen) wird wieder der Originalwert eingetragen. Wird von der CPU der Opcode `$0400` ausgeführt, wird das Programm unterbrochen und der Debugger/Monitor zeigt die Adresse an (der Stern zeigt an, dass hier ein Breakpoint gesetzt wurde). Allerdings wird vom Disassembler der Original Code angezeigt und nicht der `brk`. Bei einem Speicherdump sieht mal allerdings den Wert `$0400`. Der Opcode an der Position wird nach Ausführung dieser Originalanweisung wieder auf `$0400` gesetzt, so dass der Breakpoint auch mehrfach genutzt werden kann. 
+
+Der Breakpoint ist allerdings wieder weg, wenn das Programm neu geladen wurde. Für diesen, aber auch andere Testfälle kann es Sinn machen, eine `brk #0` Aweisung direkt im ASM Code einzufügen. Damit kommt das Programm an dieser Position immer zum Halten, so dass man hier seine Debugging Session starten kann.
 
 
 

@@ -61,26 +61,21 @@ local function dump(cpu, num)
 end
 
 -- Returns the number of words and the instruction string
-function pdp13.disassemble(cpu, mem)
+function pdp13.disassemble(cpu, mem, is_breakpoint)
 	local idx1, idx2, idx3, num = indexes(cpu)
 	local s = dump(cpu, num)
 	local opc1, opc2, opc3 = unpack(string.split(pdp13.VM13Opcodes[idx1] or "", ":"))
-	local star = " "
+	local star = is_breakpoint and "*" or " "
 	if opc1 then
 		-- code correction for all jump/branch opcodes: from '#0' to '0'
 		if pdp13.JumpInst[opc1] then
 			 if idx2 == 16 then idx2 = 17 end
 			 if idx3 == 16 then idx3 = 17 end
 		end
-		-- Consider Breakpoint
-		print(mem and mem.brkp_addr, cpu.PC)
-		if mem and mem.brkp_addr and mem.brkp_addr == cpu.PC then
-			star = "*"
-		end
 		if opc1 == "sys" and opc2 == "CNST" then
 			return 1, string.format("%s  %s%-4s #$%X", s, star, opc1, cpu.mem0 % 1024)
 		elseif opc1 == "brk" and opc2 == "CNST" then
-			return 1, string.format("%s  %sbreak %u", s, star, cpu.mem0 % 1024)
+			return 1, string.format("%s  %sbrk #%u", s, star, cpu.mem0 % 1024)
 		else
 			opc2 = operand(opc2, pdp13.VM13Operands[idx2], cpu.mem1)
 			opc3 = operand(opc3, pdp13.VM13Operands[idx3], cpu.mem1)

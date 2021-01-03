@@ -18,7 +18,7 @@ local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = minetest.string_to_pos
 
 local NUM_CHARS = 48
-local NUM_LINES = 16
+local NUM_LINES = 17
 local STR_LEN = 64
 local COLOR = "\027(c@#FFCC00)"  -- amber
 local NEWLINE = "\n"..COLOR
@@ -28,7 +28,7 @@ local WR = 119
 local function read_screenbuffer(mem)
 	mem.lLines = mem.lLines or {""}
 	local t, ln = mem.lLines, #mem.lLines
-	if t[ln] == "" then ln = ln + 1 end
+	if t[ln] == "" then ln = ln - 1 end
 	
 	-- delete old lines
 	for _ = NUM_LINES, ln, 1 do
@@ -361,14 +361,14 @@ local function after_dig_node(pos, oldnode, oldmetadata)
 end
 
 minetest.register_node("pdp13:terminal", {
-	description = "PDP13 Terminal Operator",
+	description = "PDP-13 Terminal Operator",
 	tiles = tiles,
 	drawtype = "nodebox",
 	node_box = node_box,
 	selection_box = selection_box,
 	after_place_node = function(pos, placer)
 		after_place_node(pos, placer, "pdp13:terminal")
-		M(pos):set_string("infotext", "PDP13 Terminal Operator")
+		M(pos):set_string("infotext", "PDP-13 Terminal Operator")
 		M(pos):set_int("monitor", 0)
 	end,
 	on_rightclick = on_rightclick,
@@ -386,14 +386,14 @@ minetest.register_node("pdp13:terminal", {
 })
 
 minetest.register_node("pdp13:terminal_prog", {
-	description = "PDP13 Terminal Programmer",
+	description = "PDP-13 Terminal Programmer",
 	tiles = tiles,
 	drawtype = "nodebox",
 	node_box = node_box,
 	selection_box = selection_box,
 	after_place_node = function(pos, placer)
 		after_place_node(pos, placer, "pdp13:terminal_prog")
-		M(pos):set_string("infotext", "PDP13 Terminal Programmer")
+		M(pos):set_string("infotext", "PDP-13 Terminal Programmer")
 		M(pos):set_int("monitor", 1)
 	end,
 	on_rightclick = on_rightclick,
@@ -413,15 +413,17 @@ minetest.register_node("pdp13:terminal_prog", {
 -- For monitor mode
 techage.register_node({"pdp13:terminal", "pdp13:terminal_prog"}, {
 	on_recv_message = function(pos, src, topic, payload)
-		--print("on_recv_message", topic)
+		--print("Terminal on_recv_message", topic)
 		if topic == "monitor" then
 			local mem = techage.get_nvm(pos)
 			if payload then
 				mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 				clear_screen(pos, mem)
 				print_string_ln(pos, mem, "### Monitor v2.0 ###")
+				pdp13.monitor_init(mem.cpu_pos, mem)
 			elseif mem.monitor then
 				print_string_ln(pos, mem, "end.")
+				pdp13.monitor_stopped(mem.cpu_pos, mem, payload, true)
 			end
 			mem.monitor = payload
 			return true

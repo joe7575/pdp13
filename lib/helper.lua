@@ -60,7 +60,7 @@ function pdp13.filename(s, defaultdrive)
 	else
 		drive = defaultdrive or "t"
 	end
-	if string.find(s, "^[%w_][%w_][%w_%.]+$") then
+	if #s <= pdp13.MAX_FNAME_LEN and string.find(s, "^[%w_][%w_][%w_%.]+$") then
 		return drive, s
 	end
 end

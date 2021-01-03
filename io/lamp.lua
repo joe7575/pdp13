@@ -30,12 +30,12 @@ local function switch_off(pos, node)
 end	
 
 minetest.register_node("pdp13:lamp_off", {
-    description = "PDP13 Color Lamp",
+    description = "PDP-13 Color Lamp",
     tiles = {"pdp13_lamp.png"},
 	
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
-		logic.after_place_node(pos, placer, "pdp13:lamp_off", "PDP13 Color Lamp")
-		logic.infotext(M(pos), "PDP13 Color Lamp")
+		logic.after_place_node(pos, placer, "pdp13:lamp_off", "PDP-13 Color Lamp")
+		logic.infotext(M(pos), "PDP-13 Color Lamp")
 		local node = minetest.get_node(pos)
 		node.param2 = 50
 		minetest.swap_node(pos, node)
@@ -60,7 +60,7 @@ minetest.register_node("pdp13:lamp_off", {
 
 
 minetest.register_node("pdp13:lamp_on", {
-    description = "PDP13 Color Lamp",
+    description = "PDP-13 Color Lamp",
     tiles = {"pdp13_lamp.png"},
 
 	on_rightclick = switch_off,

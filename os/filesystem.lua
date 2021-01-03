@@ -129,21 +129,23 @@ local function fopen(pos, address, val1, val2)
 	local mem = techage.get_nvm(pos)
 	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
 	local drive, fname = filename(s, mem.current_drive)
-	local uid = get_uid(pos, drive)
-	local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
-	
-	if mounted and Files[uid] then
-		if val2 == 119 then -- 'w' for write
-			Files[uid][fname] = ""
-		elseif Files[uid][fname] then
-			Files[uid][fname] = read_file_real(uid, fname) or ""
-		else
-			return 0
-		end
-		if not OpenFiles[OpenFilesRef] then
-			OpenFiles[OpenFilesRef] = {fpos = 1, uid = uid, drive = drive, fname = fname}
-			OpenFilesRef = OpenFilesRef + 1
-			return OpenFilesRef - 1
+	if drive then
+		local uid = get_uid(pos, drive)
+		local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
+		
+		if mounted and Files[uid] then
+			if val2 == 119 then -- 'w' for write
+				Files[uid][fname] = ""
+			elseif Files[uid][fname] then
+				Files[uid][fname] = read_file_real(uid, fname) or ""
+			else
+				return 0
+			end
+			if not OpenFiles[OpenFilesRef] then
+				OpenFiles[OpenFilesRef] = {fpos = 1, uid = uid, drive = drive, fname = fname}
+				OpenFilesRef = OpenFilesRef + 1
+				return OpenFilesRef - 1
+			end
 		end
 	end
 	return 0
@@ -240,11 +242,13 @@ local function file_size(pos, address, val1, val2)
 	local mem = techage.get_nvm(pos)
 	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
 	local drive, fname = filename(s, mem.current_drive)
-	local uid = get_uid(pos, drive)
-	local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
+	if drive then
+		local uid = get_uid(pos, drive)
+		local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
 
-	if mounted and Files[uid] then
-		return tonumber(Files[uid][fname]) or 0
+		if mounted and Files[uid] then
+			return tonumber(Files[uid][fname]) or 0
+		end
 	end
 	return 0
 end
@@ -330,7 +334,7 @@ local function copy_file(pos, address, val1, val2)
 	local uid2 = get_uid(pos, drive2)
 	local mounted2 = drive2 == 'h' or M(pos):get_int("mounted_t") == 1
 
-	if mounted1 and mounted2 then
+	if drive1 and drive2 and mounted1 and mounted2 then
 		if Files[uid1] and Files[uid1][fname1] and Files[uid2] then
 			Files[uid2][fname2] = Files[uid1][fname1]
 			local s = read_file_real(uid1, fname1)
@@ -354,7 +358,7 @@ local function move_file(pos, address, val1, val2)
 	local uid2 = get_uid(pos, drive2)
 	local mounted2 = drive2 == 'h' or M(pos):get_int("mounted_t") == 1
 	
-	if mounted1 and mounted2 then
+	if drive1 and drive2 and mounted1 and mounted2 then
 		if Files[uid1] and Files[uid1][fname1] and Files[uid2] then
 			Files[uid2][fname2] = Files[uid1][fname1]
 			Files[uid1][fname1] = nil
