@@ -23,6 +23,8 @@ A computer simulation that will take you back to the beginnings of programming:
 - Output possibilities like color lamp and 7-segment node
 - Compatible to TechAge to be able control machines
 - Installable assembler application `vm16asm` (on your PC)
+- J/OS operating system to be able to boot from drive
+- Many ASM stdlib and example files
 
 On client side Minetest 5.4 is recommended (font=mono)
 
@@ -32,7 +34,7 @@ This mod is based on vm16, a virtual CPU implemented as Lua library with an outs
 
 ### Manuals
 
-In-game (TechAge Construction Board) and on [GitHub](https://github.com/joe7575/pdp13/wiki)  
+Manuals are on [GitHub](https://github.com/joe7575/pdp13/wiki)
 The main manual is currently only available in German, English will follow soon.
 
 
@@ -60,4 +62,5 @@ Required: default,tubelib2,techage,vm16
 - 2020-12-18  v0.04  * Add UDP like communication mechanism
 - 2020-12-20  v0.05  * Add OS ROM chip and exam2
 - 2020-12-28  v0.06  * Add terminal, tape drive, hard dirk, and more
+- 2021-01-03  v0.07  * Add terminal history buffer, update manual, fix bugs
 

@@ -105,6 +105,7 @@ local function formspec1(pos, mem)
 		return  -- screensaver
 	end
 	
+	mem.command = mem.command or ""
 	mem.redraw = (mem.redraw or 0) + 1
 	M(pos):set_string("formspec", "size[10,8.5]" ..
 		default.gui_bg..
@@ -116,13 +117,13 @@ local function formspec1(pos, mem)
 		"style_type[label,field;font=mono]"..
 		"label[0,0;"..s.."]"..
 		"container_end[]"..
-		"button[0.1,7.0;1.8,1;exc;ESC]"..
+		"button[0.1,7.0;1.8,1;esc;ESC]"..
 		"button[2.2,7.0;1.7,1;f1;F1]"..
 		"button[4.2,7.0;1.7,1;f2;F2]"..
 		"button[6.2,7.0;1.7,1;f3;F3]"..
 		"button[8.2,7.0;1.7,1;f4;F4]"..
 		"style_type[field;textcolor=#000000]"..
-		"field[0.4,8.2;7.8,0.8;command;;]"..
+		"field[0.4,8.2;7.8,0.8;command;;"..minetest.formspec_escape(mem.command).."]"..
 		"button[8.2,7.8;1.7,1;enter;Enter]"..
 		"field_close_on_enter[command;false]")
 end
@@ -266,7 +267,19 @@ local function on_receive_fields(pos, formname, fields, player)
 			monitor_print_lines(pos, mem, lines or {})
 		else
 			mem.input = string.sub(fields.command or "", 1, STR_LEN)
+			if mem.input == "" then
+				mem.input = "\026"
+			end
 		end
+		pdp13.historybuffer_add(pos, fields.command or "")
+		mem.command = ""
+		formspec1(pos, mem)
+	elseif fields.key_up then
+		mem.command = pdp13.historybuffer_priv(pos)
+		formspec1(pos, mem)
+	elseif fields.key_down then
+		mem.command = pdp13.historybuffer_next(pos)
+		formspec1(pos, mem)
 	elseif fields.save then
 		edit_save(pos, mem, fields.edit)
 		pdp13.cpu_freeze(pos, false)

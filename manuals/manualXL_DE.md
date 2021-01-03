@@ -1,15 +1,15 @@
-# PDP13 Minicomputer (TA3)
+# PDP-13 Minicomputer (TA3)
 
-PDP13 ist ein 16-Bit-Minicomputer, inspiriert von DEC, IBM und anderen Computer aus den 60er und 70er Jahren. "Mini" deshalb, weil die Rechenanlagen bis dahin nicht nur Schränke, sondern ganze Räume oder Hallen gefüllt hatten. Erst mit der Erfindung der ersten integrierten Schaltkreisen ließen sich die Rechner auf Kleiderschrankgröße reduzieren. Damit passt dieser Computer ideal in das Ölzeitalter. Dadurch dass dieser Computer nur in Maschinencode programmiert werden kann (wie die Originale damals auch), setzt dies einiges an Computerwissen voraus, was nicht in dieser Anleitung vermittelt werden kann.
+PDP-13 ist ein 16-Bit-Minicomputer, inspiriert von DEC, IBM und anderen Computer aus den 60er und 70er Jahren. "Mini" deshalb, weil die Rechenanlagen bis dahin nicht nur Schränke, sondern ganze Räume oder Hallen gefüllt hatten. Erst mit der Erfindung der ersten integrierten Schaltkreisen ließen sich die Rechner auf Kleiderschrankgröße reduzieren. Damit passt dieser Computer ideal in das Ölzeitalter. Dadurch dass dieser Computer nur in Maschinencode programmiert werden kann (wie die Originale damals auch), setzt dies einiges an Computerwissen voraus, was nicht in dieser Anleitung vermittelt werden kann.
 
 Voraussetzungen sind damit:
 
 - Grundkenntnisse in Englisch (weitere Dokumente nur in englisch)
 - Rechnen mit HEX-Zahlen (16 Bit System)
 - Grundkenntnisse im Aufbau einer CPU (Register, Speicheradressierung) und Assemblerprogrammierung
-- Ausdauer und Lernbereitschaft, denn PDP13 ist anders, als alles, was du evtl. schon kennst
+- Ausdauer und Lernbereitschaft, denn PDP-13 ist anders, als alles, was du evtl. schon kennst
 
-Der PDP13 Minicomputer wird aber im Spiel auch nicht benötigt, sondern dient eher als Lehrmaterial in Computergrundlagen und Computergeschichte. Er kann aber wie die anderen Controller zur Steuerung von Maschinen eingesetzt werden. Die PDP13 Mod bringt auch eigene Ausgabeblöcke mit, so dass sich viele Möglichkeiten zur Anwendung bieten.
+Der PDP-13 Minicomputer wird aber im Spiel auch nicht benötigt, sondern dient eher als Lehrmaterial in Computergrundlagen und Computergeschichte. Er kann aber wie die anderen Controller zur Steuerung von Maschinen eingesetzt werden. Die `pdp13` Mod bringt auch eigene Ausgabeblöcke mit, so dass sich viele Möglichkeiten zur Anwendung bieten.
 
 Aufgrund der Länge dieses Anleitung ist diese nicht in-game, sondern nur über GitHub verfügbar: `github.com/joe7575/pdp13/wiki`.
 
@@ -130,7 +130,7 @@ Die Ausgabe erfolgt immer nach folgendem Schema:
 
 
 
-## PDP13 Punch Tape
+## PDP-13 Punch Tape
 
 Neben den Demo Tapes mit festen, kleinen Programmen gibt es auch die beschreibbaren und editierbaren Punch Tapes. Diese können (im Gegensatz zum Original) mehrfach geschrieben/geändert werden.
 
@@ -142,7 +142,7 @@ Die Punch Tapes besitzen ein Menü so dass diese auch von Hand beschrieben werde
 
 
 
-## PDP13 7-Segment
+## PDP-13 7-Segment
 
 Über diesen Block kann eine HEX-Ziffer, also 0-9 und A-F ausgegeben werden, indem Werte von 0 bis 15 über das Kommando `value` an den Block gesendet werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. Werte größer 15 löschen die Ausgabe.
 
@@ -158,7 +158,7 @@ out #00, A      ; output on port #0
 
 
 
-## PDP13 Color Lamp
+## PDP-13 Color Lamp
 
 Dieser Lampenblock kann in verschiedenen Farben leuchten. Dazu müssen Werte von 1-64 über das Kommando `value`an den Block gesendet werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. Der Werte 0 schaltet die Lampe aus.
 
@@ -174,7 +174,7 @@ out #00, A      ; output on port #0
 
 
 
-## PDP13 Memory Rack
+## PDP-13 Memory Rack
 
 Dieser Block vervollständigt als 4. Block den Rechneraufbau. Der Block hat ein Inventar für Chips zur Speichererweiterung. Der Rechner hat intern 4 KWords an Speicher (4096 Worte) und kann durch einen 4 K RAM Chip auf 8 KWords erweitert werden. Mit einem zusätzlichen 8 K RAM Chip kann der Speicher dann auf 16 KWords erweitert werden. Theoretisch sind bis zu 64 KWords möglich.
 
@@ -186,7 +186,7 @@ Das Inventar des Speicherblocks lässt sich nur in der vorgegebenen Reihenfolge 
 
 ## Minimal Beipiel
 
-Hier ein konkretes Beispiel, das den Umgang mit der Mod zeigt. Ziel ist es, die TechAge Signallampe (nicht die PDP13 Color Lamp!) einzuschalten. Dazu muss man den Wert 1 über ein `out` Befehl an dem Port ausgeben, wo die Lampe "angeschlossen" ist. Das Assembler-Programm dazu sieht aus wie folgt:
+Hier ein konkretes Beispiel, das den Umgang mit der Mod zeigt. Ziel ist es, die TechAge Signallampe (nicht die PDP-13 Color Lamp!) einzuschalten. Dazu muss man den Wert 1 über ein `out` Befehl an dem Port ausgeben, wo die Lampe "angeschlossen" ist. Das Assembler-Programm dazu sieht aus wie folgt:
 
 ```assembly
 mov A, #1   ; Lade das A-Register mit den Wert 1
@@ -228,7 +228,7 @@ Wenn du alles richtig gemacht hast, leuchtet danach die Lampe. Das "OUT" Feld im
 
 Hat man den Rechner mit dem "Monitor ROM" Chip erweitert und ein "Telewriter Programmer" Terminal angeschlossen, kann man den Rechner in Assembler programmieren. Dies ist deutlich komfortabler und weniger fehleranfällig.
 
-Das Monitor Programm auf dem Rechner wird durch Eingabe des Kommandos "mon" an der CPU gestartet und über die Taste "stop" auch wieder gestoppt werden. Alle anderen Tasten der CPU sind im Monitor-Mode nicht aktiv. Die Bedienung erfolgt nur über das Terminal. 
+Das Monitor Programm auf dem Rechner wird durch Eingabe des Kommandos "mon" an der CPU gestartet und kann über die Taste "stop" auch wieder gestoppt werden. Alle anderen Tasten der CPU sind im Monitor-Mode nicht aktiv. Die Bedienung erfolgt nur über das Terminal. 
 
 Das Monitor Programm unterstützt folgende Kommandos, die auch mit Eingabe von `?` am Telewriter ausgegeben werden:
 
@@ -294,7 +294,7 @@ Tape drive..ok
 
 
 
-## Terminal
+## PDP-13 Terminal
 
 Sofern das BIOS ROM verfügbar ist, kann am Rechner auch ein Terminal angeschlossen und angesteuert werden. Auch hier gibt es zwei Typen von Terminals:
 
@@ -311,7 +311,8 @@ Das Terminal besitzt quasi 3 Betriebsarten:
 
 Zu allen drei Betriebsarten gibt es Demoprogramme, die die Funktionsweise zeigen.
 
-Das Terminal besitzt auch zusätzliche Tasten mit folgenden Codierung:  `ESC` = 27, `F1` = 28, `F2` = 29, `F3` = 30, `F4` = 31
+Das Terminal besitzt auch zusätzliche Tasten mit folgenden Codierung:  `RTN` = 26, `ESC` = 27, `F1` = 28, `F2` = 29, `F3` = 30, `F4` = 31.
+`RTN` oder der Wert 26 wird gesendet, wenn nur "enter" gedrückt wurde, ohne dass zuvor Zeichen in die Eingabezeile eingegeben wurden.
 
 Für das Terminal stehen folgende sys-Kommandos zur Verfügung:
 
@@ -340,7 +341,7 @@ sys   #$18              ; print SM (<-SM)
 
 
 
-## Tape Drive
+## PDP-13 Tape Drive
 
 Das Tape Drive vervollständigt als weitere Block den Rechneraufbau. Damit verfügt der Rechner jetzt über einen echten Massenspeicher, auf dem Daten und Programme wiederholt gespeichert und gelesen werden können. Der Rechner ist mit Hilfe des BIOS ROM Chips auch in der Lage, von diesem Speichermedium zu booten. 
 
@@ -350,7 +351,7 @@ Es kann maximal ein Tape Drive am Rechner angeschlossen werden. Das Tape Drive m
 
 
 
-## Hard Disk
+## PDP-13 Hard Disk
 
 Die Hard Disk vervollständigt als weitere Block den Rechneraufbau. Damit verfügt der Rechner jetzt über einen zweiten Massenspeicher mit mehr Kapazität. Der Rechner ist auch hier mit Hilfe des BIOS ROM Chips in der Lage, von diesem Speichermedium zu booten.
 
@@ -360,15 +361,104 @@ Wird dieser Block abgebaut, bleiben die Daten erhalten. Wird der Block zerstört
 
 
 
+## J/OS-13 Betriebssystem
+
+Wie jeder echte Rechner macht auch PDP-13 ohne Programme oder Betriebssystem gar nichts. Deshalb müssen entweder Programme über die Punch Tapes in den Rechner geladen werden, oder es müssen Programme auf dem Tape Drive oder Hard Disk vorhanden sein, die in den Speicher geladen und ausgeführt werden können.  Um den Rechner von einem Laufwerk zu starten, muss an der CPU das Kommando `boot` eingegeben werden. Über die Taste "stop" kann die CPU wieder gestoppt werden. Alle anderen Tasten der CPU sind im `boot`-Mode nicht aktiv. Die Bedienung erfolgt nur über das Operator Terminal. 
+
+
+
+### Datei `boot`
+
+Befindet sich auf einem der Laufwerte eine Textdatei `boot`, so wird diese vom BIOS eingelesen und interpretiert. Die Datei hat nur eine Textzeile mit dem Dateiamen des Programmes, welches als erstes ausgeführt werden soll. Bei J/OS-13 sieht diese Datei auf dem Tape Drive so aus:
+
+```
+t/shell1.h16
+```
+
+
+
+### Datei `shell1.h16`
+
+Damit wird als nächstes die Datei `shell1.16` vom Tape Drive geladen und mit ab Adresse $0000 ausgeführt. `shell1.h16` ist ein Ladeprogramm, das sich im Adressbereich $0000 - $00BF einnistet und dort auch verbleibt. Jede Anwendung muss, sofern sie beendet wird, wieder zu diesem Ladeprogramm zurückkehren. Dies erfolgt normalerweise über die Anweisung `sys #$71`.
+
+Hier das berühmte "Hello World" Programm für J/OS-13 in `vm16asm` Assembler:
+
+```assembly
+; Hello world for the Terminal in COM format
+
+    .org $100
+    .code
+    
+    move  A, B          ; com v1 tag $2001
+    move    A, #TEXT
+    sys     #$14        ; println
+    sys     #$71        ; warm start
+
+    .text
+TEXT:
+    "Hello "
+    "World\0"
+```
+
+Die Zeile `move  A, B` macht nichts sinnvolles, außer dass der Wert $2001 generiert wird. Steht dieser Wert am Anfang eines `.com` Files, wird dieses File als ausführbare Datei akzeptiert, geladen und ausgeführt (com v1 version tag) .
+
+
+
+### Datei `shell2.com`
+
+Da das Ladeprogramm über keine Kommandos verfügt (der Adressbereich $0000 - $00BF ist dafür viel zu klein), wird nach einem Kaltstart ein zweiter Teil in den Addressbereich ab $0100 nachgeladen. Dieses Programm besitzt eine Kommandozeile mit Kommandos und kann andere Programme von einem Laufwerk laden und ausführen.
+
+Es werden 2 Typen von ausführbaren Programmen unterstützt:
+
+- `.h16` Files sind Textfiles im H16  Format. Dieses Format erlaubt ein Programm an eine definierte Adresse zu laden, wie dies bspw. bei `shell1.h16` der Fall ist. Auch alle Punch Tape Programme sind im H16 Format. Nur so lassen sich technisch Programme über Punch Tapes austauschen.
+- `.com` Files sind Files im Binärformat. Das Binärformat ist deutlich kompakter (ca. Faktor 3) und deshalb für Programme die bessere Wahl. `.com` Files werden immer ab Adresse $0100 geladen und müssen dafür entsprechend vorbereitet sein (Anweisung `.org $100`).
+
+Für beide Typen von Programmen gilt:  Die Anwendung muss bei Adresse $0100 starten, darf den Adreessbereich unterhalb von $00C0 nicht verändern und muss am Ende über `sys #$71` wieder zum Betriebsystem zurückkehren.
+
+### Kommandos auf der Konsole
+
+`shell2.com` verfügt über die folgenden Kommandos:
+
+- `ed <name>` um den Editor zu starten. Das angegebene File wird dabei in den Editor geladen. Existiert das File noch nicht, wird es angelegt.
+- `<name>.h16` bzw. `<name>.com` um ein Programm von einem der Laufwerke auszuführen.
+- `mv <old> <new>` um ein File umzubenennen oder zu verschieben
+- `rm <name>` um File(s) zu löschen
+- `ls [<wc>]` um die Files auszugeben. Mit `ls` werden alle Files des aktuellen Laufwerks ausgegeben. mit `ls h/*` werden bspw. alle Files des Hard Drives ausgegeben.  Mit `ls test.*` nur Files mit dem Namen "test" und mit  `ls *.com` nur `.com` Files.
+- `cp <from> <to>` Um eine Datei zu kopieren. 
+- `cd t/h` Um das Laufwerk zu wechseln. Also bspw.  `ls h` für das Hard Drive.
+
+Weitere Kommandos sind als Programm (`.com` File) implementiert und werden daher erst vom Laufwerk geladen, bevor sie ausgeführt werden.
+
+
+
+### Kommandos vom Laufwerk
+
+- `hellow`  "Hello world" Testprogramm, das zeigt, wie die Parameterübergabe funktioniert. Das Programm kann ohne `.com` Erweiterung mit mehreren Parametern gestartet werden. Diese werden dann zeilenweise wieder ausgegeben.
+
+- `asm <name>`  um ein File zu h16 zu übersetzen (ohne ext)
+- `cat <name>` um den Inhalt einer Datei auszugeben
+
+
+
+### Bereich für die Parameterübergabe
+
+Jedes eingegebene Kommando mit seinen Parametern wird von der shell in den Bereich $00C0 - $00FF geladen. Kommandos können daher max. 63 Zeichen lang sein. Das Kommando wird dabei bereits an den Leerzeichen (blanks) in einzelne Strings geteilt. Aus `cp test.txt  h/test.txt` wird damit: `cp`,  `test.txt`  und  `h/test.txt`.
+
+
+
 ## Programmieraufgaben
 
 Um einen ROM Chip herstellen zu können, wird das Programm für den Chip auf Tape benötigt. Diese Aufgabe in echt zu lösen wäre zwar eine Herausforderung, aber für 99,9 % der Spieler kaum zu lösen.
 
 Deshalb soll die Programmierung hier simuliert werden, in dem man eine (einfache) Programmieraufgabe löst, was immer noch nicht ganz einfach ist. Aber man bekommt einen Eindruck, wie aufwändig es damals war, ein Programm zu schreiben.
 
+
+
+### Wertebereiche und Zweierkomplement
+
 Zuvor aber etwas Theorie, was für die folgenden Aufgaben benötigt wird.
 
-PDP13 ist eine 16-Bit Maschine und kann daher nur Werte von 0 bis 65535 darstellen. Bei einer Darstellung mit Vorzeichen sind es nur Werte von -32768  bis +32767. Hier eine Übersicht der Wertebereiche:
+PDP-13 ist eine 16-Bit Maschine und kann daher nur Werte von 0 bis 65535 darstellen. Bei einer Darstellung mit Vorzeichen sind es nur Werte von -32768  bis +32767. Hier eine Übersicht der Wertebereiche:
 
 | 16-Bit wert (hex) | Ganzzahl ohne Vorzeichen | Ganzzahl mit Vorzeichen |
 | ----------------- | ------------------------ | ----------------------- |
@@ -381,7 +471,7 @@ PDP13 ist eine 16-Bit Maschine und kann daher nur Werte von 0 bis 65535 darstell
 Soll das Vorzeichen geändert werden, also bspw. eine negative Zahl in eine Positive gewandelt werden, so wendet man das [Zweierkomplement](https://de.wikipedia.org/wiki/Zweierkomplement) Verfahren an:
 
 ```
-pos_zahl = not neg_zahl + 1
+pos_zahl = not(neg_zahl) + 1
 ```
 
 Oder in Assembler:

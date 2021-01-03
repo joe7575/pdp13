@@ -126,7 +126,7 @@ local function total_size(tDirectory)
 end
 
 local function fopen(pos, address, val1, val2)
-	local mem = techage.get_mem(pos)
+	local mem = techage.get_nvm(pos)
 	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
 	local drive, fname = filename(s, mem.current_drive)
 	local uid = get_uid(pos, drive)
@@ -237,7 +237,7 @@ local function write_line(pos, address, val1, val2)
 end
 	
 local function file_size(pos, address, val1, val2)
-	local mem = techage.get_mem(pos)
+	local mem = techage.get_nvm(pos)
 	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
 	local drive, fname = filename(s, mem.current_drive)
 	local uid = get_uid(pos, drive)
@@ -250,7 +250,19 @@ local function file_size(pos, address, val1, val2)
 end
 
 local function list_files(pos, address, val1, val2)
-	local mem = techage.get_mem(pos)
+	local order = function(a, b)
+		local base1, ext1 = unpack(string.split(a, ".", false, 1))
+		local base2, ext2 = unpack(string.split(b, ".", false, 1))
+		ext1 = ext1 or ""
+		ext2 = ext2 or ""
+		if ext1 ~= ext2 then
+			return ext1 < ext2
+		else
+			return base1 < base2
+		end
+	end
+	
+	local mem = techage.get_nvm(pos)
 	local number = M(pos):get_string("node_number")
 	number = tonumber(number)
 	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
@@ -264,12 +276,13 @@ local function list_files(pos, address, val1, val2)
 		local pattern = gen_filepattern(fname)
 		
 		for name,str in pairs(Files[uid]) do
-			local size = tonumber(str) or 0
-			total_size = total_size + size
 			if fmatch(name, pattern) then
+				local size = tonumber(str) or 0
+				total_size = total_size + size
 				t[#t+1] = string.format("%-12s  %4s", name, kbyte(size))
 			end
 		end
+		table.sort(t, function(a,b) return order(a, b) end)
 		t[#t+1] = string.format("%u/%u files  %u/%uK", 
 				#t, max_num_files(drive), kbyte(total_size), max_fs_size(drive))
 		SharedMemory[number] = t
@@ -280,7 +293,7 @@ local function list_files(pos, address, val1, val2)
 end
 
 local function remove_files(pos, address, val1, val2)
-	local mem = techage.get_mem(pos)
+	local mem = techage.get_nvm(pos)
 	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
 	local drive, fname = filespattern(s, mem.current_drive)
 	local uid = get_uid(pos, drive)
@@ -305,7 +318,7 @@ local function remove_files(pos, address, val1, val2)
 end
 
 local function copy_file(pos, address, val1, val2)
-	local mem = techage.get_mem(pos)
+	local mem = techage.get_nvm(pos)
 	
 	local s1 = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
 	local drive1, fname1 = filename(s1, mem.current_drive)
@@ -320,6 +333,8 @@ local function copy_file(pos, address, val1, val2)
 	if mounted1 and mounted2 then
 		if Files[uid1] and Files[uid1][fname1] and Files[uid2] then
 			Files[uid2][fname2] = Files[uid1][fname1]
+			local s = read_file_real(uid1, fname1)
+			write_file_real(uid2, fname2, s)
 			return 1
 		end
 	end
@@ -327,7 +342,7 @@ local function copy_file(pos, address, val1, val2)
 end
 
 local function move_file(pos, address, val1, val2)
-	local mem = techage.get_mem(pos)
+	local mem = techage.get_nvm(pos)
 	
 	local s1 = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
 	local drive1, fname1 = filename(s1, mem.current_drive)
@@ -343,6 +358,8 @@ local function move_file(pos, address, val1, val2)
 		if Files[uid1] and Files[uid1][fname1] and Files[uid2] then
 			Files[uid2][fname2] = Files[uid1][fname1]
 			Files[uid1][fname1] = nil
+			local s = read_file_real(uid1, fname1)
+			write_file_real(uid2, fname2, s)
 			remove_file_real(uid1, fname1)
 			return 1
 		end
@@ -351,7 +368,7 @@ local function move_file(pos, address, val1, val2)
 end
 
 local function change_dir(pos, address, val1, val2)
-	local mem = techage.get_mem(pos)
+	local mem = techage.get_nvm(pos)
 	local drive = string.char(val1)
 	if drive == "t" or drive == "h" then
 		mem.current_drive = drive
@@ -360,6 +377,21 @@ local function change_dir(pos, address, val1, val2)
 	return 0
 end
 
+local function read_word(pos, address, val1, val2)
+	if OpenFiles[val1] then
+		local uid = OpenFiles[val1].uid
+		local fname = OpenFiles[val1].fname
+		local idx = OpenFiles[val1].fpos
+		local s = string.sub(Files[uid][fname], idx, idx+1)
+		if s then
+			OpenFiles[val1].fpos = OpenFiles[val1].fpos + 2
+			local val = string.byte(s, 1) + string.byte(s, 2) * 256
+			return val
+		end
+		return 65535
+	end
+	return 65535
+end
 
 local help = [[+-----+----------------+-------------+------+
 |sys #| File System    | A    | B    | rtn  |
@@ -376,7 +408,7 @@ local help = [[+-----+----------------+-------------+------+
  $59   copy file        @from  @to    1=ok
  $5A   move file        @from  @to    1=ok
  $5B   change dir       drive         1=ok
- ]]
+ $5C   read word        fref          word]]
 
 pdp13.register_SystemHandler(0x50, fopen, help)
 pdp13.register_SystemHandler(0x51, fclose)
@@ -390,16 +422,19 @@ pdp13.register_SystemHandler(0x58, remove_files)
 pdp13.register_SystemHandler(0x59, copy_file)
 pdp13.register_SystemHandler(0x5A, move_file)
 pdp13.register_SystemHandler(0x5B, change_dir)
+pdp13.register_SystemHandler(0x5C, read_word)
 
 
 function pdp13.init_filesystem(pos, has_tape, has_hdd)
 	if has_tape then
 		local uid = get_uid(pos, "t")
 		Files[uid] = Files[uid] or {}
+		write_file_real(uid, "@", uid)
 	end
 	if has_hdd then
 		local uid = get_uid(pos, "h")
 		Files[uid] = Files[uid] or {}
+		write_file_real(uid, "@", uid)
 	end
 end
 
@@ -424,3 +459,9 @@ function pdp13.file_exists(pos, fname)
 	return pdp13.sys_call(pos, pdp13.FILE_SIZE, fname, 0, pdp13.PARAM_BUFF) > 0
 end
 
+-- Only for testing purposes!!!
+function pdp13.make_file_visible(pos, drive, fname)
+	local uid = get_uid(pos, drive)
+	local s = read_file_real(uid, fname)
+	Files[uid][fname] = #s
+end

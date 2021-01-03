@@ -161,8 +161,9 @@ end
 
 local function fs_mem_data(pos, mem, s)
 	local s1, s2 = unpack(string.split(s, " "))
-	mem.regABXY = mem.cmnd1
-	mem.cmnd1 = mem.cmnd2
+	mem.addr = mem.addr or 0
+	mem.regABXY = mem.cmnd1 or ""
+	mem.cmnd1 = mem.cmnd2 or ""
 	-- only address value?
 	if string.len(mem.cmnd3) == 5 then
 		mem.cmnd2 = ""
@@ -323,7 +324,7 @@ local function reset_periphery_settings(meta)
 end
 
 local function add_periphery_settings(pos, meta, cmnd, data)
-	print("add_periphery_settings", cmnd, dump(data))
+	--print("add_periphery_settings", cmnd, dump(data))
 	if cmnd == "reg_tele" then
 		meta:set_string("telewriter_number", data)
 		return M(pos):get_string("node_number")
@@ -377,7 +378,7 @@ end
 
 -- For Rack communication
 local function pdp13_on_receive(pos, src_pos, cmnd, data)
-	print("pdp13_on_receive", cmnd, data)
+	--print("pdp13_on_receive", cmnd, data)
 	if cmnd == "power" then
 		if data == "on" then
 			local mem = techage.get_nvm(pos)
@@ -392,7 +393,7 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 			pdp13.io_store(pos, number)
 			selftest(pos, mem, number)
 			local has_tape = meta:get_int("has_tape") == 1 and rom_size >= 2
-			local has_hdd = meta:get_int("has_hdd") == 1 and rom_size >= 3
+			local has_hdd = meta:get_int("has_hdd") == 1 and rom_size >= 2
 			pdp13.init_filesystem(pos, has_tape, has_hdd)
 			return true
 		elseif data == "off" then
@@ -422,7 +423,7 @@ end
 -- update CPU formspec
 local function on_update(pos, resp, cpu)
 	local mem = techage.get_nvm(pos)
-	print("on_update", mem.monitor, resp)
+	--print("on_update", mem.monitor, resp)
 	-- External controlled?
 	if mem.monitor then
 		programmer_cmnd(pos, "stopped", resp)

@@ -4,29 +4,44 @@
 ; B = separator
 ; A <- num strings
 ;===================================
+; "Hello" => 1
+; "Hello   world" => 2
+; " Hel lo world " => 3
+
     .code
 Strsplit:
     push  X                 ; ptr
     move  X, A
-    move  A, #1             ; cnt
-    
+    move  A, #0             ; cnt
+
+    ;=== loop over all strings ===
 loop1:
-    call  find_blank
-    bze   [X], endloop1
-    move  [X]+, #0
+    call  del_blanks
+    bze   [X], exit
     inc   A
+    call find_blank
+    bze   [X], exit
     jump  loop1
     
-endloop1:
+exit:
     pop   X
     ret
 
-
+    ;=== find next blank ===
 find_blank:
+    bze   [X], return
     skne  B, [X]
-    jump  endloop2
-    bnze  [X]+, find_blank
-    dec   X
-    
-endloop2:
+    jump  return
+    inc   X
+    jump  find_blank
+
+    ;=== set blanks to zero ===
+del_blanks:
+    bze   [X], return
+    skeq  B, [X]
+    jump  return
+    move  [X]+, #0
+    jump  del_blanks
+
+return:
     ret

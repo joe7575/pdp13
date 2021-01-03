@@ -22,6 +22,7 @@ dofile(MP.."/lib/storage.lua")
 dofile(MP.."/lib/io_lib.lua")
 dofile(MP.."/lib/command.lua")
 dofile(MP.."/lib/system.lua")
+dofile(MP.."/lib/history.lua")
 
 -- OS
 dofile(MP.."/os/defines.lua")

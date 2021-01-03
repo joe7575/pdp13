@@ -1,9 +1,9 @@
 ; J/OS Shell1 v1.0
-; Copy file to Tape Drive
+; First part of the cmnd shell
 ; File name: shell1.h16
 ;--------------------------------------
 ; Resides below address $100
-BUFF1 = $00C0     ; 64 chars
+; Stays in memory as file loader
 
     .org 0
     jump coldstart
@@ -13,14 +13,13 @@ BUFF1 = $00C0     ; 64 chars
 
     .org 4
     ;=== load .com file ===
-    move  A, #BUFF1
     sys   #$76              ; load .com file
     move  SP, #0
     jump  $100              ; start of program on $100
 
     .org $0C
     ;=== load .h16 file ===
-    move  A, #BUFF1
+    move  A, #CSBUF
     sys   #$75              ; load .h16 file
     move  SP, #0
     jump  $100              ; start of program on $100
@@ -59,9 +58,13 @@ error:
     sys   #$14              ; println text
     halt
 
-    .text
+    .ctext
 HELLO:
     "J/OS v0.1 Cold Boot\0"
+ERROR:
+    "Load error!\0"
+
+    .text
 NEWLINE:
     "\0"
 RAM:
@@ -70,5 +73,5 @@ ROM:
     " K ROM\0"
 SHELL2:
     "t/shell2.com\0"
-ERROR:
-    "Shell load error!\0"
+
+$include "cmdstr.asm"

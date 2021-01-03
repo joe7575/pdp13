@@ -45,7 +45,7 @@ function pdp13.gen_filepattern(s)
 end
 
 function pdp13.fmatch(s, pattern)
-	return string.find(s, pattern) ~= nil
+	return string.find(s, "^[%w_][%w_][%w_%.]+$") and string.find(s, pattern) ~= nil
 end
 
 

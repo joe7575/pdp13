@@ -2,7 +2,7 @@
 ; Strcpy(A, B, C)
 ; A = @dest address
 ; B = @source string
-; C = max len for dest
+; C = max len for dest incl. \0
 ; A <- num chars
 ;===================================
     .code

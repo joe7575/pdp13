@@ -74,7 +74,6 @@ local function copy_uid_to_tape(pos)
 			data.uid = pdp13.get_uid(cpu_pos, "t")
 			meta:from_table({ fields = data })
 			inv:set_stack("main", 1, stack)
-			M(cpu_pos):set_string("uid_t", "")
 			return true
 		end
 	end
@@ -100,7 +99,7 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 		M(pos):set_int("has_power", data == "on" and 1 or 0)
 		if data == "on" then
 			M(pos):set_string("formspec", formspec("powered"))
-			local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
+			mount_tapedrive(pos, false)
 		else
 			M(pos):set_string("formspec", formspec("no power"))
 			M(pos):set_int("running", 0)

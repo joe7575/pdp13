@@ -1,8 +1,9 @@
 ;===================================
 ; Strcat(A, B, C)
-; A = @dest string
-; B = @source string
-; C = max len for dest
+; Append string 2 to string 1
+; A = @string 1
+; B = @string 2
+; C = max len for dest incl. '\0'
 ; A <- num bytes
 ; requires: Strlen
 ;===================================
