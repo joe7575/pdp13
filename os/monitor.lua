@@ -12,6 +12,9 @@
 
 ]]--
 
+-- for lazy programmers
+local M = minetest.get_meta
+
 local Commands = {}  -- [cmnd] = func(pos, mem, cmd, rest): returns list of output strings
 
 local function hex_dump(tbl)
@@ -78,7 +81,7 @@ Commands["?"] = function(pos, mem, cmd, rest, is_terminal)
 				"d #....dump memory      en #...enter data",
 				"as #...assemble         di #...disassemble",
 				"br #...set brkpoint     br.....rst brkpoint",
-				"",
+				"so     step over        sm.....dump SM",
 				"ld name.....load a .com/.h16 file",
 				"ct # txt....copy text to mem",
 				"cm # # #....copy mem from to num",
@@ -214,6 +217,31 @@ Commands["d"] = function(pos, mem, cmd, rest, is_terminal)
 	end
 end
 
+local function make_table(text)
+	local t = {}
+	for s in text:gmatch("[^\n]+") do
+		s = "sm: "..s:sub(1, 44)
+		table.insert(t, s)
+	end
+	return t
+end
+
+-- dump Shared Memory
+Commands["sm"] = function(pos, mem, cmd, rest, is_terminal)
+	if techage.get_nvm(pos).monitor and is_terminal then
+		local number = M(pos):get_string("node_number")
+		number = tonumber(number)
+		local s = pdp13.SharedMemory[number]
+		if s and type(s) == "string" then
+			return make_table(s)
+		elseif s and type(s) == "table" then
+			return {"Table with size "..string.len(s)}
+		else
+			return {"No SM data"}
+		end
+	end
+end
+
 -- enter data
 Commands["en"] = function(pos, mem, cmd, rest)
 	if techage.get_nvm(pos).monitor then
@@ -257,7 +285,11 @@ Commands["di"] = function(pos, mem, cmd, rest)
 	if techage.get_nvm(pos).monitor then
 		if cmd == "di" then
 			mem.mstate = "di"
-			mem.maddr = pdp13.string_to_number(rest, true)
+			if rest ~= "" then
+				mem.maddr = pdp13.string_to_number(rest, true)
+			else
+				mem.maddr = vm16.get_pc(pos)
+			end
 		else
 			mem.maddr = mem.maddr or 0
 		end
@@ -296,6 +328,23 @@ Commands["br"] = function(pos, mem, cmd, rest, is_terminal)
 			mem.brkp_code = nil
 			return {"breakpoint reset"}
 		end
+	end
+	return {"error!"}
+end
+
+-- step over (a call opcode)
+Commands["so"] = function(pos, mem, cmd, rest, is_terminal)
+	if techage.get_nvm(pos).monitor and is_terminal then
+		local cpu, sts = vm16.get_cpu_reg(pos), false
+		local addr = string.format("%X", cpu.PC + 2)
+		Commands["br"](pos, mem, "br", addr, is_terminal)
+		Commands["st"](pos, mem, "st", "", is_terminal)
+		
+		cpu, sts = vm16.get_cpu_reg(pos)
+		cpu, sts = patch_breakpoint(cpu, mem)
+		local num, s = pdp13.disassemble(cpu, mem, sts)
+		mem.mstate = "n"
+		return {s}
 	end
 	return {"error!"}
 end

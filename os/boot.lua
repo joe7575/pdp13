@@ -30,7 +30,6 @@ local function read_first_file_line(pos, val1, val2, addr1)
 end
 
 local function load_h16file(pos, address, val1, val2)
-	print("load_h16file")
 	local res = 0
 	local fref = pdp13.sys_call(pos, pdp13.FOPEN, val1, 0)
 	if fref then
@@ -57,7 +56,7 @@ local function warm_start(pos, address, val1, val2)
 	regs.D = 0
 	regs.X = 0
 	regs.Y = 0
-	regs.PC = pdp13.WARTSTART_ADDR
+	regs.PC = pdp13.WARMSTART_ADDR
 	regs.SP = 0
 	vm16.set_cpu_reg(pos, regs)
 	return 1
@@ -65,7 +64,6 @@ end
 
 local function cold_start(pos, address, val1, val2)
 	print("cold_start")
-	
 	pdp13.sys_call(pos, 2, 0x0000, 0)  -- Flush Telewriter input
 	pdp13.sys_call(pos, pdp13.INPUT, 0x0000, 0)  -- Flush Terminal input
 	
@@ -95,27 +93,23 @@ local function cold_start(pos, address, val1, val2)
 end
 	
 local function get_rom_size(pos, address, val1, val2)
-	print("get_rom_size")
 	local rom_size = M(pos):get_int("rom_size")
 	
 	return pdp13.tROM_SIZE[rom_size]
 end
 
 local function get_ram_size(pos, address, val1, val2)
-	print("get_ram_size")
 	local ram_size = M(pos):get_int("ram_size")
 	
 	return ram_size
 end
 
 local function get_current_drive(pos, address, val1, val2)
-	print("get_current_drive")
 	local mem = techage.get_mem(pos)
 	return string.byte(mem.current_drive or 't', 1)
 end
 
 local function load_comfile(pos, address, val1, val2)
-	print("load_comfile")
 	local res = 0
 	local fref = pdp13.sys_call(pos, pdp13.FOPEN, val1, 0)
 	if fref then
@@ -134,7 +128,6 @@ local function load_comfile(pos, address, val1, val2)
 end
 
 local function h16_size(pos, address, val1, val2)
-	print("h16_size")
 	local s = read_first_file_line(pos, val1, val2)
 	
 	if s and s ~= "" then
@@ -151,14 +144,12 @@ local function h16_size(pos, address, val1, val2)
 end
 
 local function com_size(pos, address, val1, val2)
-	print("com_size")
 	return pdp13.sys_call(pos, pdp13.FILE_SIZE, val1, val2)
 end
 
 -- Fileame via A Reg
 -- Size via B Reg
 local function store_as_com(pos, address, val1, val2)
-	print("store_as_com")
 	local number = M(pos):get_string("node_number")
 	number = tonumber(number)
 	pdp13.SharedMemory[number] = vm16.read_mem_bin(pos, pdp13.START_ADDR, val2)
@@ -173,7 +164,6 @@ end
 
 -- Fileame via A Reg
 local function store_as_h16(pos, address, val1, val2)
-	print("store_as_h16")
 	local number = M(pos):get_string("node_number")
 	number = tonumber(number)
 	pdp13.SharedMemory[number] = vm16.read_h16(pos. pdp13.START_ADDR, val2)

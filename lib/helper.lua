@@ -96,3 +96,12 @@ function pdp13.kbyte(val)
 		return tostring(val)
 	end
 end
+
+
+function pdp13.text2table(text)
+	local t = {}
+	for s in text:gmatch("[^\n]+") do
+		table.insert(t, s)
+	end
+	return t
+end

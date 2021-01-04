@@ -185,14 +185,12 @@ local function add_lines_to_fifo(pos, mem, lines)
 	minetest.get_node_timer(pos):start(DELAY)
 end
 
-local function has_tape(pos)
+local function has_writable_tape(pos)
 	local inv = M(pos):get_inventory()
 	if inv:is_empty("main") then return nil end
 	local stack = inv:get_stack("main", 1)
-	local name = stack:get_name()
-	return minetest.get_item_group(name, "pdp13_ptape") == 1
+	return stack:get_name() == "pdp13:punch_tape" or stack:get_name() == "pdp13:tape"
 end
-
 
 local function get_tape_code(pos)
 	local inv = M(pos):get_inventory()
@@ -221,7 +219,7 @@ local function write_tape_code(pos, code)
 	if inv:is_empty("main") then return nil end
 	local stack = inv:get_stack("main", 1)
 	local name = stack:get_name()
-	if name == "pdp13:punch_tape" then
+	if name == "pdp13:punch_tape" or name == "pdp13:tape" then
 		local meta = stack:get_meta()
 		if meta then
 			local data = meta:to_table().fields or {}
@@ -261,7 +259,7 @@ local function gen_demotape(pos, demotape)
 end
 
 local function gen_rom_tape(pos, rom_tape)
-	if has_tape(pos) then
+	if has_writable_tape(pos) then
 		minetest.after(DELAY, function(pos, rom_tape)
 			local inv = M(pos):get_inventory()
 			inv:set_stack("main", 1, ItemStack(rom_tape))
@@ -364,13 +362,13 @@ local function on_receive_fields(pos, formname, fields, player)
 			M(pos):set_string("formspec", formspec2(mem))
 		end
 	elseif fields.reader and not mem.writer then
-		if has_tape(pos) then
+		if has_writable_tape(pos) then
 			mem.reader = true
 			read_code_from_cpu(pos)
 			M(pos):set_string("formspec", formspec2(mem))
 		end
 	elseif fields.punch and not mem.writer and not mem.reader then
-		if has_tape(pos) then
+		if has_writable_tape(pos) then
 			mem.reader = true
 			gen_demotape(pos, fields.demotape)
 		end
@@ -385,6 +383,14 @@ local function node_timer(pos, elapsed)
 		print_line(pos, mem)
 		return true
 	end
+end
+
+local function start_tape(pos, mem)
+	play_sound(pos)
+	minetest.after(1, function(mem)
+		mem.reader = false
+		mem.writer = false
+	end, mem)
 end
 
 local function can_dig(pos)
@@ -505,12 +511,16 @@ techage.register_node({"pdp13:telewriter", "pdp13:telewriter_prog"}, {
 		elseif topic == "read_tape" then  -- provide the tape string
 			local mem = techage.get_nvm(pos)
 			if not mem.reader then
+				mem.reader = true
+				start_tape(pos, mem)
 				return get_tape_code(pos)
 			end			
 		elseif topic == "write_tape" then  -- write string to tape
 			local mem = techage.get_nvm(pos)
 			if not mem.writer then
 				if write_tape_code(pos, payload) then
+					mem.writer = true
+					start_tape(pos, mem)
 					return 1
 				end
 			end			

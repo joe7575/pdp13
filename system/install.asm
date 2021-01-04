@@ -15,7 +15,7 @@
 
 ;=== h16com ===
 ; Convert .h16 file to .com format.
-h16com:
+H16com:
     move  A, #CSBUF
     move  B, #H16COM_FILE
     move  C, #64
@@ -26,6 +26,9 @@ h16com:
     move  C, #64
     call  Strcat
 
+    ;=== prepare parameter parsing ===
+    call CSprocess
+    
     ;=== load tool ===
     move  A, #CSBUF
     sys   #$75              ; load .h16 file
@@ -47,7 +50,6 @@ Coldstart:
     sys   #$14              ; println
 
     ;=== boot ====
-boot:
     move  A, #BOOT_MSG
     sys   #$14              ; println
     call  readenter
@@ -56,9 +58,10 @@ boot:
     bze   A, error
     move  A, #BOOT_FILE
     call  writefile
+    move  A, #10
+    call  sleep
 
     ;=== h16com ====
-h16com:
     move  A, #H16COM_MSG
     sys   #$14              ; println
     call  readenter
@@ -67,9 +70,10 @@ h16com:
     bze   A, error
     move  A, #H16COM_FILE
     call  writefile
+    move  A, #10
+    call  sleep
 
     ;=== shell1 ====
-shell1:
     move  A, #SHELL1_MSG
     sys   #$14              ; println
     call  readenter
@@ -78,9 +82,10 @@ shell1:
     bze   A, error
     move  A, #SHELL1_FILE
     call  writefile
+    move  A, #10
+    call  sleep
 
     ;=== shell2 ====
-shell2:
     move  A, #SHELL2_MSG
     sys   #$14              ; println
     call  readenter
@@ -89,14 +94,16 @@ shell2:
     bze   A, error
     move  A, #SHELL2_FILE
     call  writefile
-    jump  h16com            ; convert to .com
+    move  A, #10
+    call  sleep
+    jump  H16com            ; convert to .com
 
 
 ;===================================
 ; Function: readenter
 ; Loop until enter is pressed.
 ; Param A: -
-; Used   : A
+; Used   : X
 ; Result : -
 ;===================================
 readenter:    
@@ -107,8 +114,8 @@ readenter:
     bze   A, readenter
     inc   A                 ; no terminal?
     bze   A, readenter
-    move  A, #CSBUF
-    skeq   A, #26
+    move  A, CSBUF
+    skeq  A, #26
     jump  readenter
 
     ret
@@ -117,7 +124,7 @@ readenter:
 ; Function: writefile
 ; Convert write SM to file.
 ; Param A: @fname
-; Used   : B
+; Used   : B,C
 ; Result : -
 ;===================================
 writefile:
@@ -127,15 +134,26 @@ writefile:
     move  B, #20            ; error #20
     bze   A, error
     ; write file
-    move  B, A
+    move  C, A
     sys   #$54              ; write file (A <- 1)
     move  B, #21            ; error #21
     bze   A, error
     ; close file
-    move  A, B              ; A = fref
+    move  A, C              ; A = fref
     sys   #$51  
     ret
     
+;===================================
+; Function: sleep
+; sleep for the given amount of 100ms ticks
+; Param A: ticks
+; Used   : -
+; Result : -
+;===================================
+sleep:
+    nop
+    dbnz  A, sleep
+    ret
 
 ;===================================
 ; Function: error

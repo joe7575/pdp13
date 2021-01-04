@@ -60,7 +60,7 @@ pdp13.STORE_COM    = 0x7A
 
 pdp13.TAPE_NUM     = 1
 pdp13.HDD_NUM      = 2
-pdp13.WARTSTART_ADDR = 2
+pdp13.WARMSTART_ADDR = 2
 
 pdp13.WR  = 119  -- 'w'
 pdp13.RD  = 114  -- 'r'

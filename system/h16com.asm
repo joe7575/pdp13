@@ -25,8 +25,7 @@ main:
     dec   A 
     bze   A, error1         ; no param: error
     call  CSnext            ; CSPOS <- @fname
-    brk #0;###############################################################
-    
+
     ;=== determine string len ===
     move  A, CSPOS
     call  Strlen            ; A <- size
@@ -55,7 +54,7 @@ main:
     move  A, CSPOS
     move  B, #DCOM
     move  C, #64
-    call  Strcat            ;add .com
+    call  Strcat            ; add .com
 
     ;=== store .com ===
     move  A, CSPOS

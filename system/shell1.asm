@@ -63,14 +63,14 @@ HELLO:
     "J/OS v0.1 Cold Boot\0"
 ERROR:
     "Load error!\0"
-
-    .text
-NEWLINE:
-    "\0"
 RAM:
     " K RAM  \0"
 ROM:
     " K ROM\0"
+
+    .text
+NEWLINE:
+    "\0"
 SHELL2:
     "t/shell2.com\0"
 

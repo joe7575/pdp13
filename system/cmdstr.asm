@@ -20,7 +20,11 @@ BUFF2  = $0F00      ; behind shell2
 CSprocess:
     ;=== Process command ===
     move  A, #CSBUF
-    move  CSPOS, A          ; init 
+    move  CSPOS, A          ; init
+    call  Strlen
+    move  CSLEN, A          ; command length
+    
+    move  A, #CSBUF
     move  B, #32
     call  Strsplit          ; A = num str
     move  CSNUM, A
@@ -51,3 +55,4 @@ CSnext:
 
 $include "strsplit.asm"
 $include "nextstr.asm"
+$include "strlen.asm"
