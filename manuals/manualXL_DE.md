@@ -1,6 +1,6 @@
 # PDP-13 Minicomputer (TA3)
 
-PDP-13 ist ein 16-Bit-Minicomputer, inspiriert von DEC, IBM und anderen Computer aus den 60er und 70er Jahren. "Mini" deshalb, weil die Rechenanlagen bis dahin nicht nur Schränke, sondern ganze Räume oder Hallen gefüllt hatten. Erst mit der Erfindung der ersten integrierten Schaltkreisen ließen sich die Rechner auf Kleiderschrankgröße reduzieren. Damit passt dieser Computer ideal in das Ölzeitalter. Dadurch dass dieser Computer nur in Maschinencode programmiert werden kann (wie die Originale damals auch), setzt dies einiges an Computerwissen voraus, was nicht in dieser Anleitung vermittelt werden kann.
+PDP-13 ist ein 16-Bit-Minicomputer, inspiriert von DEC, IBM und anderen Computer aus den 60er und 70er Jahren. "Mini" deshalb, weil die Rechenanlagen bis dahin nicht nur Schränke, sondern ganze Räume oder Hallen gefüllt hatten. Erst mit der Erfindung der ersten integrierten Schaltkreisen ließen sich die Rechner auf Kleiderschrankgröße reduzieren. Damit passt dieser Computer ideal in das Techage Ölzeitalter. Dadurch dass dieser Computer zu Beginn nur in Maschinencode programmiert werden kann (wie die Originale damals auch), setzt dies einiges an Computerwissen voraus, was nicht in dieser Anleitung vermittelt werden kann.
 
 Voraussetzungen sind damit:
 
@@ -237,28 +237,30 @@ Das Monitor Programm unterstützt folgende Kommandos, die auch mit Eingabe von `
 | Kommando   | Bedeutung                                                    |
 | ---------- | ------------------------------------------------------------ |
 | `?`        | Hilfetext ausgeben                                           |
-| `st [#]`   | Starten der CPU (entspricht der "start" Taste an der CPU). Die Startadresse kann optional eingegeben werden |
-| `sp`       | Stoppen der CPU (entspricht der "stop" Taste an der CPU)     |
-| `rt`       | Rücksetzen des Programm Counters (entspricht der "reset" Taste an der CPU) |
-| `n`        | Nächsten Befehl ausführen (entspricht der "step" Taste an der CPU). Wird  danach "enter" gedrückt, wird der nächste Befehl ausgeführt. |
-| `r`        | Inhalt der CPU Register ausgeben                             |
-| `ad #`     | Setzen des Programm Counters (entspricht der "address" Taste an der CPU). `#` ist dabei die Adresse |
-| `d #`      | Speicher ausgeben (entspricht der "dump" Taste an der CPU). `#` ist dabei die Startadresse. Wird danach "enter" gedrückt, wird der nächste Speicherblock ausgegeben |
-| `en #`     | Daten eingeben. `#` ist dabei die Adresse. Danach können Werte (Zahlen) eingegeben und mit "enter" übernommen werden |
-| `as #`     | Starten des Assemblers. Für `#` muss die Startadresse angegeben werden Danach können Assemblerbefehle eingegeben werden. Aus diesem Mode kommt man durch Eingabe eines anderen Kommandos |
-| `di #`     | Ausgabe eines Speicherbereichs der CPU in Assemblerschreibweise (disassemble). Es werden immer 8 Befehle ausgegeben. Wird danach "enter" gedrückt, werden die nächsten 8 Befehle ausgegeben |
-| `ct # txt` | Kopieren von Text in den Speicher, also mit `ct 100 Hallo Welt,` wird der Text an die Adresse 100  kopiert |
-| `cm # # #` | Speicher kopieren. Die drei `#` bedeuten: Quell-Adresse, Ziel-Adresse, Anzahl Worte |
-| `ex`       | Monitor Mode vom Terminal aus beenden                        |
+| `st [#]`   | (start) Starten der CPU (entspricht der "start" Taste an der CPU). Die Startadresse kann optional eingegeben werden |
+| `sp`       | (stop) Stoppen der CPU (entspricht der "stop" Taste an der CPU) |
+| `rt`       | (reset) Rücksetzen des Programm Counters (entspricht der "reset" Taste an der CPU) |
+| `n`        | (next) Nächsten Befehl ausführen (entspricht der "step" Taste an der CPU). Wird  danach "enter" gedrückt, wird der nächste Befehl ausgeführt. |
+| `r`        | (registers) Inhalt der CPU Register ausgeben                 |
+| `ad #`     | (address) Setzen des Programm Counters (entspricht der "address" Taste an der CPU). `#` ist dabei die Adresse |
+| `d #`      | (dump) Speicher ausgeben (entspricht der "dump" Taste an der CPU). `#` ist dabei die Startadresse. Wird danach "enter" gedrückt, wird der nächste Speicherblock ausgegeben |
+| `en #`     | (enter) Daten eingeben. `#` ist dabei die Adresse. Danach können Werte (Zahlen) eingegeben und mit "enter" übernommen werden |
+| `as #`     | (assembler) Starten des Assemblers. Für `#` muss die Startadresse angegeben werden Danach können Assemblerbefehle eingegeben werden. Aus diesem Mode kommt man durch Eingabe eines anderen Kommandos |
+| `di #`     | (disassemble) Ausgabe eines Speicherbereichs der CPU in Assemblerschreibweise. Es werden immer 8 Befehle ausgegeben. Wird danach "enter" gedrückt, werden die nächsten 8 Befehle ausgegeben |
+| `ct # txt` | (copy text) Kopieren von Text in den Speicher, also mit `ct 100 Hallo Welt,` wird der Text an die Adresse 100  kopiert |
+| `cm # # #` | (copy memory) Speicher kopieren. Die drei `#` bedeuten: Quell-Adresse, Ziel-Adresse, Anzahl Worte |
+| `ex`       | (exit) Monitor Mode vom Terminal aus beenden                 |
 
 Auf dem "Terminal Programmer" läuft die Version 2 des Monitors. Diese bietet folgende zusätzliche Kommandos:
 
 | Kommando   | Bedeutung                                                    |
 | ---------- | ------------------------------------------------------------ |
-| `ld name`  | Laden einer `.com` oder `.h16` Datei in den Speicher         |
-| `sy # # #` | Aufrufen eines `sys` Kommandos mit Nummer, Wert für Reg A, Wert für Reg B |
-| `br #`     | Setzen eines Breakpoints an der angegebenen Adresse. Es kann nur ein Breakpoint gesetzt werden |
-| `br`       | Löschen des Breakpoints                                      |
+| `ld name`  | (load) Laden einer `.com` oder `.h16` Datei in den Speicher  |
+| `sy # # #` | (sys) Aufrufen eines `sys` Kommandos mit Nummer, Wert für Reg A, Wert für Reg B |
+| `br #`     | (breakpoint) Setzen eines Breakpoints an der angegebenen Adresse. Es kann nur ein Breakpoint gesetzt werden |
+| `br`       | (breakpoint) Löschen des Breakpoints                         |
+| `so`       | (step over) Springe über die nächste `call` Anweisung. Steht der Debugger aktuell an einer `call` Anweisung, würde man mit einem `n(ext)` dem call folgen und die Funktion im Einzelschritt durchlaufen. Mit `so` wird die Funktion komplett ausgeführt und der Debugger bleibt in der nächsten Zeile wieder stehen. Technisch sind dies zwei Kommandos: `br PC+2` und `st`. Das bedeutet, der zuvor gesetzte Breakpoint ist damit gelöscht (siehe auch Breakpoints). |
+| sm         | (dump Shared Memory) Das Shared Memory sichtbar machen (siehe auch Shared Memory). |
 
 **Alle Zahlenangaben sind in hexadezimaler Form  einzugeben!**
 
@@ -290,6 +292,7 @@ Zur Verfügung stehen ab sofort bspw. folgende zusätzliche sys-Kommandos (Das Z
 | $59   | copy file                          | @source file name          | @dest file name | 1=ok, 0=error   |
 | $5A   | move file                          | @source file name          | @dest file name | 1=ok, 0=error   |
 | $5B   | change drive                       | drive character `t` or `h` |                 | 1=ok, 0=error   |
+| $5B   | read word                          | file reference             |                 | word            |
 
 Zusätzlich beinhaltet der BIOS ROM Chip eine Selbsttest Routine, die beim Einschalten des Rechners ausgeführt und das Ergebnis an der CPU ausgegeben wird (dies dient zur Überprüfung, ob man alles korrekt angeschlossen hat):
 
@@ -314,7 +317,7 @@ Das Terminal besitzt quasi 3 Betriebsarten:
 
 - Editor-Mode (tbd)
 - Terminal-Mode 1 mit zeilenweise Ausgabe von Texten
-- Terminal-Mode 2 mit Bildschirmspeicher (48 Zeichen x 16 Zeilen) Hierbei wird immer der komplette Bildschirmspeicher an das Terminal übertragen 
+- Terminal-Mode 2 mit Bildschirmspeicher (48 Zeichen x 16 Zeilen) Hierbei wird immer der komplette Bildschirmspeicher an das Terminal übertragen (WIP).
 
 Zu allen drei Betriebsarten gibt es Demoprogramme, die die Funktionsweise zeigen.
 
@@ -337,6 +340,8 @@ Für das Terminal stehen folgende sys-Kommandos zur Verfügung:
 | $19   | flush stdout (Ausgabe erzwingen) |                |                | 1=ok, 0=error |
 | $1A   | prompt ausgeben                  |                |                | 1=ok, 0=error |
 | $1B   | beep ausgeben                    |                |                | 1=ok, 0=error |
+
+#### Shared Memory
 
 Um die Speicherverwaltung für eine in ASM geschriebene Anwendung bei bestimmten Terminal-Ein-/Ausgaben zu vereinfachen, gibt es in Lua einen zusätzlichen Datenpuffer, hier als "shared memory" bezeichnet. Diesen Puffer verwenden sys-Kommandos, um untereinander Daten auszutauschen. Die CPU hat keinen Zugriff auf diesen Speicher.  Dies wird bspw. dazu genutzt, die Daten  des "list files" Kommando direkt auf dem Terminal auszugeben:
 
@@ -396,10 +401,10 @@ Hier das berühmte "Hello World" Programm für J/OS-13 in `vm16asm` Assembler:
     .org $100
     .code
     
-    move  A, B          ; com v1 tag $2001
-    move    A, #TEXT
-    sys     #$14        ; println
-    sys     #$71        ; warm start
+    move  A, B        ; com v1 tag $2001
+    move  A, #TEXT
+    sys   #$14        ; println
+    sys   #$71        ; warm start
 
     .text
 TEXT:
@@ -427,10 +432,10 @@ Für beide Typen von Programmen gilt:  Die Anwendung muss bei Adresse $0100 star
 `shell2.com` verfügt über die folgenden Kommandos:
 
 - `ed <name>` um den Editor zu starten. Das angegebene File wird dabei in den Editor geladen. Existiert das File noch nicht, wird es angelegt.
-- `<name>.h16` bzw. `<name>.com` um ein Programm von einem der Laufwerke auszuführen.
+- `<name>.h16` bzw. `<name>.com` um ein Programm von einem der Laufwerke auszuführen. Bei `.com` Programmen kann die `.com` Endung auch weggelassen werden.
 - `mv <old> <new>` um ein File umzubenennen oder zu verschieben
 - `rm <name>` um File(s) zu löschen
-- `ls [<wc>]` um die Files auszugeben. Mit `ls` werden alle Files des aktuellen Laufwerks ausgegeben. mit `ls h/*` werden bspw. alle Files des Hard Drives ausgegeben.  Mit `ls test.*` nur Files mit dem Namen "test" und mit  `ls *.com` nur `.com` Files.
+- `ls [<wc>]` um die Filenamen als Liste auszugeben. Mit `ls` werden alle Files des aktuellen Laufwerks ausgegeben. mit `ls h/*` werden bspw. alle Files des Hard Drives ausgegeben.  Mit `ls test.*` nur Files mit dem Namen "test" und mit  `ls *.com` nur `.com` Files.
 - `cp <from> <to>` Um eine Datei zu kopieren. 
 - `cd t/h` Um das Laufwerk zu wechseln. Also bspw.  `ls h` für das Hard Drive.
 
@@ -453,6 +458,29 @@ Jedes eingegebene Kommando mit seinen Parametern wird von der shell in den Berei
 
 
 
+### Installation
+
+Um das Betriebssystem installieren zu können, werden die OS Tapes benötigt. Diese gibt es aber nur, wenn Aufgabe 3 gelöst wurde. Außerdem muss:
+
+- der Rechner eingeschaltet sein
+- der Rechner über "Monitor" und "BIOS" ROM Chips verfügen
+-  ein Tape Drive "angeschlossen" und gestartet sein
+- eine Tape Chest platziert sein (max. 3 Blöcke Abstand von der CPU)
+- ein Terminal Operator "angeschlossen" sein
+
+Um das Betriebsystem zu installieren, musst du wie folgt vorgehen:
+
+- Den Rechner stoppen, sofern er läuft
+- Das Tape "System File 1: OS install" im Telewriter einlegen und in den Rechner kopieren
+- Den Rechner an der CPU mit Reset/Start starten
+- Den Anweisungen am Terminal folgen
+- Nach Abschluss der Installation den Rechner an der CPU stoppen und das Betriebssystem über das Kommando "boot" starten
+- Am Terminal "ls" eingeben um zu prüfen, ob die installieren Files vorhanden sind
+
+Das wars! Du hast J/OS erfolgreich installiert!
+
+
+
 ## Programmieraufgaben
 
 Um einen ROM Chip herstellen zu können, wird das Programm für den Chip auf Tape benötigt. Diese Aufgabe in echt zu lösen wäre zwar eine Herausforderung, aber für 99,9 % der Spieler kaum zu lösen.
@@ -465,7 +493,7 @@ Deshalb soll die Programmierung hier simuliert werden, in dem man eine (einfache
 
 Zuvor aber etwas Theorie, was für die folgenden Aufgaben benötigt wird.
 
-PDP-13 ist eine 16-Bit Maschine und kann daher nur Werte von 0 bis 65535 darstellen. Bei einer Darstellung mit Vorzeichen sind es nur Werte von -32768  bis +32767. Hier eine Übersicht der Wertebereiche:
+PDP-13 ist eine 16-Bit Maschine und kann daher nur Werte von 0 bis 65535 in CPU Registern speichern. Alle Berechnungen sind auch auf diesen Wertebereich beschränkt. Bei einer Darstellung mit Vorzeichen sind es nur Werte von -32768  bis +32767. Hier eine Übersicht der Wertebereiche:
 
 | 16-Bit wert (hex) | Ganzzahl ohne Vorzeichen | Ganzzahl mit Vorzeichen |
 | ----------------- | ------------------------ | ----------------------- |
@@ -554,16 +582,16 @@ halt            ; wichtig, sonst läuft das Programm unkontrolliert weiter
 
 
 
-### Aufgabe 3: PDP-13 OS Install Tape
+### Aufgabe 3: PDP-13 OS Install Tapes
 
-Um das OS Install Tape zu erhalten, musst du folgende Aufgabe lösen:
+Um die OS Install Tapes zu erhalten, musst du folgende Aufgabe lösen:
 
 *Wandle die übergebenen Wert (0..65535) um in einen String mit der dezimalen Darstellung der Zahl (das was bspw. auch die Lua-Funktion `tostring()` macht).*
 
-Das Programm muss zuerst den Wert über `sys #$304` anfordern und am Ende das Ergebnis wieder über `sys #$305` ausgeben. Wenn die Umwandlung passt und im "Telewriter Operator" befindet sich ein leeres Tape, dann wird bei passendem Ergebnis das Tape geschrieben. In jedem Falle erfolgt eine Chat-Ausgabe mit den Strings. Hier der Rahmen des Programms:
+Das Programm muss zuerst den Wert über `sys #$304` anfordern und am Ende das Ergebnis wieder über `sys #$305` ausgeben. Wenn die Umwandlung passt und eine leere "Tape Chest" vorhanden ist, dann werden bei passendem Ergebnis die Tapes in die Kiste gelegt. In jedem Falle erfolgt eine Chat-Ausgabe mit den Strings. Hier der Rahmen des Programms:
 
 ```assembly
-sys   #$304     ; den Werte anfordern, dieser stehen dann in A
+sys   #$304     ; den Werte anfordern, dieser steht dann in A
 ....
 move  A, #$nnn  ; A mit der String-Adresse laden
 sys   #$305     ; Ergebnis übergeben

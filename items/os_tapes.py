@@ -96,7 +96,7 @@ SystemFiles = [
 
 lOut = []
 for file_type, file_name, item_name, item_desc in SystemFiles:
-    lOut.append(generate_file("../system/", file_type, file_name, item_name, item_desc, "false"))
+    lOut.append(generate_file("../system/", file_type, file_name, item_name, item_desc, "true"))
 open("os_tapes.lua", "w").write(Header + "\n\n".join(lOut))
 
 ################################################################################
@@ -109,8 +109,8 @@ DemoFiles = [
     ("h16", "inp_number",  "pdp13:tape_inp_num",   "Demo: Telewriter Input Number"),
     ("h16", "inp_string",  "pdp13:tape_inp_str",   "Demo: Telewriter Input String"),
     ("h16", "terminal",    "pdp13:tape_terminal",  "Demo: Terminal"),
-    ("h16", "udp_send",    "pdp13:tape_udp_send",  "Demo: Comm Send"),
-    ("h16", "udp_recv",    "pdp13:tape_udp_recv",  "Demo: Comm Receive"),
+    #("h16", "udp_send",    "pdp13:tape_udp_send",  "Demo: Comm Send"),
+    #("h16", "udp_recv",    "pdp13:tape_udp_recv",  "Demo: Comm Receive"),
 ]
 
 lOut = []

@@ -21,6 +21,7 @@ pdp13.AllNodes = {
 	"pdp13:mem_rack",
 	"pdp13:tape_drive",
 	"pdp13:hard_disk",
+	"pdp13:tape_chest",
 	"pdp13:telewriter", "pdp13:telewriter_prog",
 	"pdp13:terminal", "pdp13:terminal_prog",
 }

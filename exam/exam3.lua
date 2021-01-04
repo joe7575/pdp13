@@ -23,6 +23,14 @@ local function exam_provide_number(pos, address, val1, val2)
 	return val
 end
 
+local function add_tape(pos, owner, tape)
+	local names = {"pdp13:tape_chest"}
+	local resp = pdp13.send(pos, nil, names, "add_tape", tape)
+	if not resp then
+		minetest.chat_send_player(owner, "Not enough space in the chest!")
+	end
+end
+
 local function exam_check_result(pos, address, val1, val2)
 	local mem = techage.get_nvm(pos)
 	local meta = M(pos)
@@ -33,7 +41,11 @@ local function exam_check_result(pos, address, val1, val2)
         "[PDP13] Exam3 result: '"..mem.exam3_res.. "' expected, '"..s.. "' received")
 	if mem.exam3_res == s then
 		minetest.chat_send_player(owner, "***### !!! Congratulations !!! ###***")
-		pdp13.operator_cmnd(pos, "punch", "pdp13:tape_install")
+		add_tape(pos, owner, "pdp13:tape_install")
+		add_tape(pos, owner, "pdp13:tape_boot")
+		add_tape(pos, owner, "pdp13:tape_h16com")
+		add_tape(pos, owner, "pdp13:tape_shell1")
+		add_tape(pos, owner, "pdp13:tape_shell2")
 		return 1
 	end
 	return 0

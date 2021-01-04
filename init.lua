@@ -50,6 +50,7 @@ dofile(MP.."/io/lamp.lua")
 dofile(MP.."/io/7segment.lua")
 dofile(MP.."/io/telewriter.lua")
 dofile(MP.."/io/terminal.lua")
+dofile(MP.."/io/chest.lua")
 
 -- Items
 dofile(MP.."/items/punch_tape.lua")

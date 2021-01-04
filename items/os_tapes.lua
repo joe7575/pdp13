@@ -88,13 +88,13 @@ pdp13.tape.register_tape("pdp13:tape_install", "System File 1: OS install",
 :802F800214B553002FD745002F8210C20026C40
 :5030000240234026CA06C801800
 :00000FF
-]], false)
+]], true)
 
 
 pdp13.tape.register_tape("pdp13:tape_boot", "System File 2: boot",
 [[
 ]], [[t/shell1.h16
-]], false)
+]], true)
 
 
 pdp13.tape.register_tape("pdp13:tape_h16com", "System File 3: h16com",
@@ -138,7 +138,7 @@ pdp13.tape.register_tape("pdp13:tape_h16com", "System File 3: h16com",
 :8FF80007450FF7D210C20026C40240234026CA0
 :2FF88006C801800
 :00000FF
-]], false)
+]], true)
 
 
 pdp13.tape.register_tape("pdp13:tape_shell1", "System File 4: shell1",
@@ -171,7 +171,7 @@ pdp13.tape.register_tape("pdp13:tape_shell1", "System File 4: shell1",
 :800B0002080200C555000B72800120000B26C80
 :100B8001800
 :00000FF
-]], false)
+]], true)
 
 
 pdp13.tape.register_tape("pdp13:tape_shell2", "System File 5: shell2",
@@ -254,4 +254,4 @@ pdp13.tape.register_tape("pdp13:tape_shell2", "System File 5: shell2",
 :8034000033C210C20026C40240234026CA06C80
 :10348001800
 :00000FF
-]], false)
+]], true)
