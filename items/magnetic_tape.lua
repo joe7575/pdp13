@@ -41,7 +41,7 @@ end
 
 
 minetest.register_on_player_receive_fields(function(player, formname, fields)
-	if formname ~= "pdp13:magnetic_tape" then return end
+	if formname ~= "pdp13:magnetic_tape" then return false end
 	local inv = player:get_inventory()
 	local stack = player:get_wielded_item()
 
@@ -60,6 +60,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		stack:get_meta():from_table({ fields = data })
 	end
 	player:set_wielded_item(stack)
+	return true
 end)
 
 minetest.register_craftitem("pdp13:magnetic_tape", {
