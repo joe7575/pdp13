@@ -11,5 +11,6 @@ h16com.h16 <file>  - convert .h16 to .com
 ed  <file>         - edit txt/asm file
 ls  [<wc>]         - list dir in two rows
 mv  <old> <new>    - move/rename file
-ptcopy  <file>     - copy file from punch tape
+ptrd  <file>       - copy file from punch tape
+ptwr  <file>       - copy file to punch tape
 rm  <files>        - remove file(s)
