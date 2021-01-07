@@ -464,10 +464,10 @@ Für beide Typen von Programmen gilt:  Die Anwendung muss bei Adresse $0100 star
 
 `shell2.com` verfügt über die folgenden Kommandos:
 
-- `ed <name>` um den Editor zu starten. Das angegebene File wird dabei in den Editor geladen. Existiert das File noch nicht, wird es angelegt.
+- `ed <file>` um den Editor zu starten. Das angegebene File wird dabei in den Editor geladen. Existiert das File noch nicht, wird es angelegt.
 - `<name>.h16` bzw. `<name>.com` um ein Programm von einem der Laufwerke auszuführen. Bei `.com` Programmen kann die `.com` Endung auch weggelassen werden.
 - `mv <old> <new>` um ein File umzubenennen oder zu verschieben
-- `rm <name>` um File(s) zu löschen
+- `rm <file>` um File(s) zu löschen
 - `ls [<wc>]` um die Filenamen als Liste auszugeben. Mit `ls` werden alle Files des aktuellen Laufwerks ausgegeben. mit `ls h/*` werden bspw. alle Files des Hard Drives ausgegeben.  Mit `ls test.*` nur Files mit dem Namen "test" und mit  `ls *.com` nur `.com` Files.
 - `cp <from> <to>` Um eine Datei zu kopieren. 
 - `cd t/h` Um das Laufwerk zu wechseln. Also bspw.  `ls h` für das Hard Drive.
@@ -478,8 +478,10 @@ Weitere Kommandos sind als Programm (`.com` File) implementiert und werden daher
 
 ### Kommandos vom Laufwerk
 
-- `asm <name>`  um ein File zu h16 zu übersetzen (ohne ext)
-- `cat <name>` um den Inhalt einer Datei auszugeben
+- `asm <file>`  um ein File zu h16 zu übersetzen (ohne ext)
+- `cat <file>` um den Inhalt einer Datei auszugeben
+- `ptrd <file>` um ein ASCII File vom Punch Tape in das Filesystem zu kopieren
+- `ptwr <file>` um ein ASCII File vom Filesystem auf ein Punch Tape zu kopieren
 
 Weitere Programme folgen...
 
