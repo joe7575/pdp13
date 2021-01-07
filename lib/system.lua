@@ -19,6 +19,8 @@ local S2P = minetest.string_to_pos
 
 local SystemHandlers = {}  -- on startup generated: t[address] = func
 
+pdp13.SysDesc = ""
+
 function pdp13.register_SystemHandler(address, func, desc)
 	SystemHandlers[address] = func
 	if desc then
@@ -31,7 +33,15 @@ function pdp13.register_SystemHandler(address, func, desc)
 end
 
 local function on_system(pos, address, val1, val2)
-	return SystemHandlers[address] and SystemHandlers[address](pos, address, val1, val2) or 0xFFFF
+	if SystemHandlers[address] then
+		local sts, resp = pcall(SystemHandlers[address], pos, address, val1, val2)
+		if sts then
+			return resp
+		else
+			minetest.log("warning", "[PDP13] pcall exception: "..resp)
+		end
+	end
+	return 0xFFFF
 end
 
 -- Overwrite one of the five event handlers
@@ -42,18 +52,15 @@ vm16.register_callbacks(nil, nil, on_system)
 function pdp13.sys_call(pos, address, val1, val2, addr1, addr2)
 	if val1 then
 		if type(val1) == "string" and addr1 then
-			vm16.write_ascii(pos, addr1, val1.."\000")
+			vm16.write_ascii(pos, addr1, val1)
 			val1 = addr1
 		end
 	end
 	if val2 then
 		if type(val2) == "string" and addr2 then
-			vm16.write_ascii(pos, addr2, val2.."\000")
+			vm16.write_ascii(pos, addr2, val2)
 			val2 = addr2
 		end
 	end
-	if SystemHandlers[address] then
-		return SystemHandlers[address](pos, address, val1, val2)
-	end
-	return 65535
+	return on_system(pos, address, val1, val2)
 end

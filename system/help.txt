@@ -1,0 +1,15 @@
+                 J/OS Help
+-----------------------------------------------
+[] = optional   <wc> = wirdcard like *.*
+----------------------------------------------
+asm  <file>        - assembler (opt. -cls)
+cat  <file>        - output file
+cd  t/h            - change dir
+cp  <from> <to>    - copy file
+h16com.h16 <file>  - convert .h16 to .com
+                     <file> w/o extension
+ed  <file>         - edit txt/asm file
+ls  [<wc>]         - list dir in two rows
+mv  <old> <new>    - move/rename file
+ptcopy  <file>     - copy file from punch tape
+rm  <files>        - remove file(s)

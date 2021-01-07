@@ -1,5 +1,5 @@
 ;===================================
-; Strsplit(A)
+; strsplit(A)
 ; A = @string
 ; B = separator
 ; A <- num strings
@@ -9,7 +9,7 @@
 ; " Hel lo world " => 3
 
     .code
-Strsplit:
+start:
     push  X                 ; ptr
     move  X, A
     move  A, #0             ; cnt

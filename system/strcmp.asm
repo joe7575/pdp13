@@ -1,11 +1,12 @@
 ;===================================
-; Strcmp(A, B)
+; strcmp(A, B)
 ; A = @string 1
 ; B = @string 2
 ; A <- 0=equal
 ;===================================
+
     .code
-Strcmp:
+start:
     push  X                 ; ptr1
     push  Y                 ; ptr2
     move  X, A

@@ -1,12 +1,12 @@
 ;===================================
-; Strrstr(A, B)
+; strrstr(A, B)
 ; Function returns 1 if string 1 ends with String 2.
 ; A = @string 1
 ; B = @string 2
 ; A <- 1=match
 ;===================================
     .code
-Strrstr:
+start:
     push  X
     push  Y
     move  X, A

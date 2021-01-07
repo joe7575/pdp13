@@ -1,5 +1,5 @@
 ;===================================
-; Nextstr(A)
+; nextstr(A)
 ; Search the first char of the next string behing string @A
 ; A = @string
 ; B = max len
@@ -7,7 +7,7 @@
 ;===================================
     .code
 
-Nextstr:
+start:
     push  X
     move  X, A
     add   X, B

@@ -18,7 +18,7 @@ local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = minetest.string_to_pos
 
 local NUM_CHARS = 48
-local NUM_LINES = 17
+local NUM_LINES = 16+1
 local STR_LEN = 64
 local COLOR = "\027(c@#FFCC00)"  -- amber
 local NEWLINE = "\n"..COLOR
@@ -107,39 +107,39 @@ local function formspec1(pos, mem)
 	
 	mem.command = mem.command or ""
 	mem.redraw = (mem.redraw or 0) + 1
-	M(pos):set_string("formspec", "size[10,8.5]" ..
+	M(pos):set_string("formspec", "size[11,8.5]" ..
 		default.gui_bg..
 		default.gui_bg_img..
-		"background[-0.1,-0.2;10.2,9.15;pdp13_form_term1.png]"..
+		"background[-0.1,-0.2;11.2,9.15;pdp13_form_term1.png]"..
 		"label[-2,-2;"..mem.redraw.."]"..
 		"container[0.2,0.2]"..
-		"background[0,0;9.6,6.7;pdp13_form_term2.png]"..
+		"background[0,0;10.6,6.7;pdp13_form_term2.png]"..
 		"style_type[label,field;font=mono]"..
 		"label[0,0;"..s.."]"..
 		"container_end[]"..
-		"button[0.1,7.0;1.8,1;esc;ESC]"..
-		"button[2.2,7.0;1.7,1;f1;F1]"..
-		"button[4.2,7.0;1.7,1;f2;F2]"..
-		"button[6.2,7.0;1.7,1;f3;F3]"..
-		"button[8.2,7.0;1.7,1;f4;F4]"..
+		"button[0.6,7.0;1.8,1;esc;ESC]"..
+		"button[2.7,7.0;1.7,1;f1;F1]"..
+		"button[4.7,7.0;1.7,1;f2;F2]"..
+		"button[6.7,7.0;1.7,1;f3;F3]"..
+		"button[8.7,7.0;1.7,1;f4;F4]"..
 		"style_type[field;textcolor=#000000]"..
-		"field[0.4,8.2;7.8,0.8;command;;"..minetest.formspec_escape(mem.command).."]"..
-		"button[8.2,7.8;1.7,1;enter;Enter]"..
+		"field[0.9,8.2;7.8,0.8;command;;"..minetest.formspec_escape(mem.command).."]"..
+		"button[8.7,7.8;1.7,1;enter;Enter]"..
 		"field_close_on_enter[command;false]")
 end
 
 local function formspec2(code)
 	code = minetest.formspec_escape(code or "")
-	return "size[10,8.5]" ..
+	return "size[11,8.5]" ..
 		default.gui_bg..
 		default.gui_bg_img..
 		default.gui_slots..
-		"background[-0.1,-0.2;10.2,9.15;pdp13_form_term1.png]"..
+		"background[-0.1,-0.2;11.2,9.15;pdp13_form_term1.png]"..
 		"style_type[textarea;font=mono;textcolor=#FFCC00;border=false]"..
-		"textarea[0.4,0.1;9.8,9.3;edit;;"..code.."]"..
-		"background[0.2,0.2;9.6,7.7;pdp13_form_term2.png]"..
-		"button[5.4,7.9;1.8,1;exit;Exit]"..
-		"button[7.3,7.9;1.8,1;save;Save]"
+		"textarea[0.4,0.1;10.8,9.1;edit;;"..code.."]"..
+		"background[0.2,0.2;10.6,7.7;pdp13_form_term2.png]"..
+		"button[6.4,7.9;1.8,1;exit;Exit]"..
+		"button[8.3,7.9;1.8,1;save;Save]"
 end
 
 local function clear_screen(pos, mem)
@@ -226,23 +226,39 @@ end
 local function edit_save(pos, mem, text)
 	local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 	if mem.fname == "" then mem.fname = "new.txt" end
-	local number = M(cpu_pos):get_string("node_number")
-	number = tonumber(number)
-	pdp13.SharedMemory[number] = text
 	
-	local fp = pdp13.sys_call(cpu_pos, pdp13.FOPEN, mem.fname, WR, 0x00C0)
-	if fp then
-		pdp13.sys_call(cpu_pos, pdp13.WRITE_FILE, fp, 0)
-		pdp13.sys_call(cpu_pos, pdp13.FCLOSE, fp, 0)
+	local fref = pdp13.sys_call(cpu_pos, pdp13.FOPEN, mem.fname, WR, 0x00C0)
+	if fref then
+		pdp13.write_file(pos, fref, text)
+		pdp13.sys_call(cpu_pos, pdp13.FCLOSE, fref, 0)
 		print_string_ln(pos, mem, "File stored.")
 		pdp13.sys_call(cpu_pos, pdp13.PROMPT, 0, 0)
 	else
 		print_string_ln(pos, mem, "Store error!")
 		pdp13.sys_call(cpu_pos, pdp13.PROMPT, 0, 0)
 	end
-	pdp13.SharedMemory[number] = nil
 end
 
+local function function_keys(fields)
+	if fields.esc then
+		fields.command = "\027"
+		fields.enter = true
+	elseif fields.f1 then
+		fields.command = "\028"
+		fields.enter = true
+	elseif fields.f2 then
+		fields.command = "\029"
+		fields.enter = true
+	elseif fields.f3 then
+		fields.command = "\030"
+		fields.enter = true
+	elseif fields.f4 then
+		fields.command = "\031"
+		fields.enter = true
+	end
+	return fields
+end
+		
 local function on_receive_fields(pos, formname, fields, player)
 	--print(dump(fields))
 	if minetest.is_protected(pos, player:get_player_name()) then
@@ -257,6 +273,7 @@ local function on_receive_fields(pos, formname, fields, player)
 	
 	local mem = techage.get_nvm(pos)
 	mem.ttl = minetest.get_gametime() + SCREENSAVER_TIME
+	fields = function_keys(fields)
 		
 	if fields.key_enter_field or fields.enter then
 		if M(pos):get_int("monitor") == 1 then
@@ -284,20 +301,12 @@ local function on_receive_fields(pos, formname, fields, player)
 		edit_save(pos, mem, fields.edit)
 		pdp13.cpu_freeze(pos, false)
 	elseif fields.exit then
-		print_string_ln(pos, mem, "abort")
+		print_string_ln(pos, mem, "canceled")
+		local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
+		pdp13.sys_call(cpu_pos, pdp13.PROMPT, 0, 0)
 		mem.edit = false
 		mem.input = fields.command or ""
 		pdp13.cpu_freeze(pos, false)
-	elseif fields.esc then
-		mem.input = "\027"
-	elseif fields.f1 then
-		mem.input = "\028"
-	elseif fields.f2 then
-		mem.input = "\029"
-	elseif fields.f3 then
-		mem.input = "\030"
-	elseif fields.f4 then
-		mem.input = "\031"
 	elseif fields.quit then
 		mem.ttl = 0
 	end

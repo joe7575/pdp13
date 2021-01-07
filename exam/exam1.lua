@@ -23,6 +23,7 @@ local function exam_provide_numbers(pos, address, val1, val2)
 
 	local mem = techage.get_nvm(pos)
 	mem.exam1_res = (n1lw + (n1hw * 0x10000)) + (n2lw + (n2hw * 0x10000))
+	mem.exam1_time = minetest.get_gametime()
 
 	vm16.poke(pos, val1 + 0, n1lw)
 	vm16.poke(pos, val1 + 1, n1hw)
@@ -39,7 +40,15 @@ local function exam_check_result(pos, address, val1, val2)
 	local reslw = vm16.peek(pos, val1 + 0)
 	local reshw = vm16.peek(pos, val1 + 1)
 	local res = reslw + (reshw * 0x10000)
+	
+	mem.exam1_res = mem.exam1_res or 0
+	mem.exam1_time = mem.exam1_time or 0
 
+	if mem.exam1_time + 1 < minetest.get_gametime() then
+		minetest.chat_send_player(owner, "[PDP13] Timeout reached!")
+		return 0
+	end
+		
 	minetest.chat_send_player(owner, 
 	"[PDP13] Exam1 result: "..mem.exam1_res.. " expected, "..res.. " received")
 	if mem.exam1_res == res then

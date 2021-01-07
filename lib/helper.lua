@@ -100,8 +100,20 @@ end
 
 function pdp13.text2table(text)
 	local t = {}
+	text = text or ""
 	for s in text:gmatch("[^\n]+") do
 		table.insert(t, s)
 	end
 	return t
 end
+
+function pdp13.table_2rows(tbl, gap)
+	local t = {}
+	local size = math.floor((#tbl + 1) / 2) * 2
+	for i = 1, size, 2 do
+		table.insert(t, (tbl[i] or "")..gap..(tbl[i+1] or ""))
+	end
+	return t
+end
+
+

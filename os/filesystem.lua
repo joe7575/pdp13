@@ -25,7 +25,6 @@ local max_fs_size = pdp13.max_fs_size
 local kbyte = pdp13.kbyte
 
 local Files = {}  -- t[uid][fname] = filesize
-local SharedMemory = {} -- used for large text chunks or tables of strings
 local OpenFiles = {}  -- {fpos, uid, drive, fname}
 local OpenFilesRef = 1
 
@@ -46,8 +45,10 @@ local function scan_file_system()
 	
 	for _,name in ipairs(minetest.get_dir_list(WP, false)) do
 		local uid, fname = unpack(string.split(name, "_", false, 1))
-		Files[uid] = Files[uid] or {}
-		Files[uid][fname] = fsize(name)
+		if uid and fname then
+			Files[uid] = Files[uid] or {}
+			Files[uid][fname] = fsize(name)
+		end
 	end
 end
 
@@ -170,18 +171,15 @@ local function fclose(pos, address, val1)
 	return 0
 end
 
--- Read into shared memory to be used by other sys commands
+-- Read into pipe to be used by other sys commands
 local function read_file(pos, address, val1, val2)
-	local number = M(pos):get_string("node_number")
-	number = tonumber(number)
-	
 	if OpenFiles[val1] then
 		local uid = OpenFiles[val1].uid
 		local fname = OpenFiles[val1].fname
-		SharedMemory[number] = Files[uid][fname]
+		local items = pdp13.text2table(Files[uid][fname])
+		pdp13.push_pipe(pos, items)
 		return 1
 	end
-	SharedMemory[number] = nil
 	return 0
 end
 
@@ -197,7 +195,7 @@ local function read_line(pos, address, val1, val2)
 			if s then
 				local size = string.len(s)
 				OpenFiles[val1].fpos = OpenFiles[val1].fpos + size + 1
-				vm16.write_ascii(pos, val2, s.."\000")
+				vm16.write_ascii(pos, val2, s)
 				return size
 			end
 		end
@@ -208,15 +206,14 @@ end
 
 -- Write from shared memory, prepared by other sys commands
 local function write_file(pos, address, val1, val2)
-	local number = M(pos):get_string("node_number")
-	number = tonumber(number)
-	
 	if OpenFiles[val1] then
 		local uid = OpenFiles[val1].uid
 		local fname = OpenFiles[val1].fname
-		Files[uid][fname] = SharedMemory[number]
-		SharedMemory[number] = nil
-		return 1
+		local items = pdp13.pop_pipe(pos, pdp13.MAX_PIPE_LEN)
+		if uid and fname and items then
+			Files[uid][fname] = table.concat(items, "\n")
+			return 1
+		end
 	end
 	return 0
 end
@@ -267,8 +264,6 @@ local function list_files(pos, address, val1, val2)
 	end
 	
 	local mem = techage.get_nvm(pos)
-	local number = M(pos):get_string("node_number")
-	number = tonumber(number)
 	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
 	local drive, fname = filespattern(s, mem.current_drive)
 	local uid = get_uid(pos, drive)
@@ -287,12 +282,12 @@ local function list_files(pos, address, val1, val2)
 			end
 		end
 		table.sort(t, function(a,b) return order(a, b) end)
-		t[#t+1] = string.format("%u/%u files  %u/%uK", 
+		t = pdp13.table_2rows(t, "     ")
+		t[#t+1] = string.format("%u/%u files  %s/%uK", 
 				#t, max_num_files(drive), kbyte(total_size), max_fs_size(drive))
-		SharedMemory[number] = t
+		pdp13.push_pipe(pos, t)
 		return #t - 1
 	end
-	SharedMemory[number] = nil
 	return 0
 end
 
@@ -307,7 +302,7 @@ local function remove_files(pos, address, val1, val2)
 		local t = {} -- For post-deletion
 		local pattern = gen_filepattern(fname)
 		
-		for name,str in pairs(Files[uid]) do
+		for name,_ in pairs(Files[uid]) do
 			if fmatch(name, pattern) then
 				t[#t+1] = name
 			end
@@ -402,12 +397,12 @@ local help = [[+-----+----------------+-------------+------+
 +-----+----------------+-------------+------+
  $50   file open        @fname  mode  fref
  $51   file close       fref    -     1=ok
- $52   read file (>SM)  fref    -     1=ok
+ $52   read file (>p)   fref    -     1=ok
  $53   read line        fref   @dest  1=ok
- $54   write file (<SM) fref    -     1=ok
+ $54   write file (<p)  fref    -     1=ok
  $55   write line       fref   @text  1=ok    
  $56   file size        @fname  -     size
- $57   list files (>SM) @fname  -     num f
+ $57   list files (>p)  @fname  -     num f
  $58   remove files     @fname  -     num f
  $59   copy file        @from  @to    1=ok
  $5A   move file        @from  @to    1=ok
@@ -433,12 +428,12 @@ function pdp13.init_filesystem(pos, has_tape, has_hdd)
 	if has_tape then
 		local uid = get_uid(pos, "t")
 		Files[uid] = Files[uid] or {}
-		write_file_real(uid, "@", uid)
+		write_file_real(uid, "pipe.sys", uid)
 	end
 	if has_hdd then
 		local uid = get_uid(pos, "h")
 		Files[uid] = Files[uid] or {}
-		write_file_real(uid, "@", uid)
+		write_file_real(uid, "pipe.sys", uid)
 	end
 end
 
@@ -453,19 +448,67 @@ pcall(scan_file_system)
 -------------------------------------------------------------------------------
 -- Export
 -------------------------------------------------------------------------------
-pdp13.SharedMemory = SharedMemory
 -- pdp13.get_uid(pos, drive)
 pdp13.get_uid = get_uid
 -- pdp13.set_uid(pos, drive, uid)
 pdp13.set_uid = set_uid
 
-function pdp13.file_exists(pos, fname)
-	return pdp13.sys_call(pos, pdp13.FILE_SIZE, fname, 0, pdp13.PARAM_BUFF) > 0
+
+function pdp13.real_file_path(pos, file_name)
+	local mem = techage.get_nvm(pos)
+	local drive, _ = filename(file_name, mem.current_drive)
+	if drive then
+		local uid = get_uid(pos, drive)
+		return WP..uid.."_"
+	end
 end
 
--- Only for testing purposes!!!
-function pdp13.make_file_visible(pos, drive, fname)
-	local uid = get_uid(pos, drive)
-	local s = read_file_real(uid, fname)
-	Files[uid][fname] = #s
+function pdp13.real_file_filename(pos, file_name)
+	local mem = techage.get_nvm(pos)
+	local drive, fname = filename(file_name, mem.current_drive)
+	if drive then
+		local uid = get_uid(pos, drive)
+		return WP..uid.."_"..fname
+	end
+end
+
+function pdp13.file_exists(pos, file_name)
+	file_name = pdp13.real_file_filename(pos, file_name)
+	local f = io.open(file_name, "r")
+	if f ~= nil then 
+		io.close(f) 
+		return true 
+	else 
+		return false 
+	end
+end
+
+function pdp13.read_file(pos, fref)
+	if OpenFiles[fref] then
+		local uid = OpenFiles[fref].uid
+		local fname = OpenFiles[fref].fname
+		return Files[uid][fname]
+	end
+end
+
+function pdp13.write_file(pos, fref, s)
+	if OpenFiles[fref] then
+		local uid = OpenFiles[fref].uid
+		local fname = OpenFiles[fref].fname
+		Files[uid][fname] = s
+		return true
+	end
+end
+
+function pdp13.make_file_visible(pos, file_name)
+	local mem = techage.get_nvm(pos)
+	local drive, fname = filename(file_name, mem.current_drive)
+	if drive then
+		local uid = get_uid(pos, drive)
+		local s = read_file_real(uid, fname)
+		if s then
+			Files[uid] = Files[uid] or {}
+			Files[uid][fname] = string.len(s)
+		end
+	end
 end

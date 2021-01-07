@@ -14,6 +14,7 @@
 
 pdp13.MAX_FNAME_LEN    = 12
 pdp13.MAX_LINE_LEN     = 64
+pdp13.MAX_PIPE_LEN     = 1000
 
 -- size translation
 pdp13.tROM_SIZE = {[0] = 0, [1] = 8, [2] = 16, [3] = 24, [4] = 32}
@@ -27,7 +28,7 @@ pdp13.PRINT_STRLN  = 0x14
 pdp13.UPD_SCREEN   = 0x15
 pdp13.START_ED     = 0x16
 pdp13.INPUT        = 0x17
-pdp13.PRINT_SM     = 0x18
+pdp13.PRINT_PIPE   = 0x18
 pdp13.FLUSH        = 0x19
 pdp13.PROMPT       = 0x1A
 
@@ -57,6 +58,10 @@ pdp13.H16_SIZE     = 0x77
 pdp13.COM_SIZE     = 0x78
 pdp13.STORE_H16    = 0x79
 pdp13.STORE_COM    = 0x7A
+
+pdp13.PUSH_PIPE    = 0x80
+pdp13.POP_PIPE     = 0x81
+pdp13.PIPE_SIZE    = 0x82
 
 pdp13.TAPE_NUM     = 1
 pdp13.HDD_NUM      = 2

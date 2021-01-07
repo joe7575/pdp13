@@ -16,14 +16,14 @@ A computer simulation that will take you back to the beginnings of programming:
 - Terminals
 - Hard disks
 - Tape drives
-- Can boot from the drives
 - Monitor program with assembler / disassembler (in-game)
 - RAM and ROM chips to expand the computer
 - Communication possibilities between computers
 - Output possibilities like color lamp and 7-segment node
 - Compatible to TechAge to be able control machines
-- Installable assembler application `vm16asm` (on your PC)
+- Installable macro assembler application `vm16asm` (on your PC) and in-game
 - J/OS operating system to be able to boot from drive
+- commands like: ls, cat, rm, rm, cd, cp, ...
 - Many ASM stdlib and example files
 
 On client side Minetest 5.4 is recommended (font=mono)
@@ -41,7 +41,7 @@ The main manual is currently only available in German, English will follow soon.
 
 ### License
 
-Copyright (C) 2019-2020 Joe (iauit@gmx.de)  
+Copyright (C) 2019-2021 Joe (iauit@gmx.de)
 Code: Licensed under the GNU AGPL version 3 or later. See LICENSE.txt  
 Textures: CC BY-SA 3.0  
 Sound: 271163__alienxxx__beep-008.wav from freesound.org,  
@@ -51,7 +51,7 @@ licensed under the Attribution License.
 
 ### Dependencies
 
-Required: default,tubelib2,techage,vm16
+Required: default,tubelib2,techage,vm16,vm16asm
 
 
 ### History
@@ -63,4 +63,5 @@ Required: default,tubelib2,techage,vm16
 - 2020-12-20  v0.05  * Add OS ROM chip and exam2
 - 2020-12-28  v0.06  * Add terminal, tape drive, hard dirk, and more
 - 2021-01-03  v0.07  * Add terminal history buffer, update manual, fix bugs
+- 2021-01-07  v0.08  * Add macro asm, OS install process, and many more
 

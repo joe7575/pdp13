@@ -1,166 +1,73 @@
-; J/OS Install Tape v1.0
-; Write tape to RAM and start
-; program at address 0
+; J/OS Installation Tape v1.0
+
+; Write tape to RAM and start program at address 0
 ;--------------------------------------
 
-    .org 0
-    jump Coldstart
-
-    .org 2
-    ;=== Ready ====
-    move  A, #READY
+; %1 = terminal message (TEXT)
+; %2 = error num (1)
+$macro read_tape 2
+    move  A, #%1
     sys   #$14              ; println
+    call  input
 
-    halt
+    move  A, #$500          ; any address
+    sys   #5                ; read tape name (A <- 1)
+    move  B, #%2            ; error number
+    bze   A, error
 
-;=== h16com ===
-; Convert .h16 file to .com format.
-H16com:
-    move  A, #CSBUF
-    move  B, #H16COM_FILE
-    move  C, #64
-    call  Strcpy
+    move  B, #15
+    call  sleep
+$endmacro
 
-    move  A, #CSBUF
-    move  B, #SHELL2_FILE2
-    move  C, #64
-    call  Strcat
 
-    ;=== prepare parameter parsing ===
-    call CSprocess
-    
-    ;=== load tool ===
-    move  A, #CSBUF
-    sys   #$75              ; load .h16 file
-    move  SP, #0
-    jump  $100              ; start of program on $100
-
-    .text
-READY:
-    "Ready.\0"
-
-;=====================================================
-    .code
-    .org $100
-Coldstart:
+start:
     sys   #$10              ; clear screen
     move  A, #HELLO
     sys   #$14              ; println
     move  A, #NEWLINE
     sys   #$14              ; println
 
-    ;=== boot ====
-    move  A, #BOOT_MSG
-    sys   #$14              ; println
-    call  readenter
-    sys   #3                ; read tape (A <- 1)
-    move  B, #1             ; error #1
-    bze   A, error
-    move  A, #BOOT_FILE
-    call  writefile
-    move  A, #10
-    call  sleep
+    $read_tape TAPE1 1
 
-    ;=== h16com ====
-    move  A, #H16COM_MSG
-    sys   #$14              ; println
-    call  readenter
-    sys   #3                ; read tape (A <- 1)
-    move  B, #2             ; error #2
-    bze   A, error
-    move  A, #H16COM_FILE
-    call  writefile
-    move  A, #10
-    call  sleep
+    $read_tape TAPE2 2
 
-    ;=== shell1 ====
-    move  A, #SHELL1_MSG
-    sys   #$14              ; println
-    call  readenter
-    sys   #3                ; read tape (A <- 1)
-    move  B, #3             ; error #3
-    bze   A, error
-    move  A, #SHELL1_FILE
-    call  writefile
-    move  A, #10
-    call  sleep
+    $read_tape TAPE3 3
 
-    ;=== shell2 ====
-    move  A, #SHELL2_MSG
+    move  A, #READY
     sys   #$14              ; println
-    call  readenter
-    sys   #3                ; read tape (A <- 1)
-    move  B, #4             ; error #4
-    bze   A, error
-    move  A, #SHELL2_FILE
-    call  writefile
-    move  A, #10
-    call  sleep
-    jump  H16com            ; convert to .com
 
+    halt
 
 ;===================================
-; Function: readenter
-; Loop until enter is pressed.
-; Param A: -
-; Used   : X
-; Result : -
+; Function: input
+; Wait on input from terminal
 ;===================================
-readenter:    
-    move  A, #CSBUF
-    sys   #$17              ; input string (a <- len)
-    move  CSLEN, A          ; command length
+input:
+    move  A, #$500
+    sys   #$17      ; terminal input (A<-size)
     nop
-    bze   A, readenter
-    inc   A                 ; no terminal?
-    bze   A, readenter
-    move  A, CSBUF
-    skeq  A, #26
-    jump  readenter
-
+    bze   A, input
     ret
 
-;===================================
-; Function: writefile
-; Convert write SM to file.
-; Param A: @fname
-; Used   : B,C
-; Result : -
-;===================================
-writefile:
-    ; open cmd file
-    move  B, #119           ; write
-    sys   #$50              ; fopen (A <- fref)
-    move  B, #20            ; error #20
-    bze   A, error
-    ; write file
-    move  C, A
-    sys   #$54              ; write file (A <- 1)
-    move  B, #21            ; error #21
-    bze   A, error
-    ; close file
-    move  A, C              ; A = fref
-    sys   #$51  
-    ret
-    
 ;===================================
 ; Function: sleep
-; sleep for the given amount of 100ms ticks
-; Param A: ticks
-; Used   : -
-; Result : -
+; sleep for the given amount of 600ms ticks
+; and simulate tape reading
+; Param B: ticks
 ;===================================
 sleep:
+    sys   #$6
     nop
-    dbnz  A, sleep
+    nop
+    nop
+    nop
+    dbnz  B, sleep
     ret
 
 ;===================================
 ; Function: error
 ; Output error and halt.
 ; Param B: error number
-; Used   : -
-; Result : -
 ;===================================
 error:
     move  A, #ERROR
@@ -180,31 +87,18 @@ HELLO:
 NEWLINE:
     "\0"
 
-BOOT_MSG:
-    "Insert System Tape 'boot' and press enter\0"
-BOOT_FILE:
-    "boot\0"
+TAPE1:
+    "Insert System Tape 1 and press enter\0"
+TAPE2:   
+    "Insert System Tape 2 and press enter\0"
+TAPE3:   
+    "Insert System Tape 3 and press enter\0"
 
-H16COM_MSG:   
-    "Insert System Tape 'h16com' and press enter\0"
-H16COM_FILE:
-    "h16com.h16\0"
-
-SHELL1_MSG:   
-    "Insert System Tape 'shell1' and press enter\0"
-SHELL1_FILE:
-    "shell1.h16\0"
-
-SHELL2_MSG:   
-    "Insert System Tape 'shell2' and press enter\0"
-SHELL2_FILE:
-    "shell2.h16\0"
-SHELL2_FILE2:
-    " shell2\0"     ; file as param w/o ext
+READY:
+    "Ready. Boot your OS.\0"
     
-
 ERROR:
-    "Error \0"
+    "Tape error \0"
     
 $include "../system/cmdstr.asm"
 $include "strcpy.asm"

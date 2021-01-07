@@ -121,7 +121,6 @@ vm16.register_callbacks(on_input, on_output)
 -- API functions
 --
 function pdp13.io_restore(pos, number)
-	print("io_restore")
 	number = tonumber(number)
 	OutputNumbers[number] = get_tbl(pos, "OutputNumbers")
 	InputAdresses[number] = get_tbl(pos, "InputAdresses")
@@ -129,7 +128,6 @@ function pdp13.io_restore(pos, number)
 end
 
 function pdp13.io_store(pos, number)
-	print("io_store")
 	number = tonumber(number)
 	set_tbl(pos, "OutputNumbers", OutputNumbers[number])
 	set_tbl(pos, "InputAdresses", InputAdresses[number])

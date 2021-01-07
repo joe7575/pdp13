@@ -12,6 +12,11 @@
 
 ]]--
 
+local IE = minetest.request_insecure_environment()
+if not IE then
+	error("Please add pdp13 to the list of 'secure.trusted_mods' in minetest.conf!")
+end
+
 local MP = minetest.get_modpath("pdp13")
 
 pdp13 = {}
@@ -27,6 +32,7 @@ dofile(MP.."/lib/history.lua")
 -- OS
 dofile(MP.."/os/defines.lua")
 dofile(MP.."/os/asm_help.lua")
+dofile(MP.."/os/pipes.lua")
 dofile(MP.."/os/opcodes.lua")
 dofile(MP.."/os/assemble.lua")
 dofile(MP.."/os/disassemble.lua")
@@ -36,6 +42,9 @@ dofile(MP.."/os/terminal.lua")
 dofile(MP.."/os/comm.lua")
 dofile(MP.."/os/filesystem.lua")
 dofile(MP.."/os/boot.lua")
+dofile(MP.."/os/install.lua")
+assert(loadfile(MP.."/os/tools.lua"))(IE)
+IE = nil
 
 -- PDP-13
 dofile(MP.."/pdp13/cpu.lua")
@@ -59,6 +68,7 @@ dofile(MP.."/items/tapes.lua")
 dofile(MP.."/items/demo_tapes.lua")
 dofile(MP.."/items/os_tapes.lua")
 dofile(MP.."/items/exam_tapes.lua")
+dofile(MP.."/items/install_tapes.lua")
 dofile(MP.."/items/chips.lua")
 
 -- Exams

@@ -1,5 +1,5 @@
 ;===================================
-; Strcat(A, B, C)
+; strcat(A, B, C)
 ; Append string 2 to string 1
 ; A = @string 1
 ; B = @string 2
@@ -10,7 +10,7 @@
 $include "strlen.asm"
 
     .code
-Strcat:
+start:
     push  X
     push  Y
     push  C
@@ -19,7 +19,7 @@ Strcat:
 
     ;=== calc end of dest
     move  X, A
-    call  Strlen
+    call  strlen
     add   X, A
     sub   C, A
 

@@ -1,14 +1,12 @@
-;##############################################################################
-; ASCII to unsigned integer conversion routine v1.0
-;##############################################################################
+;===================================
+; Function: hatoi(X)
+; Convert hex ASCII (zero terminated string) to integer 
+; Input: source pointer in X
+; Output: value in A
+; Destroys: B
+;===================================
 
-        ;#######################################################
-        ; Function: HATOI
-        ; Convert hex ASCII (zero terminated string) to integer 
-        ; Input: source pointer in X
-        ; Output: value in A
-        ; Destroys: B
-HATOI:  move    A, #0
+start:  move    A, #0
 loop:   move    B, [X]+
         bze     B, +exit            ; end of string
 

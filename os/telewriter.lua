@@ -33,10 +33,10 @@ end
 local function telewriter_input_string(pos, address, val1, val2)
 	local number = M(pos):get_string("telewriter_number")
 	local s = send_cmnd(pos, number, "input")
-	if s and vm16.write_ascii(pos, val1, s.."\000") then
-		return #s
+	if s and vm16.write_ascii(pos, val1, s) then
+		return string.len(s)
 	end
-	return 65535
+	return 0
 end
 
 local function telewriter_input_number(pos, address, val1, val2)
@@ -49,45 +49,55 @@ local function telewriter_read_tape(pos, address, val1, val2)
 	local number = M(pos):get_string("telewriter_number")
 	local s = send_cmnd(pos, number, "read_tape")
 	if s then
-		number = M(pos):get_string("node_number")
-		number = tonumber(number)
-		pdp13.SharedMemory[number] = s
+		local items = pdp13.text2table(s)
+		return pdp13.push_pipe(pos, items)
 	end
-	return s and 1 or 0
+	return 0
 end
 
 local function telewriter_write_tape(pos, address, val1, val2)
-	local number = M(pos):get_string("node_number")
-	number = tonumber(number)
-	local s = pdp13.SharedMemory[number]
-	pdp13.SharedMemory[number] = nil
+	local items = pdp13.pop_pipe(pos, pdp13.MAX_PIPE_LEN)
+	local s = table.concat(items, "\n")
 	if s and vm16.is_ascii(s) then
-		number = M(pos):get_string("telewriter_number")
+		local number = M(pos):get_string("telewriter_number")
 		return send_cmnd(pos, number, "write_tape", s)
 	end
 	return 0
 end
 
+local function telewriter_read_tape_name(pos, address, val1, val2)
+	local number = M(pos):get_string("telewriter_number")
+	local s = send_cmnd(pos, number, "tape_name")
+	if s ~= "" and vm16.write_ascii(pos, val1, s) then
+		pdp13.tape_detected(pos, s)
+		return string.len(s)
+	end
+	return 0
+end
 
-pdp13.SysDesc = [[
+local function telewriter_tape_sound(pos, address, val1, val2)
+	local number = M(pos):get_string("telewriter_number")
+	return send_cmnd(pos, number, "tape_sound") or 0
+end
+
+
+local help = [[
 +-----+----------------+-------------+------+
 |sys #| Telewriter     | A    | B    | rtn  |
 +-----+----------------+-------------+------+
  $0    string output    @text   -     1=ok 
  $1    string input     @dest   -     size
  $2    number input      -      -     number
- $3    read tape (>SM)   -      -     1=ok
- $4    write tape (<SM)  -      -     1=ok]]
+ $3    read tape (>p)    -      -     lines
+ $4    write tape (<p)   -      -     1=ok
+ $5    read tape name   @dest   -     1=ok
+ $6    tape sound        -      -     1=ok]]
 
-pdp13.SysDesc = pdp13.SysDesc:gsub(",", "\\,")
-pdp13.SysDesc = pdp13.SysDesc:gsub("\n", ",")
-pdp13.SysDesc = pdp13.SysDesc:gsub("#", "\\#")
-pdp13.SysDesc = pdp13.SysDesc:gsub(";", "\\;")
-
-
-pdp13.register_SystemHandler(0, telewriter_print_string_ln)
+pdp13.register_SystemHandler(0, telewriter_print_string_ln, help)
 pdp13.register_SystemHandler(1, telewriter_input_string)
 pdp13.register_SystemHandler(2, telewriter_input_number)
 pdp13.register_SystemHandler(3, telewriter_read_tape)
 pdp13.register_SystemHandler(4, telewriter_write_tape)
+pdp13.register_SystemHandler(5, telewriter_read_tape_name)
+pdp13.register_SystemHandler(6, telewriter_tape_sound)
 

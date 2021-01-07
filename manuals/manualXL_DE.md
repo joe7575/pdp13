@@ -256,11 +256,11 @@ Auf dem "Terminal Programmer" läuft die Version 2 des Monitors. Diese bietet fo
 | Kommando   | Bedeutung                                                    |
 | ---------- | ------------------------------------------------------------ |
 | `ld name`  | (load) Laden einer `.com` oder `.h16` Datei in den Speicher  |
-| `sy # # #` | (sys) Aufrufen eines `sys` Kommandos mit Nummer, Wert für Reg A, Wert für Reg B |
+| `sy # # #` | (sys) Aufrufen eines `sys` Kommandos mit Nummer, Wert für Reg A, Wert für Reg B (nur sys-Nummern kleiner $300) |
 | `br #`     | (breakpoint) Setzen eines Breakpoints an der angegebenen Adresse. Es kann nur ein Breakpoint gesetzt werden |
 | `br`       | (breakpoint) Löschen des Breakpoints                         |
 | `so`       | (step over) Springe über die nächste `call` Anweisung. Steht der Debugger aktuell an einer `call` Anweisung, würde man mit einem `n(ext)` dem call folgen und die Funktion im Einzelschritt durchlaufen. Mit `so` wird die Funktion komplett ausgeführt und der Debugger bleibt in der nächsten Zeile wieder stehen. Technisch sind dies zwei Kommandos: `br PC+2` und `st`. Das bedeutet, der zuvor gesetzte Breakpoint ist damit gelöscht (siehe auch Breakpoints). |
-| sm         | (dump Shared Memory) Das Shared Memory sichtbar machen (siehe auch Shared Memory). |
+| ps         | (pipe size) Den Füllstand der Pipe in (Anzahl von Textzeilen) ausgeben |
 
 **Alle Zahlenangaben sind in hexadezimaler Form  einzugeben!**
 
@@ -278,21 +278,21 @@ Hat man den Rechner mit dem "BIOS ROM" Chip erweitert, hat der Rechner Zugriff a
 
 Zur Verfügung stehen ab sofort bspw. folgende zusätzliche sys-Kommandos (Das Zeichen `@` bedeutet "Speicheradresse von"):
 
-| sys # | Bedeutung                          | Parameter in A             | Parameter in B  | Ergebnis in A   |
-| ----- | ---------------------------------- | -------------------------- | --------------- | --------------- |
-| $50   | file open                          | @file name                 | mode `w` / `r`  | file reference  |
-| $51   | file close                         | file reference             | -               | 1=ok, 0=error   |
-| $52   | read file (ins Shared Memory)      | file reference             | -               | 1=ok, 0=error   |
-| $53   | read line                          | file reference             | @destination    | 1=ok, 0=error   |
-| $54   | write file (aus dem Shared Memory) | file reference             | -               | 1=ok, 0=error   |
-| $55   | write line                         | file reference             | @text           | 1=ok, 0=error   |
-| $56   | file size                          | @file name                 | -               | size in bytes   |
-| $57   | list files (ins Shared Memory)     | @file name pattern         | -               | number of files |
-| $58   | remove files                       | @file name pattern         | -               | number of files |
-| $59   | copy file                          | @source file name          | @dest file name | 1=ok, 0=error   |
-| $5A   | move file                          | @source file name          | @dest file name | 1=ok, 0=error   |
-| $5B   | change drive                       | drive character `t` or `h` |                 | 1=ok, 0=error   |
-| $5B   | read word                          | file reference             |                 | word            |
+| sys # | Bedeutung                 | Parameter in A             | Parameter in B  | Ergebnis in A   |
+| ----- | ------------------------- | -------------------------- | --------------- | --------------- |
+| $50   | file open                 | @file name                 | mode `w` / `r`  | file reference  |
+| $51   | file close                | file reference             | -               | 1=ok, 0=error   |
+| $52   | read file (in die pipe)   | file reference             | -               | 1=ok, 0=error   |
+| $53   | read line                 | file reference             | @destination    | 1=ok, 0=error   |
+| $54   | write file (aus der pipe) | file reference             | -               | 1=ok, 0=error   |
+| $55   | write line                | file reference             | @text           | 1=ok, 0=error   |
+| $56   | file size                 | @file name                 | -               | size in bytes   |
+| $57   | list files (in die pipe)  | @file name pattern         | -               | number of files |
+| $58   | remove files              | @file name pattern         | -               | number of files |
+| $59   | copy file                 | @source file name          | @dest file name | 1=ok, 0=error   |
+| $5A   | move file                 | @source file name          | @dest file name | 1=ok, 0=error   |
+| $5B   | change drive              | drive character `t` or `h` |                 | 1=ok, 0=error   |
+| $5B   | read word                 | file reference             |                 | word            |
 
 Zusätzlich beinhaltet der BIOS ROM Chip eine Selbsttest Routine, die beim Einschalten des Rechners ausgeführt und das Ergebnis an der CPU ausgegeben wird (dies dient zur Überprüfung, ob man alles korrekt angeschlossen hat):
 
@@ -315,41 +315,42 @@ Beide Terminals können an einer CPU angeschlossen sein, wobei es pro Typ wieder
 
 Das Terminal besitzt quasi 3 Betriebsarten:
 
-- Editor-Mode (tbd)
+- Editor-Mode
 - Terminal-Mode 1 mit zeilenweise Ausgabe von Texten
 - Terminal-Mode 2 mit Bildschirmspeicher (48 Zeichen x 16 Zeilen) Hierbei wird immer der komplette Bildschirmspeicher an das Terminal übertragen (WIP).
-
-Zu allen drei Betriebsarten gibt es Demoprogramme, die die Funktionsweise zeigen.
 
 Das Terminal besitzt auch zusätzliche Tasten mit folgenden Codierung:  `RTN` = 26, `ESC` = 27, `F1` = 28, `F2` = 29, `F3` = 30, `F4` = 31.
 `RTN` oder der Wert 26 wird gesendet, wenn nur "enter" gedrückt wurde, ohne dass zuvor Zeichen in die Eingabezeile eingegeben wurden.
 
 Für das Terminal stehen folgende sys-Kommandos zur Verfügung:
 
-| sys # | Bedeutung                        | Parameter in A | Parameter in B | Ergebnis in A |
-| ----- | -------------------------------- | -------------- | -------------- | ------------- |
-| $10   | clear screen                     | -              | -              | 1=ok, 0=error |
-| $11   | print char                       | char/word      | -              | 1=ok, 0=error |
-| $12   | print number                     | number         | base: 10 / 16  | 1=ok, 0=error |
-| $13   | print string                     | @text          | -              | 1=ok, 0=error |
-| $14   | print string with newline        | @text          | -              | 1=ok, 0=error |
-| $15   | update screen                    | @text          | -              | 1=ok, 0=error |
-| $16   | start editor (<SM)               | @file name     | -              | 1=ok, 0=error |
-| $17   | input string                     | @destination   | -              | size          |
-| $18   | print from shared memory         | -              | -              | 1=ok, 0=error |
-| $19   | flush stdout (Ausgabe erzwingen) |                |                | 1=ok, 0=error |
-| $1A   | prompt ausgeben                  |                |                | 1=ok, 0=error |
-| $1B   | beep ausgeben                    |                |                | 1=ok, 0=error |
+| sys # | Bedeutung                         | Parameter in A | Parameter in B | Ergebnis in A |
+| ----- | --------------------------------- | -------------- | -------------- | ------------- |
+| $10   | clear screen                      | -              | -              | 1=ok, 0=error |
+| $11   | print char                        | char/word      | -              | 1=ok, 0=error |
+| $12   | print number                      | number         | base: 10 / 16  | 1=ok, 0=error |
+| $13   | print string                      | @text          | -              | 1=ok, 0=error |
+| $14   | print string with newline         | @text          | -              | 1=ok, 0=error |
+| $15   | update screen                     | @text          | -              | 1=ok, 0=error |
+| $16   | start editor (Daten aus der pipe) | @file name     | -              | 1=ok, 0=error |
+| $17   | input string                      | @destination   | -              | size          |
+| $18   | print pipe (Daten aus der pipe)   | -              | -              | 1=ok, 0=error |
+| $19   | flush stdout (Ausgabe erzwingen)  | -              | -              | 1=ok, 0=error |
+| $1A   | prompt ausgeben                   | -              | -              | 1=ok, 0=error |
+| $1B   | beep ausgeben                     | -              | -              | 1=ok, 0=error |
 
-#### Shared Memory
 
-Um die Speicherverwaltung für eine in ASM geschriebene Anwendung bei bestimmten Terminal-Ein-/Ausgaben zu vereinfachen, gibt es in Lua einen zusätzlichen Datenpuffer, hier als "shared memory" bezeichnet. Diesen Puffer verwenden sys-Kommandos, um untereinander Daten auszutauschen. Die CPU hat keinen Zugriff auf diesen Speicher.  Dies wird bspw. dazu genutzt, die Daten  des "list files" Kommando direkt auf dem Terminal auszugeben:
 
-```assembly
-move  A, #TEXT          ; file name
-sys   #$57              ; list files (->SM)
-sys   #$18              ; print SM (<-SM)
-```
+## Pipe
+
+Um die Speicherverwaltung für eine in ASM geschriebene Anwendung bei bestimmten Terminal-Ein-/Ausgaben zu vereinfachen, gibt es einen zusätzlichen Datenpuffer, hier als "pipe" bezeichnet. Dieser Puffer wird als FIFO verwaltet. Über sys-Kommandos kann man Texte zeilenweise in die Pipe schieben bzw. von dort lesen.  
+
+| sys # | Bedeutung                                | Parameter in A | Parameter in B | Ergebnis in A |
+| ----- | ---------------------------------------- | -------------- | -------------- | ------------- |
+| $80   | push pipe (string in die Pipe kopieren)  | @text          | -              | 1=ok, 0=error |
+| $81   | pop pipe (string von der Pipe lesen)     | @dest          | -              | 1=ok, 0=error |
+| $82   | pipe size (Größe in Einträgen anfordern) | -              | -              | size          |
+| $83   | flush pipe (Pipe leeren)                 | -              | -              | 1=ok, 0=error |
 
 
 
@@ -445,10 +446,16 @@ Weitere Kommandos sind als Programm (`.com` File) implementiert und werden daher
 
 ### Kommandos vom Laufwerk
 
-- `hellow`  "Hello world" Testprogramm, das zeigt, wie die Parameterübergabe funktioniert. Das Programm kann ohne `.com` Erweiterung mit mehreren Parametern gestartet werden. Diese werden dann zeilenweise wieder ausgegeben.
-
 - `asm <name>`  um ein File zu h16 zu übersetzen (ohne ext)
 - `cat <name>` um den Inhalt einer Datei auszugeben
+
+
+
+### Weitere Tools
+
+- `h16com.h16 <name>` um ein `.h16` File in ein `.com` File umzuwandeln. Der Dateiname `<name>` muss ohne Endung eingegeben werden.
+- `hellow`  "Hello world" Testprogramm, das zeigt, wie die Parameterübergabe funktioniert. Das Programm kann ohne `.com` Erweiterung mit mehreren Parametern gestartet werden. Diese werden dann zeilenweise wieder ausgegeben.
+- 
 
 
 
@@ -478,6 +485,22 @@ Um das Betriebsystem zu installieren, musst du wie folgt vorgehen:
 - Am Terminal "ls" eingeben um zu prüfen, ob die installieren Files vorhanden sind
 
 Das wars! Du hast J/OS erfolgreich installiert!
+
+
+
+### Debugging
+
+Um eine J/OS Anwendung zu debuggen, kann der Rechner an der CPU auch über das Kommando `mon` gestartet werden. Am Programmer Terminal muss dann das Kommando `st 0` eingegeben werden. Danach muss das Programm über `sp` wieder gestoppt werden, um dann einen Breakpoint setzen zu können.
+
+
+
+## Assembler Programmierung
+
+Eine Einführung in die Assembler Programmierung ist ein umfangreiches Thema. Grundsätzlich empfehlenswert ist die Seite [Assembly Programming Tutorial](https://www.tutorialspoint.com/assembly_programming/index.htm). Diese behandelt zwar eine ganz andere CPU und viele Dinge sind sicher nicht übertragbar. Aber mit dem Wissen aus dem Tutorial kommt man evtl. mit der knappen Dokumentation zur VM16 CPU und zum `vm16asm` Assembler besser zurecht.
+
+Der `vm16asm` Assembler ist sowohl in-game, also auf dem PDP-13 System, als auch zur Installation auf dem eigenen Rechner verfügbar. Es empfielt sich, den Assembler auf dem eigenen Rechner zu installieren, sofern man Python3 installiert hat.  Entwickelte und assemblierbare Files können dann per copy/paste in den Editor des PDP-13 Terminals kopiert werden.
+
+
 
 
 

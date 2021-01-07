@@ -1,10 +1,10 @@
 ;===================================
-; Strlen(A)
+; strlen(A)
 ; A = @string
 ; A <- num chars w/o '\0'
 ;===================================
     .code
-Strlen:
+start:
     push  X
     move  X, A
     move  A, #0

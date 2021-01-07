@@ -6,49 +6,49 @@
 COMV1  = $2001      ; version tag
 
 ; Global command string variables ($B8 - $BF)
-CSLEN  = $00BD      ; CS length
-CSPOS  = $00BE      ; CS current pos
-CSNUM  = $00BF      ; num of CSs
-CSBUF  = $00C0      ; CS buffer (64 chars)
-BUFF2  = $0F00      ; behind shell2
+LEN  = $00BD      ; command string length
+POS  = $00BE      ; command string current pos
+NUM  = $00BF      ; num of command strings
+BUF  = $00C0      ; command string buffer (64 chars)
+BUF2 = $0F00      ; behind shell2
 
     .code
 ;===================================
-; CSprocess
-; Prepare CS parameter parsing
+; process
+; Prepare command string parameter parsing
 ;===================================
-CSprocess:
+process:
     ;=== Process command ===
-    move  A, #CSBUF
-    move  CSPOS, A          ; init
-    call  Strlen
-    move  CSLEN, A          ; command length
+    move  A, #BUF
+    move  POS, A            ; init
+    call  strlen
+    move  LEN, A            ; command length
     
-    move  A, #CSBUF
+    move  A, #BUF
     move  B, #32
-    call  Strsplit          ; A = num str
-    move  CSNUM, A
+    call  strsplit          ; A = num str
+    move  NUM, A
     ret
 
 ;===================================
-; CSprocess
-; Set CSPOS no next param
+; next
+; Set POS no next param
 ; Result in A: 1=param, 0=no param
 ;===================================
-CSnext:
+next:
     ;=== determine next string ===
     push  B
-    dec   CSNUM
-    move  A, CSNUM
+    dec   NUM
+    move  A, NUM
     bnze  A, +3
     move  A, #0             ; no param
     pop   B
     ret
 
-    move  A, CSPOS
-    move  B, CSLEN
-    call  Nextstr           ; A = str pos
-    move  CSPOS, A
+    move  A, POS
+    move  B, LEN
+    call  nextstr           ; A = str pos
+    move  POS, A
     move  A, #1             ; param
     pop   B
     ret

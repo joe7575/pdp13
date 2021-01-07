@@ -21,43 +21,43 @@ main:
     sys   #$14              ; println
     
     ;=== determine param fname ===
-    move  A, CSNUM          ; check num strings
+    move  A, cmdstr.NUM     ; check num strings
     dec   A 
     bze   A, error1         ; no param: error
-    call  CSnext            ; CSPOS <- @fname
+    call  cmdstr.next       ; cmdstr.POS <- @fname
 
     ;=== determine string len ===
-    move  A, CSPOS
-    call  Strlen            ; A <- size
-    add   A, CSPOS          ; C <- @end-of-str
+    move  A, cmdstr.POS
+    call  strlen            ; A <- size
+    add   A, cmdstr.POS     ; C <- @end-of-str
     move  EOSTR, A
 
     ;=== add .h16 ext ===
-    move  A, CSPOS
+    move  A, cmdstr.POS
     move  B, #DH16
     move  C, #64
-    call  Strcat
+    call  strcat
 
     ;=== determine file size
-    move  A, CSPOS
+    move  A, cmdstr.POS
     sys   #$77              ; A <- fsize
     bze   A, error2
     move  FSIZE, A 
     
     ;=== load .h16 file ===
-    move  A, CSPOS          ; A = @fname
+    move  A, cmdstr.POS     ; A = @fname
     sys   #$75              ; load .h16 file
    
     ;=== add .com ext ===
     move  X, EOSTR
     move  [X], #0           ; cut ext
-    move  A, CSPOS
+    move  A, cmdstr.POS
     move  B, #DCOM
     move  C, #64
-    call  Strcat            ; add .com
+    call  strcat            ; add .com
 
     ;=== store .com ===
-    move  A, CSPOS
+    move  A, cmdstr.POS
     move  B, FSIZE
     sys   #$7A
 

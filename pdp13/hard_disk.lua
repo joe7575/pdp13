@@ -104,7 +104,7 @@ minetest.register_craft({
 	output = "pdp13:hard_disk",
 	recipe = {
 		{"pdp13:ic1", "pdp13:chassis", "pdp13:ic1"},
-		{"pdp13:ram4k", "basic_materials:gold_wire", "pdp13:disk_rom"},
+		{"pdp13:ram4k", "basic_materials:gold_wire", "pdp13:tape_hdd"},
 		{"basic_materials:plastic_sheet", "basic_materials:motor", "basic_materials:plastic_sheet"},
 	},
 })

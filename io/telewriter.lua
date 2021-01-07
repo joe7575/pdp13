@@ -192,6 +192,13 @@ local function has_writable_tape(pos)
 	return stack:get_name() == "pdp13:punch_tape" or stack:get_name() == "pdp13:tape"
 end
 
+local function get_tape_name(pos)
+	local inv = M(pos):get_inventory()
+	if inv:is_empty("main") then return "" end
+	local stack = inv:get_stack("main", 1)
+	return stack:get_name() or ""
+end
+
 local function get_tape_code(pos)
 	local inv = M(pos):get_inventory()
 	if inv:is_empty("main") then return nil end
@@ -523,6 +530,16 @@ techage.register_node({"pdp13:telewriter", "pdp13:telewriter_prog"}, {
 					start_tape(pos, mem)
 					return 1
 				end
+			end			
+		elseif topic == "tape_name" then
+			local mem = techage.get_nvm(pos)
+			return get_tape_name(pos)
+		elseif topic == "tape_sound" then
+			local mem = techage.get_nvm(pos)
+			if not mem.reader then
+				mem.reader = true
+				start_tape(pos, mem)
+				return 1
 			end			
 			return 0
 		end

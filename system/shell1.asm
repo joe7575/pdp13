@@ -19,7 +19,7 @@
 
     .org $0C
     ;=== load .h16 file ===
-    move  A, #CSBUF
+    move  A, #cmdstr.BUF
     sys   #$75              ; load .h16 file
     move  SP, #0
     jump  $100              ; start of program on $100

@@ -18,14 +18,15 @@ local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2P = minetest.string_to_pos
 
 local NUM_CHARS = pdp13.MAX_LINE_LEN
-local SCREENBUFFER_SIZE = 48*16
+local NUM_LINES = 16
+local SCREENBUFFER_SIZE = NUM_CHARS * NUM_LINES
 
 local function send_terminal_command(cpu_pos, mem, cmnd, payload)
 	if M(cpu_pos):get_int("rom_size") >= 2 then  -- BIOS enabled
 		mem.term_pos = mem.term_pos or S2P(M(cpu_pos):get_string("terminal_pos"))
 		return pdp13.send(cpu_pos, mem.term_pos, nil, cmnd, payload)
 	end
-	return 65535
+	return 0
 end
 
 local function sys_clear_screen(cpu_pos)
@@ -94,9 +95,8 @@ end
 
 local function sys_editor_start(cpu_pos, address, val1)
 	local fname = vm16.read_ascii(cpu_pos, val1, pdp13.MAX_FNAME_LEN)
-	local number = M(cpu_pos):get_string("node_number")
-	number = tonumber(number)
-	local text = pdp13.SharedMemory[number] or ""
+	local items = pdp13.pop_pipe(cpu_pos, pdp13.MAX_PIPE_LEN)
+	local text = table.concat(items, "\n")
 	local mem = techage.get_nvm(cpu_pos)
 	send_terminal_command(cpu_pos, mem, "edit", {text = text, fname = fname})
 	return 1
@@ -105,29 +105,23 @@ end
 local function sys_input_string(cpu_pos, address, val1)
 	local mem = techage.get_nvm(cpu_pos)
 	local s = send_terminal_command(cpu_pos, mem, "input")
-	if s and vm16.write_ascii(cpu_pos, val1, s.."\000") then
+	if s and vm16.write_ascii(cpu_pos, val1, s) then
 		return #s
 	end
 	return 0
 end
 
-local function sys_print_shared_mem(cpu_pos, address, val1)
+local function sys_print_pipe(cpu_pos, address, val1)
 	local mem = techage.get_nvm(cpu_pos)
-	local number = M(cpu_pos):get_string("node_number")
-	number = tonumber(number)
-	local sm = pdp13.SharedMemory[number]
-	if type(sm) == "string" then
-		for s in sm:gmatch("[^\n]+") do
+	local items = pdp13.pop_pipe(cpu_pos, val1)
+	for _,s in ipairs(items) do
+		if vm16.is_ascii(s) then
 			send_terminal_command(cpu_pos, mem, "println", s)
+		else
+			send_terminal_command(cpu_pos, mem, "println", "invalid data")
 		end
-		return 1
-	elseif type(sm) == "table" then
-		for _,s in ipairs(sm) do
-			send_terminal_command(cpu_pos, mem, "println", s)
-		end
-		return 1
 	end
-	return 0
+	return 1
 end
 
 local function sys_prompt(cpu_pos, address, val1)
@@ -157,9 +151,9 @@ local help = [[+-----+----------------+-------------+------+
  $13   print string     @text   -     1=ok
  $14   println string   @text   -     1=ok
  $15   update screen    @text   -     1=ok
- $16   start edit (<SM) @fname  -     1=ok
+ $16   start edit (<p)  @fname  -     1=ok
  $17   input string     @dest   -     size
- $18   print SM (<SM)   -       -     1=ok
+ $18   print pipe       lines   -     1=ok
  $19   flush stdout     -       -     1=ok
  $1A   prompt           -       -     1=ok
  $1B   beep             -       -     1=ok]]
@@ -172,7 +166,7 @@ pdp13.register_SystemHandler(0x14, sys_print_string_ln)
 pdp13.register_SystemHandler(0x15, sys_update_screen)
 pdp13.register_SystemHandler(0x16, sys_editor_start)
 pdp13.register_SystemHandler(0x17, sys_input_string)
-pdp13.register_SystemHandler(0x18, sys_print_shared_mem)
+pdp13.register_SystemHandler(0x18, sys_print_pipe)
 pdp13.register_SystemHandler(0x19, sys_flush_stdout)
 pdp13.register_SystemHandler(0x1A, sys_prompt)
 pdp13.register_SystemHandler(0x1B, sys_beep)

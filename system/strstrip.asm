@@ -1,10 +1,10 @@
 ;===================================
-; Strstrip(A)
+; strstrip(A)
 ; A = @string
 ; A <- @new string
 ;===================================
     .code
-Strstrip:
+start:
     push  X
     move  X, A
 

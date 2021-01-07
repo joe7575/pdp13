@@ -537,15 +537,16 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 					fs_cpu_stopped(pos, mem)
 				end
 			elseif fields.command == "boot" then
-				if rom_size >= 16 then
-					if pdp13.sys_call(pos, pdp13.COLD_START, 0, 0) == 1 then
+				if rom_size < 16 then
+					fs_help(pos, mem, "error 1")
+				else
+					local sts = pdp13.cold_start(pos)
+					if sts == 1 then
 						fs_cpu_running(pos, mem)
 						pdp13.start_cpu(pos)
 					else
-						fs_help(pos, mem, "error")
+						fs_help(pos, mem, "error "..sts)
 					end
-				else
-					fs_cpu_stopped(pos, mem)
 				end
 			elseif mem.inp_mode == "address" then
 				mem_address(pos, mem, fields.command)

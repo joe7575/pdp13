@@ -1,10 +1,12 @@
-        ;#######################################################
-        ; Function: ITOA
-        ; Convert unsigned integer in A to ASCII
-        ; Input: value in A, dest pointer in X
-        ; Output: new dest pointer (end of string)
-        ; Destroys: A, B, C
-ITOA:   push    #0          ; stack base marker and sting end
+;===================================
+; Function: itoa(X)
+; Convert unsigned integer in A to ASCII
+; Input: value in A, dest pointer in X
+; Output: new dest pointer (end of string)
+; Destroys: A, B, C
+;===================================
+
+start:  push    #0          ; stack base marker and sting end
 loop:   move    B, A
         div     B, #10      ; rest in B
         move    C, A

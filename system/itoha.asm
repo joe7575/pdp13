@@ -1,10 +1,12 @@
-        ;#######################################################
-        ; Function: ITOHA
-        ; Convert unsigned integer in A to hex ASCII
-        ; Input: value in A, dest pointer in X
-        ; Output: new dest pointer (end of string)
-        ; Destroys: A, B, C
-ITOHA:  push    #0          ; stack base marker and sting end
+;===================================
+; Function: itoha(X)
+; Convert unsigned integer in A to hex ASCII
+; Input: value in A, dest pointer in X
+; Output: new dest pointer (end of string)
+; Destroys: A, B, C
+;===================================
+
+start:  push    #0          ; stack base marker and sting end
         move    C, #4       ; num digits
 loop:   move    B, A
         div     B, #$10     ; rest in B

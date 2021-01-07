@@ -76,12 +76,12 @@ Commands["?"] = function(pos, mem, cmd, rest, is_terminal)
 		if is_terminal then
 			return {
 				"st [#].start            sp.....stop",
-				"rt.....reset            n......next step",
-				"r......register         ad #...set address",
+				"rt.....reset            n......next step [F1]",
+				"r......register [F3]    ad #...set address",
 				"d #....dump memory      en #...enter data",
 				"as #...assemble         di #...disassemble",
 				"br #...set brkpoint     br.....rst brkpoint",
-				"so     step over        sm.....dump SM",
+				"so     step over [F2]   ps.....pipe size",
 				"ld name.....load a .com/.h16 file",
 				"ct # txt....copy text to mem",
 				"cm # # #....copy mem from to num",
@@ -165,26 +165,23 @@ Commands["n"] = function(pos, mem, cmd, rest)
 		return {s}
 	end
 end
+
+Commands["\028"] = Commands["n"]
 	
 -- register
 Commands["r"] = function(pos, mem, cmd, rest, is_terminal)
 	if techage.get_nvm(pos).monitor then
 		local cpu = vm16.get_cpu_reg(pos)
 		mem.mstate = nil
-		if is_terminal then
-			return {
-				string.format("A:%04X B:%04X C:%04X D:%04X", cpu.A, cpu.B, cpu.C, cpu.D).." "..
-				string.format("X:%04X Y:%04X PC:%04X SP:%04X", cpu.X, cpu.Y, cpu.PC, cpu.SP),
-			}
-		else
-			return {
-				string.format("A:%04X B:%04X C:%04X D:%04X", cpu.A, cpu.B, cpu.C, cpu.D),
-				string.format("X:%04X Y:%04X P:%04X S:%04X", cpu.X, cpu.Y, cpu.PC, cpu.SP),
-			}
-		end
+		return {
+			string.format("A:%04X B:%04X C:%04X D:%04X", cpu.A, cpu.B, cpu.C, cpu.D),
+			string.format("X:%04X Y:%04X P:%04X S:%04X", cpu.X, cpu.Y, cpu.PC, cpu.SP),
+		}
 	end
 end
 
+Commands["\030"] = Commands["r"]
+	
 -- set address
 Commands["ad"] = function(pos, mem, cmd, rest)
 	if techage.get_nvm(pos).monitor then
@@ -226,19 +223,11 @@ local function make_table(text)
 	return t
 end
 
--- dump Shared Memory
-Commands["sm"] = function(pos, mem, cmd, rest, is_terminal)
+-- dump pipe size
+Commands["ps"] = function(pos, mem, cmd, rest, is_terminal)
 	if techage.get_nvm(pos).monitor and is_terminal then
-		local number = M(pos):get_string("node_number")
-		number = tonumber(number)
-		local s = pdp13.SharedMemory[number]
-		if s and type(s) == "string" then
-			return make_table(s)
-		elseif s and type(s) == "table" then
-			return {"Table with size "..string.len(s)}
-		else
-			return {"No SM data"}
-		end
+		local size = pdp13.pipe_size(pos)
+		return {"pipe size = "..size}
 	end
 end
 
@@ -336,18 +325,23 @@ end
 Commands["so"] = function(pos, mem, cmd, rest, is_terminal)
 	if techage.get_nvm(pos).monitor and is_terminal then
 		local cpu, sts = vm16.get_cpu_reg(pos), false
-		local addr = string.format("%X", cpu.PC + 2)
-		Commands["br"](pos, mem, "br", addr, is_terminal)
-		Commands["st"](pos, mem, "st", "", is_terminal)
-		
-		cpu, sts = vm16.get_cpu_reg(pos)
-		cpu, sts = patch_breakpoint(cpu, mem)
-		local num, s = pdp13.disassemble(cpu, mem, sts)
-		mem.mstate = "n"
-		return {s}
+		local opcode = math.floor(cpu.mem0 / 1024)
+		if opcode == 5 then
+			local addr = string.format("%X", cpu.PC + 2)
+			Commands["br"](pos, mem, "br", addr, is_terminal)
+			Commands["st"](pos, mem, "st", "", is_terminal)
+			
+			cpu, sts = vm16.get_cpu_reg(pos)
+			cpu, sts = patch_breakpoint(cpu, mem)
+			local num, s = pdp13.disassemble(cpu, mem, sts)
+			mem.mstate = "n"
+			return {}
+		end
 	end
 	return {"error!"}
 end
+
+Commands["\029"] = Commands["so"]
 
 -- copy text
 Commands["ct"] = function(pos, mem, cmd, rest)
@@ -356,7 +350,7 @@ Commands["ct"] = function(pos, mem, cmd, rest)
 		local words = string.split(rest, " ", true, 1)
 		if #words == 2 then
 			local addr = pdp13.string_to_number(words[1], true)
-			vm16.write_ascii(pos, addr, words[2].."\000")
+			vm16.write_ascii(pos, addr, words[2])
 			return {"text copied"}
 		end
 		return {"error!"}
@@ -391,13 +385,8 @@ Commands["sy"] = function(pos, mem, cmd, rest, is_terminal)
 		regA = pdp13.string_to_number(regA, true) or 0
 		regB = pdp13.string_to_number(regB, true) or 0
 		
-		if num then
-			local sts, resp = pcall(pdp13.sys_call, pos, num, regA, regB)
-			if sts then
-				return {"result = "..resp}
-			else
-				return {"sys error", resp:sub(1, 48)}
-			end
+		if num and num < 0x300 then
+			return pdp13.sys_call(pos, num, regA, regB)
 		end
 		return {"error!"}
 	end
@@ -449,7 +438,7 @@ function pdp13.monitor(cpu_pos, mem, command, is_terminal)
 		else
 			resp = Commands["?"](cpu_pos, mem, words[1], words[2] or "", is_terminal)
 		end
-		if command ~= "" then
+		if command ~= "" and string.byte(command, 1) > 32 then -- don't return function keys
 			return "[mon]$ "..command, resp
 		else
 			return nil, resp

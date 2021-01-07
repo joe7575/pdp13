@@ -51,7 +51,7 @@ def generate_file(path, file_type, file_name, item_name, item_desc, hidden):
         asm_file = path + file_name + ".asm"
         dst_file = path + file_name + ".com"
         lst_file = path + file_name + ".lst"
-        os.system("vm16asm %s -com" % asm_file)
+        os.system("vm16asm %s --com" % asm_file)
     elif file_type == "":
         asm_file = path + file_name
         dst_file = path + file_name
@@ -74,7 +74,7 @@ def copy_file(src_path, dst_path, file_type, file_name, uid):
         asm_file = src_path + file_name + ".asm"
         src_file = src_path + file_name + ".com"
         dst_file = dst_path + uid + "_" + file_name + ".com"
-        os.system("vm16asm %s -com" % asm_file)
+        os.system("vm16asm %s --com" % asm_file)
         shutil.copy(src_file, dst_file)
     elif file_type == "h16":
         asm_file = src_path + file_name + ".asm"
@@ -87,11 +87,11 @@ def copy_file(src_path, dst_path, file_type, file_name, uid):
 ## System Files
 ################################################################################
 SystemFiles = [
-    ("h16", "install",   "pdp13:tape_install",   "System File 1: OS install"),
-    ("",    "boot",      "pdp13:tape_boot",      "System File 2: boot"),
-    ("h16", "h16com",    "pdp13:tape_h16com",    "System File 3: h16com"),
-    ("h16", "shell1",    "pdp13:tape_shell1",    "System File 4: shell1"),
-    ("h16", "shell2",    "pdp13:tape_shell2",    "System File 5: shell2"),
+    ("h16", "install",   "pdp13:tape_install",   "J/OS Installation Tape"),
+    #("",    "boot",      "pdp13:tape_boot",      "System File 2: boot"),
+    #("h16", "h16com",    "pdp13:tape_h16com",    "System File 3: h16com"),
+    #("h16", "shell1",    "pdp13:tape_shell1",    "System File 4: shell1"),
+    #("h16", "shell2",    "pdp13:tape_shell2",    "System File 5: shell2"),
 ]
 
 lOut = []
@@ -123,9 +123,12 @@ open("demo_tapes.lua", "w").write(Header + "\n\n".join(lOut))
 ################################################################################
 CopyFiles = [
     ("",    "boot",),
+    ("",    "help.txt",),
     ("h16", "shell1"),
     ("com", "shell2"),
     ("h16", "h16com"),
+    ("com", "asm"),
+    ("com", "cat"),
 ]
 
 lOut = []
@@ -136,7 +139,7 @@ for file_type, file_name in CopyFiles:
 ## Copy Files Examples
 ################################################################################
 CopyFiles = [
-    ("com", "hellow"),
+    #("com", "hellow"),
 ]
 
 lOut = []

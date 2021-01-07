@@ -12,15 +12,15 @@
     sys   #$14      ; println
 
     ;=== print params ===
-    move  A, CSNUM          ; check num strings
+    move  A, cmdstr.NUM     ; check num strings
     dec   A 
     bze   A, exit           ; no param: exit
     move  D, A              ; D <- num param
 
 loop:
-    call  CSnext            ; CSPOS <- @param
+    call  cmdstr.next       ; cmdstr.POS <- @param
     
-    move  A, CSPOS
+    move  A, cmdstr.POS
     sys   #$14              ; println
     dbnz  D, loop           ; further param: loop
     
