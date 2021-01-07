@@ -5,7 +5,7 @@
     .org $100
     .code
 
-    move  A, B      ; com v1 tag $2001
+    move  A, B              ; com v1 tag $2001
 
     ; check params
     move  A, cmdstr.NUM     ; check num strings
@@ -22,9 +22,11 @@ fname:
     move  B, #NO_PARAM
     skeq  C, #3
     jump  main
-    
+
+    move  afname, A
     call  cmdstr.next       ; cmdstr.POS <- @options
-    move  B, cmdstr.POS
+    move  B, cmdstr.POS     ; B = @options
+    move  A, afname         ; A = @filename
 
     ; call asm
 main:
@@ -36,12 +38,12 @@ main:
     ;=== param error ===
 error:
     move  A, #ERROR
-    sys   #$14      ; println
-    sys   #$71      ; warm start
+    sys   #$14              ; println
+    sys   #$71              ; warm start
 
     ;=== output pipe ===
 exit:
-    sys   #$71      ; warm start
+    sys   #$71              ; warm start
 
     .text
 
@@ -50,6 +52,9 @@ NO_PARAM:
 
 ERROR:
     "Param error!\0"
+
+    .data
+afname:  0
 
 $include "cmdstr.asm"
 $include "less.asm"

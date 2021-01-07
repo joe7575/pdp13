@@ -15,6 +15,9 @@ $macro read_tape 2
     move  B, #%2            ; error number
     bze   A, error
 
+    move  A, #COPY
+    sys   #$14              ; println
+    
     move  B, #15
     call  sleep
 $endmacro
@@ -27,11 +30,11 @@ start:
     move  A, #NEWLINE
     sys   #$14              ; println
 
-    $read_tape TAPE1 1
+    read_tape TAPE1 1
 
-    $read_tape TAPE2 2
+    read_tape TAPE2 2
 
-    $read_tape TAPE3 3
+    read_tape TAPE3 3
 
     move  A, #READY
     sys   #$14              ; println
@@ -93,6 +96,8 @@ TAPE2:
     "Insert System Tape 2 and press enter\0"
 TAPE3:   
     "Insert System Tape 3 and press enter\0"
+COPY:
+    "copy files...\0"
 
 READY:
     "Ready. Boot your OS.\0"

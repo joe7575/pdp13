@@ -6,7 +6,7 @@ Start:
 
     move  A, #$100
     sys   #1        ; read string from telewriter
-    bneg  A, -5     ; val >= $8000: branch to move
+    bze   A, -5     ; val == 0: branch to move
 
     move  X, #$100  ; src ptr
     move  Y, #TEXT3 ; dst ptr

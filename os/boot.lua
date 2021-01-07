@@ -100,12 +100,15 @@ function pdp13.cold_start(pos)
 	-- shell1.h16 file
 	local fname = read_first_file_line(pos, "t/boot", addr_dest, addr_fname) or 
 			read_first_file_line(pos, "h/boot", addr_dest, addr_fname)
+	
+	if not fname then return 3 end  -- file boot is invalid
+	
 	sts = pdp13.file_exists(pos, fname)
-	if not sts then return 3 end -- shell1.h16 (or corresponding file) file missing
+	if not sts then return 4 end -- shell1.h16 (or corresponding file) file missing
 	
 	-- test .h16 file (shell1.h16)
 	sts = fname and pdp13.is_h16_file(fname)
-	if not sts then return 4 end -- shell1.h16 (or corresponding .h16 file) file corrupt
+	if not sts then return 5 end -- shell1.h16 (or corresponding .h16 file) file corrupt
 	
 	return cold_start(pos)
 end

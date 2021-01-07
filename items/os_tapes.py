@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 
 Header = """--[[
@@ -46,12 +47,14 @@ def generate_file(path, file_type, file_name, item_name, item_desc, hidden):
         asm_file = path + file_name + ".asm"
         dst_file = path + file_name + ".h16"
         lst_file = path + file_name + ".lst"
-        os.system("vm16asm %s" % asm_file)
+        if os.system("vm16asm %s" % asm_file) != 0:
+            sys.exit(0)
     elif file_type == "com":
         asm_file = path + file_name + ".asm"
         dst_file = path + file_name + ".com"
         lst_file = path + file_name + ".lst"
-        os.system("vm16asm %s --com" % asm_file)
+        if os.system("vm16asm %s --com" % asm_file) != 0:
+            sys.exit(0)
     elif file_type == "":
         asm_file = path + file_name
         dst_file = path + file_name
@@ -65,6 +68,20 @@ def generate_file(path, file_type, file_name, item_name, item_desc, hidden):
     s = Templ % (item_name, item_desc, desc, txt, hidden)
     return s
 
+def compile_file(path, file_type, file_name):
+    if file_type == "h16":
+        asm_file = path + file_name + ".asm"
+        dst_file = path + file_name + ".h16"
+        lst_file = path + file_name + ".lst"
+        if os.system("vm16asm %s" % asm_file) != 0:
+            sys.exit(0)
+    elif file_type == "com":
+        asm_file = path + file_name + ".asm"
+        dst_file = path + file_name + ".com"
+        lst_file = path + file_name + ".lst"
+        if os.system("vm16asm %s --com" % asm_file) != 0:
+            sys.exit(0)
+
 def copy_file(src_path, dst_path, file_type, file_name, uid):
     if file_type == "":
         src_file = src_path + file_name
@@ -74,33 +91,48 @@ def copy_file(src_path, dst_path, file_type, file_name, uid):
         asm_file = src_path + file_name + ".asm"
         src_file = src_path + file_name + ".com"
         dst_file = dst_path + uid + "_" + file_name + ".com"
-        os.system("vm16asm %s --com" % asm_file)
+        if os.system("vm16asm %s --com" % asm_file) != 0:
+            sys.exit(0)
         shutil.copy(src_file, dst_file)
     elif file_type == "h16":
         asm_file = src_path + file_name + ".asm"
         src_file = src_path + file_name + ".h16"
         dst_file = dst_path + uid + "_" + file_name + ".h16"
-        os.system("vm16asm %s" % asm_file)
+        if os.system("vm16asm %s" % asm_file) != 0:
+            sys.exit(0)
         shutil.copy(src_file, dst_file)
 
 ################################################################################
-## System Files
+## Files for os_tapes.lua
 ################################################################################
-SystemFiles = [
+OsFiles = [
     ("h16", "install",   "pdp13:tape_install",   "J/OS Installation Tape"),
-    #("",    "boot",      "pdp13:tape_boot",      "System File 2: boot"),
-    #("h16", "h16com",    "pdp13:tape_h16com",    "System File 3: h16com"),
-    #("h16", "shell1",    "pdp13:tape_shell1",    "System File 4: shell1"),
-    #("h16", "shell2",    "pdp13:tape_shell2",    "System File 5: shell2"),
 ]
 
 lOut = []
-for file_type, file_name, item_name, item_desc in SystemFiles:
+for file_type, file_name, item_name, item_desc in OsFiles:
     lOut.append(generate_file("../system/", file_type, file_name, item_name, item_desc, "true"))
 open("os_tapes.lua", "w").write(Header + "\n\n".join(lOut))
 
 ################################################################################
-## Demo Files
+## System files to be build
+################################################################################
+SystemFiles = [
+    ("",    "boot"),
+    ("h16", "h16com"),
+    ("h16", "shell1"),
+    ("com", "shell2"),
+    ("com", "cat"),
+    ("com", "ptrd"),
+    ("com", "ptwr"),
+    ("com", "asm"),
+]
+
+for file_type, file_name in SystemFiles:
+    compile_file("../system/", file_type, file_name)
+
+################################################################################
+## Demo files for demo_tapes.lua
 ################################################################################
 DemoFiles = [
     ("h16", "7segment",    "pdp13:tape_7seg",      "Demo: 7-Segment"),
@@ -109,8 +141,6 @@ DemoFiles = [
     ("h16", "inp_number",  "pdp13:tape_inp_num",   "Demo: Telewriter Input Number"),
     ("h16", "inp_string",  "pdp13:tape_inp_str",   "Demo: Telewriter Input String"),
     ("h16", "terminal",    "pdp13:tape_terminal",  "Demo: Terminal"),
-    #("h16", "udp_send",    "pdp13:tape_udp_send",  "Demo: Comm Send"),
-    #("h16", "udp_recv",    "pdp13:tape_udp_recv",  "Demo: Comm Receive"),
 ]
 
 lOut = []
@@ -119,7 +149,7 @@ for file_type, file_name, item_name, item_desc in DemoFiles:
 open("demo_tapes.lua", "w").write(Header + "\n\n".join(lOut))
 
 ################################################################################
-## Copy Files System
+## System files to copy to files system for testing
 ################################################################################
 CopyFiles = [
     ("",    "boot",),
@@ -133,16 +163,18 @@ CopyFiles = [
 
 lOut = []
 for file_type, file_name in CopyFiles:
-    copy_file("../system/", "../../../worlds/pdp13_test/pdp13/", file_type, file_name, "00000002")
+    #copy_file("../system/", "../../../worlds/pdp13_test/pdp13/", file_type, file_name, "00000002")
+    pass
 
 ################################################################################
-## Copy Files Examples
+## Example files to copy to files system for testing
 ################################################################################
 CopyFiles = [
-    #("com", "hellow"),
+    ("com", "hellow"),
 ]
 
 lOut = []
 for file_type, file_name in CopyFiles:
-    copy_file("../examples/", "../../../worlds/pdp13_test/pdp13/", file_type, file_name, "00000002")
+    #copy_file("../examples/", "../../../worlds/pdp13_test/pdp13/", file_type, file_name, "00000002")
+    pass
 

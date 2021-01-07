@@ -2,11 +2,7 @@
 
 A 16-bit minicomputer simulation inspired by DEC, IBM, and other Vintage Computers from the 60s and 70s.
 
-
 ![screenshot](https://github.com/joe7575/pdp13/blob/main/screenshot.png)
-
-
-### THIS MOD IS WORK IN PROGRESS!
 
 A computer simulation that will take you back to the beginnings of programming:
 
@@ -31,6 +27,21 @@ On client side Minetest 5.4 is recommended (font=mono)
 This mod is based on vm16, a virtual CPU implemented as Lua library with an outstanding performance.
 
 
+To be able to use the external `vm16asm` assembler tool in-game,
+add 'pdp13' to the list of trusted mods in minetest.conf:
+
+```
+secure.trusted_mods = vm16,pdp13
+```
+
+
+
+### See also:
+
+- Virtual maschine [vm16](https://github.com/joe7575/vm16)
+- Macro Assembler [vm16asm](https://github.com/joe7575/vm16asm)
+
+
 
 ### Manuals
 
@@ -52,6 +63,7 @@ licensed under the Attribution License.
 ### Dependencies
 
 Required: default,tubelib2,techage,vm16,vm16asm
+
 
 
 ### History

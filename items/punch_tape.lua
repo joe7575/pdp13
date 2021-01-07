@@ -52,7 +52,12 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		data.name = fields.name:sub(1, MAX_SIZE)
 		data.description = data.name
 		data.desc = fields.desc or ""
-		data.code = fields.code or ""
+		local code = fields.code or ""
+		if vm16.is_ascii(code) then
+			data.code = code
+		else
+			data.code = "<invalid ASCII>"
+		end
 		stack:get_meta():from_table({ fields = data })
 	end
 	player:set_wielded_item(stack)

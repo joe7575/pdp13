@@ -446,3 +446,20 @@ techage.register_node({"pdp13:terminal", "pdp13:terminal_prog"}, {
 	end,
 })	
 
+minetest.register_craft({
+	output = "pdp13:terminal",
+	recipe = {
+		{"", "techage:terminal2", ""},
+		{"", "pdp13:ic1", ""},
+		{"", "", ""},
+	},
+})
+
+minetest.register_craft({
+	output = "pdp13:terminal_prog",
+	recipe = {
+		{"", "techage:terminal2", ""},
+		{"pdp13:ic1", "pdp13:ic1", "pdp13:ic1"},
+		{"", "", ""},
+	},
+})

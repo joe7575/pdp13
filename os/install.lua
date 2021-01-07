@@ -19,13 +19,15 @@ local Tape1Files = {
 	"shell1.h16",
 	"shell2.com",
 	"cat.com",
-	"h16com.h16",
 	"pipe.sys",
 	"help.txt",
+	"ptrd.com",
+	"ptwr.com",
+	"h16com.h16",
+	"asm.com",
 }
 
 local Tape2Files = {
-	"asm.com",
 	"cmdstr.asm",
 	"less.asm",
 	"nextstr.asm",
@@ -47,6 +49,7 @@ local Tape3Files = {
 	"shell2.asm",
 	"",
 }
+
 
 local function copy_file(pos, fname)
 	local src_file = MP.."/system/"..fname

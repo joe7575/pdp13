@@ -1,22 +1,4 @@
---[[
-
-	PDP-13
-	======
-
-	Copyright (C) 2019-2020 Joachim Stolberg
-
-	AGPL v3
-	See LICENSE.txt for more information
-	
-	PDP-13 Punch Tapes
-
-]]--
-
-pdp13.tape.register_tape("pdp13:tape_install", "J/OS Installation Tape",
-[[; J/OS Installation Tape v1.0
-
-; Write tape to RAM and start program at address 0
-]], [[:20000010000019B
+:20000010000019B
 :800000008102010005D08142010006F08142010
 :80008000070081416000043201005000805202D
 :800100054100052201000DF08142030000F1600
@@ -70,4 +52,3 @@ pdp13.tape.register_tape("pdp13:tape_install", "J/OS Installation Tape",
 :8019000553001947450018F210C20026C402402
 :401980034026CA06C801800
 :00000FF
-]], true)

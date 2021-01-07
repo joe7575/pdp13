@@ -174,8 +174,8 @@ Commands["r"] = function(pos, mem, cmd, rest, is_terminal)
 		local cpu = vm16.get_cpu_reg(pos)
 		mem.mstate = nil
 		return {
-			string.format("A:%04X B:%04X C:%04X D:%04X", cpu.A, cpu.B, cpu.C, cpu.D),
-			string.format("X:%04X Y:%04X P:%04X S:%04X", cpu.X, cpu.Y, cpu.PC, cpu.SP),
+			string.format("A:%04X  B:%04X   C:%04X   D:%04X", cpu.A, cpu.B, cpu.C, cpu.D),
+			string.format("X:%04X  Y:%04X  PC:%04X  SP:%04X", cpu.X, cpu.Y, cpu.PC, cpu.SP),
 		}
 	end
 end
@@ -454,6 +454,10 @@ function pdp13.monitor_stopped(cpu_pos, mem, resp, is_terminal)
 		end
 		cpu = vm16.get_cpu_reg(cpu_pos)
 		cpu, sts = patch_breakpoint(cpu, mem)
+		local num, s = pdp13.disassemble(cpu, mem, sts)
+		return {s}
+	elseif not is_terminal and resp == vm16.BREAK then
+		local cpu, sts = vm16.get_cpu_reg(cpu_pos), false
 		local num, s = pdp13.disassemble(cpu, mem, sts)
 		return {s}
 	elseif not mem.mstate then

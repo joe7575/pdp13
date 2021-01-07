@@ -406,8 +406,8 @@ local help = [[+-----+----------------+-------------+------+
  $58   remove files     @fname  -     num f
  $59   copy file        @from  @to    1=ok
  $5A   move file        @from  @to    1=ok
- $5B   change dir       drive         1=ok
- $5C   read word        fref          word]]
+ $5B   change dir       drive   -     1=ok
+ $5C   read word        fref    -     word]]
 
 pdp13.register_SystemHandler(0x50, fopen, help)
 pdp13.register_SystemHandler(0x51, fclose)
@@ -459,7 +459,9 @@ function pdp13.real_file_path(pos, file_name)
 	local drive, _ = filename(file_name, mem.current_drive)
 	if drive then
 		local uid = get_uid(pos, drive)
-		return WP..uid.."_"
+		if uid then
+			return WP..uid.."_"
+		end
 	end
 end
 
@@ -468,18 +470,22 @@ function pdp13.real_file_filename(pos, file_name)
 	local drive, fname = filename(file_name, mem.current_drive)
 	if drive then
 		local uid = get_uid(pos, drive)
-		return WP..uid.."_"..fname
+		if uid then
+			return WP..uid.."_"..fname
+		end
 	end
 end
 
+-- check if file is visible for CPU
 function pdp13.file_exists(pos, file_name)
-	file_name = pdp13.real_file_filename(pos, file_name)
-	local f = io.open(file_name, "r")
-	if f ~= nil then 
-		io.close(f) 
-		return true 
-	else 
-		return false 
+	local mem = techage.get_nvm(pos)
+	local drive, fname = filename(file_name, mem.current_drive)
+	if drive then
+		local uid = get_uid(pos, drive)
+		local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
+		if uid and mounted and Files[uid] then
+			return Files[uid][fname] ~= nil
+		end
 	end
 end
 
@@ -509,6 +515,7 @@ function pdp13.make_file_visible(pos, file_name)
 		if s then
 			Files[uid] = Files[uid] or {}
 			Files[uid][fname] = string.len(s)
+			return true
 		end
 	end
 end

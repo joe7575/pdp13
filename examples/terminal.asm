@@ -52,7 +52,7 @@ ram_size:                   ; size in A
 
     ;=== read ROM size ===
 rom_size: 
-    sys   #$73              ; ROM size (->A)
+    sys   #$72              ; ROM size (->A)
     move  B, #10            ; base 10
     sys   #$12              ; print size
     

@@ -21,8 +21,8 @@ Aufgrund der Länge dieses Anleitung ist diese nicht in-game, sondern nur über 
 - Crafte die 3 Blöcke "PDP-13 Power Module", "PDP-13 CPU" und "PDP-13 I/O Rack".
 - Das Rack gibt es in 2 Varianten, die sich aber nur vom Frontdesign unterschieden
 - Setzte den CPU Block auf den Power Block und das I/O-Rack direkt neben den Power Block
-- Diese Reihenfolge muss eingehalten werden, sonst können sich die I/O-Racks nicht mit der CPU verbinden. Der maximale Abstand zwischen einem Erweiterungsblock und der CPU beträgt 3 Blöcke. Dies gilt auch für Telewriter, Terminal und alle weiteren Blöcke.
-- Über den Power Block wird die CPU und die weiteren Blöcke eingeschaltet
+- Der maximale Abstand zwischen einem Erweiterungsblock und der CPU beträgt 3 Blöcke. Dies gilt auch für Telewriter, Terminal und alle weiteren Blöcke.
+- Über den Power Block wird die CPU und die weiteren Blöcke eingeschaltet. Damit registrieren sich alle Blöcke bei der CPU. Damit ein neuer Block erkannt wird, muss das System neu eingeschaltet werden.
 - Das I/O-Rack kann nur konfiguriert werden, wenn der Power Block ausgeschaltet ist
 - Die CPU kann nur programmiert werden, wenn der Power Block eingeschaltet ist (logisch)
 
@@ -34,9 +34,9 @@ Aufgrund der Länge dieses Anleitung ist diese nicht in-game, sondern nur über 
 Das I/O-Rack verbindet die CPU mit der Welt, also anderen Blöcken und Maschinen. Es können mehrere I/O-Blöcke pro CPU genutzt werden
 
 - Das erste I/O-Rack belegt die I/O-Adressen #0 bis #7. Diesen Adressen können über das Menü des I/O-Racks Blocknummern zugeordnet werden
-- Kommandos, welche an Adresse #0 bis #7 ausgegeben werden, werden dann vom I/O-Rack an den entsprechenden Block weitergegeben
-- Kommandos, die an die CPU bzw. an die Nummer der CPU gesendet werden (bspw. von einem Schalter) können so wieder eingelesen werden
-- Das Description Feld ist optional und muss nicht beschrieben werden
+- Werte, welche über das `out` Kommando an Adresse #0 bis #7 ausgegeben werden, werden dann vom I/O-Rack an den entsprechenden Block weitergegeben
+- Kommandos, die an die CPU bzw. an die Nummer der CPU gesendet werden (bspw. von einem Schalter) können so über ein `in` Kommando wieder eingelesen werden
+- Das Description Feld ist optional und muss nicht beschrieben werden. Im unkonfigurierten Fall zeigt es den Blocknamen an, mit dem der Port über die Blocknummer verbunden ist
 - Das "OUT" Feld zeigt den zuletzt ausgegebenen Wert/das zuletzt ausgegebene Kommando
 - Das "IN" Feld zeigt entweder das empfangene Kommando oder die Antwort auf ein gesendetes Kommando. Wird 65535 ausgegeben, wurde kein Antwort empfangen (viele Blöcke senden keine Anwort auf ein "on"/"off" Kommando)
 - Das "help" Register zeigt eine Tabelle mit Informationen zur Umsetzung von Ein/Ausgabe Werten der CPU zu Techage Kommandos (Die CPU kann nur Nummern ausgeben, diese werden dann in Techage Text-Kommandos umgesetzt und umgekehrt)
@@ -140,7 +140,7 @@ Die Punch Tapes besitzen ein Menü so dass diese auch von Hand beschrieben werde
 
 - dem Tape einen eindeutigen Namen zu geben
 - zu beschreiben, wie das Programm genutzt werden kann (Description)
-- direkt ein H16 File in das Code-Fenster zu kopieren, welches bspw. am eigenen PC erstellt wurde (vm16asm). 
+- direkt ein `.h16` File in das Code-Fenster zu kopieren, welches bspw. am eigenen PC erstellt wurde (vm16asm). 
 
 
 
@@ -230,7 +230,9 @@ Wenn du alles richtig gemacht hast, leuchtet danach die Lampe. Das "OUT" Feld im
 
 Hat man den Rechner mit dem "Monitor ROM" Chip erweitert und ein "Telewriter Programmer" Terminal angeschlossen, kann man den Rechner in Assembler programmieren. Dies ist deutlich komfortabler und weniger fehleranfällig.
 
-Das Monitor Programm auf dem Rechner wird durch Eingabe des Kommandos "mon" an der CPU gestartet und kann über die Taste "stop" auch wieder gestoppt werden. Alle anderen Tasten der CPU sind im Monitor-Mode nicht aktiv. Die Bedienung erfolgt nur über das Terminal. 
+Um an den  "Monitor ROM" Chip zu kommen, musst du Aufgabe 1 lösen (siehe am Ende dieser Anleitung).
+
+Das Monitor Programm auf dem Rechner wird durch Eingabe des Kommandos "mon" an der CPU gestartet und kann über die Taste "stop" auch wieder gestoppt werden. Alle anderen Tasten der CPU sind im Monitor-Mode nicht aktiv. Die Bedienung erfolgt nur über den "Telewriter Programmer". 
 
 Das Monitor Programm unterstützt folgende Kommandos, die auch mit Eingabe von `?` am Telewriter ausgegeben werden:
 
@@ -251,30 +253,33 @@ Das Monitor Programm unterstützt folgende Kommandos, die auch mit Eingabe von `
 | `cm # # #` | (copy memory) Speicher kopieren. Die drei `#` bedeuten: Quell-Adresse, Ziel-Adresse, Anzahl Worte |
 | `ex`       | (exit) Monitor Mode vom Terminal aus beenden                 |
 
-Auf dem "Terminal Programmer" läuft die Version 2 des Monitors. Diese bietet folgende zusätzliche Kommandos:
+**Alle Zahlenangaben sind in hexadezimaler Form  einzugeben (auf das '$' Zeichen kann dabei verzichtet werden)!**
 
-| Kommando   | Bedeutung                                                    |
-| ---------- | ------------------------------------------------------------ |
-| `ld name`  | (load) Laden einer `.com` oder `.h16` Datei in den Speicher  |
-| `sy # # #` | (sys) Aufrufen eines `sys` Kommandos mit Nummer, Wert für Reg A, Wert für Reg B (nur sys-Nummern kleiner $300) |
-| `br #`     | (breakpoint) Setzen eines Breakpoints an der angegebenen Adresse. Es kann nur ein Breakpoint gesetzt werden |
-| `br`       | (breakpoint) Löschen des Breakpoints                         |
-| `so`       | (step over) Springe über die nächste `call` Anweisung. Steht der Debugger aktuell an einer `call` Anweisung, würde man mit einem `n(ext)` dem call folgen und die Funktion im Einzelschritt durchlaufen. Mit `so` wird die Funktion komplett ausgeführt und der Debugger bleibt in der nächsten Zeile wieder stehen. Technisch sind dies zwei Kommandos: `br PC+2` und `st`. Das bedeutet, der zuvor gesetzte Breakpoint ist damit gelöscht (siehe auch Breakpoints). |
-| ps         | (pipe size) Den Füllstand der Pipe in (Anzahl von Textzeilen) ausgeben |
+Jetzt können auch umfangreichere Programme in Assembler am "Telewriter Programmer" eingegeben und getestet werden, fast wie [Dennis Ritchie](https://www.wired.com/2011/10/thedennisritchieeffect/). Um Programme zu testen, können diese mit mit `n` Kommando im Einzelschrittverfahren durchgearbeitet werden. Das Kommando `r` zeigt dir bei Bedarf die Registerwerte.
 
-**Alle Zahlenangaben sind in hexadezimaler Form  einzugeben!**
+Du kannst aber auch den Assemblerbefehl `brk #0` in dein Programm einbauen. Das Programm wird dann an dieser Stelle unterbrochen und der Monitor zeigt dir die nächste Assemblerzeile, so dass du dann mit `n` weiter im Einzelschrittverfahren testen kannst.
 
-#### Breakpoints
+Ist dann dein Programm fertig, kannst du die  `brk #0`  Anweisung bspw. durch ein `move A, A` ersetzen, so dass dein Programm nicht mehr anhält.
 
-Das Monitor Programm V2 (Terminal) unterstützt einen Software Breakpoint. Dies bedeutet, dass bei Eingabe von bspw. `br 100` an der Adresse $100 der Code mit dem neuen Wert $0400 (`brk #0`) überschrieben wird. Mit `br` (Breakpoint löschen) wird wieder der Originalwert eingetragen. Wird von der CPU der Opcode `$0400` ausgeführt, wird das Programm unterbrochen und der Debugger/Monitor zeigt die Adresse an (der Stern zeigt an, dass hier ein Breakpoint gesetzt wurde). Allerdings wird vom Disassembler der Original Code angezeigt und nicht der `brk`. Bei einem Speicherdump sieht mal allerdings den Wert `$0400`. Der Opcode an der Position wird nach Ausführung dieser Originalanweisung wieder auf `$0400` gesetzt, so dass der Breakpoint auch mehrfach genutzt werden kann. 
+Selbst geschriebene Programme kannst du auf Punch Tape kopieren, um diese zu sichern, oder an andere Spieler weiterzugeben.
 
-Der Breakpoint ist allerdings wieder weg, wenn das Programm neu geladen wurde. Für diesen, aber auch andere Testfälle kann es Sinn machen, eine `brk #0` Aweisung direkt im ASM Code einzufügen. Damit kommt das Programm an dieser Position immer zum Halten, so dass man hier seine Debugging Session starten kann.
+### Selbsttest
+
+Zusätzlich beinhaltet der "Monitor ROM" Chip eine Selbsttest Routine, die beim Einschalten des Rechners ausgeführt und das Ergebnis an der CPU ausgegeben wird (dies dient zur Überprüfung, ob man alles korrekt angeschlossen hat):
+
+```
+RAM=4K   ROM=8K   I/O=8
+Telewriter..ok
+Programmer..ok
+```
 
 
 
 ## BIOS ROM
 
 Hat man den Rechner mit dem "BIOS ROM" Chip erweitert, hat der Rechner Zugriff auf das Terminal und auf das Filesystem des Bandlaufwerks und der Festplatte. Der Rechner kann damit theoretisch von einem der Laufwerke booten, wenn er denn eine Betriebssystem hätte, aber dazu später mehr.
+
+Für den  "BIOS ROM" Chip musst du Aufgabe 2 lösen.
 
 Zur Verfügung stehen ab sofort bspw. folgende zusätzliche sys-Kommandos (Das Zeichen `@` bedeutet "Speicheradresse von"):
 
@@ -293,14 +298,6 @@ Zur Verfügung stehen ab sofort bspw. folgende zusätzliche sys-Kommandos (Das Z
 | $5A   | move file                 | @source file name          | @dest file name | 1=ok, 0=error   |
 | $5B   | change drive              | drive character `t` or `h` |                 | 1=ok, 0=error   |
 | $5B   | read word                 | file reference             |                 | word            |
-
-Zusätzlich beinhaltet der BIOS ROM Chip eine Selbsttest Routine, die beim Einschalten des Rechners ausgeführt und das Ergebnis an der CPU ausgegeben wird (dies dient zur Überprüfung, ob man alles korrekt angeschlossen hat):
-
-```
-RAM=8K   ROM=16K   I/O=8
-Telewriter..ok  Terminal..ok
-Tape drive..ok
-```
 
 
 
@@ -341,6 +338,29 @@ Für das Terminal stehen folgende sys-Kommandos zur Verfügung:
 
 
 
+## Monitor ROM V2
+
+Auf dem "Terminal Programmer" läuft die Version 2 des Monitors. Diese bietet folgende zusätzliche Kommandos:
+
+| Kommando   | Bedeutung                                                    |
+| ---------- | ------------------------------------------------------------ |
+| `ld name`  | (load) Laden einer `.com` oder `.h16` Datei in den Speicher  |
+| `sy # # #` | (sys) Aufrufen eines `sys` Kommandos mit Nummer, Wert für Reg A, Wert für Reg B (nur sys-Nummern kleiner $300) |
+| `br #`     | (breakpoint) Setzen eines Breakpoints an der angegebenen Adresse. Es kann nur ein Breakpoint gesetzt werden |
+| `br`       | (breakpoint) Löschen des Breakpoints                         |
+| `so`       | (step over) Springe über die nächste `call` Anweisung. Steht der Debugger aktuell an einer `call` Anweisung, würde man mit einem `n(ext)` dem call folgen und die Funktion im Einzelschritt durchlaufen. Mit `so` wird die Funktion komplett ausgeführt und der Debugger bleibt in der nächsten Zeile wieder stehen. Technisch sind dies zwei Kommandos: `br PC+2` und `st`. Das bedeutet, der zuvor gesetzte Breakpoint ist damit gelöscht (siehe auch Breakpoints). |
+| ps         | (pipe size) Den Füllstand der Pipe in (Anzahl von Textzeilen) ausgeben |
+
+**Alle Zahlenangaben sind in hexadezimaler Form  einzugeben!**
+
+#### Breakpoints
+
+Das Monitor Programm V2 (Terminal) unterstützt einen Software Breakpoint. Dies bedeutet, dass bei Eingabe von bspw. `br 100` an der Adresse $100 der Code mit dem neuen Wert $0400 (`brk #0`) überschrieben wird. Mit `br` (Breakpoint löschen) wird wieder der Originalwert eingetragen. Wird von der CPU der Opcode `$0400` ausgeführt, wird das Programm unterbrochen und der Debugger/Monitor zeigt die Adresse an (der Stern zeigt an, dass hier ein Breakpoint gesetzt wurde). Allerdings wird vom Disassembler der Original Code angezeigt und nicht der `brk`. Bei einem Speicherdump sieht mal allerdings den Wert `$0400`. Der Opcode an der Position wird nach Ausführung dieser Originalanweisung wieder auf `$0400` gesetzt, so dass der Breakpoint auch mehrfach genutzt werden kann. 
+
+Der Breakpoint ist allerdings wieder weg, wenn das Programm neu geladen wurde. 
+
+
+
 ## Pipe
 
 Um die Speicherverwaltung für eine in ASM geschriebene Anwendung bei bestimmten Terminal-Ein-/Ausgaben zu vereinfachen, gibt es einen zusätzlichen Datenpuffer, hier als "pipe" bezeichnet. Dieser Puffer wird als FIFO verwaltet. Über sys-Kommandos kann man Texte zeilenweise in die Pipe schieben bzw. von dort lesen.  
@@ -362,27 +382,35 @@ Damit das Tape Drive genutzt werden kann, muss es mit einem Magnetic Tape bestü
 
 Es kann maximal ein Tape Drive am Rechner angeschlossen werden. Das Tape Drive muss bei der Pfadangabe über `t/`, also bspw. `t/myfile.txt` angesprochen werden.
 
+Für den Zugriff auf das Filesystem (Tape Drive und Hard Disk) gibt es folgende sys-Kommandos:
 
-
-## PDP-13 Hard Disk
-
-Die Hard Disk vervollständigt als weitere Block den Rechneraufbau. Damit verfügt der Rechner jetzt über einen zweiten Massenspeicher mit mehr Kapazität. Der Rechner ist auch hier mit Hilfe des BIOS ROM Chips in der Lage, von diesem Speichermedium zu booten.
-
-Es kann maximal eine Hard Disk am Rechner angeschlossen werden. Der Zugriff auf die Hard Disk erfolgt über `h/`, also bspw. `h/myfile.txt`
-
-Wird dieser Block abgebaut, bleiben die Daten erhalten. Wird der Block zerstört, sind die Daten auch weg.
+| sys # | Bedeutung          | Parameter in A  | Parameter in B   | Ergebnis in A  |
+| ----- | ------------------ | --------------- | ---------------- | -------------- |
+| $50   | file open          | @file name      | mode ("r" / "w") | file reference |
+| $51   | file close         | file reference  | -                | 1=ok, 0=error  |
+| $52   | read file (>pipe)  | file reference  | -                | 1=ok, 0=error  |
+| $53   | read line          | file reference  | @destination     | 1=ok, 0=error  |
+| $54   | write file (<pipe) | file reference  | -                | 1=ok, 0=error  |
+| $55   | write line         | file reference  | @text            | 1=ok, 0=error  |
+| $56   | file size          | @file name      | -                | size in bytes  |
+| $57   | list files (>pipe) | @file name      | -                | number files   |
+| $58   | remove files       | @file name      | -                | number files   |
+| $59   | copy file          | @file name from | @file name to    | 1=ok, 0=error  |
+| $5A   | move file          | @file name from | @file name to    | 1=ok, 0=error  |
+| $5B   | change dir         | drive           | -                | 1=ok, 0=error  |
+| $5C   | read word          | file reference  | -                | word           |
 
 
 
 ## J/OS-13 Betriebssystem
 
-Wie jeder echte Rechner macht auch PDP-13 ohne Programme oder Betriebssystem gar nichts. Deshalb müssen entweder Programme über die Punch Tapes in den Rechner geladen werden, oder es müssen Programme auf dem Tape Drive oder Hard Disk vorhanden sein, die in den Speicher geladen und ausgeführt werden können.  Um den Rechner von einem Laufwerk zu starten, muss an der CPU das Kommando `boot` eingegeben werden. Über die Taste "stop" kann die CPU wieder gestoppt werden. Alle anderen Tasten der CPU sind im `boot`-Mode nicht aktiv. Die Bedienung erfolgt nur über das Operator Terminal. 
+Wie jeder echte Rechner macht auch PDP-13 ohne Programme oder Betriebssystem gar nichts. Deshalb müssen entweder Programme über die Punch Tapes in den Rechner geladen werden, oder es müssen Programme auf dem Tape Drive oder Hard Disk vorhanden sein, die in den Speicher geladen und ausgeführt werden können.  Um den Rechner von einem Laufwerk zu starten, muss an der CPU das Kommando `boot` eingegeben werden. Über die Taste "stop" kann die CPU wieder gestoppt werden. Alle anderen Tasten der CPU sind im `boot`-Mode nicht aktiv. Die Bedienung erfolgt ausschließlich über das Operator Terminal. 
 
 
 
 ### Datei `boot`
 
-Befindet sich auf einem der Laufwerte eine Textdatei `boot`, so wird diese vom BIOS eingelesen und interpretiert. Die Datei hat nur eine Textzeile mit dem Dateiamen des Programmes, welches als erstes ausgeführt werden soll. Bei J/OS-13 sieht diese Datei auf dem Tape Drive so aus:
+Befindet sich auf einem der Laufwerte eine Textdatei `boot`, so wird diese vom BIOS eingelesen und interpretiert. Die Datei hat nur eine Textzeile mit dem Dateinamen des Programms, welches als erstes ausgeführt werden soll. Bei J/OS-13 sieht diese Datei auf dem Tape Drive so aus:
 
 ```
 t/shell1.h16
@@ -392,14 +420,14 @@ t/shell1.h16
 
 ### Datei `shell1.h16`
 
-Damit wird als nächstes die Datei `shell1.16` vom Tape Drive geladen und mit ab Adresse $0000 ausgeführt. `shell1.h16` ist ein Ladeprogramm, das sich im Adressbereich $0000 - $00BF einnistet und dort auch verbleibt. Jede Anwendung muss, sofern sie beendet wird, wieder zu diesem Ladeprogramm zurückkehren. Dies erfolgt normalerweise über die Anweisung `sys #$71`.
+Damit wird als nächstes die Datei `shell1.16` vom Tape Drive geladen und ab Adresse $0000 ausgeführt. `shell1.h16` ist ein Ladeprogramm, das sich im Adressbereich $0000 - $00BF einnistet und dort auch verbleibt. Jede Anwendung muss, sofern sie beendet wird, wieder zu diesem Ladeprogramm zurückkehren. Dies erfolgt normalerweise über die Anweisung `sys #$71`.
 
 Hier das berühmte "Hello World" Programm für J/OS-13 in `vm16asm` Assembler:
 
 ```assembly
 ; Hello world for the Terminal in COM format
 
-    .org $100
+    .org $100         ; start at address $100
     .code
     
     move  A, B        ; com v1 tag $2001
@@ -419,14 +447,18 @@ Die Zeile `move  A, B` macht nichts sinnvolles, außer dass der Wert $2001 gener
 
 ### Datei `shell2.com`
 
-Da das Ladeprogramm über keine Kommandos verfügt (der Adressbereich $0000 - $00BF ist dafür viel zu klein), wird nach einem Kaltstart ein zweiter Teil in den Addressbereich ab $0100 nachgeladen. Dieses Programm besitzt eine Kommandozeile mit Kommandos und kann andere Programme von einem Laufwerk laden und ausführen.
+Da das Ladeprogramm über keine Kommandos verfügt (der Adressbereich $0000 - $00BF ist dafür viel zu klein), wird nach einem Kaltstart ein zweiter Teil in den Adressbereich ab $0100 nachgeladen. Dieses Programm besitzt eine Kommandozeile mit Kommandos und kann andere Programme von einem Laufwerk laden und ausführen.
 
 Es werden 2 Typen von ausführbaren Programmen unterstützt:
 
 - `.h16` Files sind Textfiles im H16  Format. Dieses Format erlaubt ein Programm an eine definierte Adresse zu laden, wie dies bspw. bei `shell1.h16` der Fall ist. Auch alle Punch Tape Programme sind im H16 Format. Nur so lassen sich technisch Programme über Punch Tapes austauschen.
 - `.com` Files sind Files im Binärformat. Das Binärformat ist deutlich kompakter (ca. Faktor 3) und deshalb für Programme die bessere Wahl. `.com` Files werden immer ab Adresse $0100 geladen und müssen dafür entsprechend vorbereitet sein (Anweisung `.org $100`).
 
-Für beide Typen von Programmen gilt:  Die Anwendung muss bei Adresse $0100 starten, darf den Adreessbereich unterhalb von $00C0 nicht verändern und muss am Ende über `sys #$71` wieder zum Betriebsystem zurückkehren.
+(geplant sind noch Batch Files mit der Endung `.bat`)
+
+Für beide Typen von Programmen gilt:  Die Anwendung muss bei Adresse $0100 starten, darf den Adressbereich unterhalb von $00C0 nicht verändern und muss am Ende über `sys #$71` wieder zum Betriebssystem zurückkehren.
+
+
 
 ### Kommandos auf der Konsole
 
@@ -449,13 +481,16 @@ Weitere Kommandos sind als Programm (`.com` File) implementiert und werden daher
 - `asm <name>`  um ein File zu h16 zu übersetzen (ohne ext)
 - `cat <name>` um den Inhalt einer Datei auszugeben
 
+Weitere Programme folgen...
+
 
 
 ### Weitere Tools
 
 - `h16com.h16 <name>` um ein `.h16` File in ein `.com` File umzuwandeln. Der Dateiname `<name>` muss ohne Endung eingegeben werden.
 - `hellow`  "Hello world" Testprogramm, das zeigt, wie die Parameterübergabe funktioniert. Das Programm kann ohne `.com` Erweiterung mit mehreren Parametern gestartet werden. Diese werden dann zeilenweise wieder ausgegeben.
-- 
+
+Weitere Tools folgen...
 
 
 
@@ -472,13 +507,12 @@ Um das Betriebssystem installieren zu können, werden die OS Tapes benötigt. Di
 - der Rechner eingeschaltet sein
 - der Rechner über "Monitor" und "BIOS" ROM Chips verfügen
 -  ein Tape Drive "angeschlossen" und gestartet sein
-- eine Tape Chest platziert sein (max. 3 Blöcke Abstand von der CPU)
 - ein Terminal Operator "angeschlossen" sein
 
-Um das Betriebsystem zu installieren, musst du wie folgt vorgehen:
+Um das Betriebssystem zu installieren, musst du wie folgt vorgehen:
 
 - Den Rechner stoppen, sofern er läuft
-- Das Tape "System File 1: OS install" im Telewriter einlegen und in den Rechner kopieren
+- Das Tape "J/OS Installation Tape" im Telewriter einlegen und in den Rechner kopieren
 - Den Rechner an der CPU mit Reset/Start starten
 - Den Anweisungen am Terminal folgen
 - Nach Abschluss der Installation den Rechner an der CPU stoppen und das Betriebssystem über das Kommando "boot" starten
@@ -491,6 +525,18 @@ Das wars! Du hast J/OS erfolgreich installiert!
 ### Debugging
 
 Um eine J/OS Anwendung zu debuggen, kann der Rechner an der CPU auch über das Kommando `mon` gestartet werden. Am Programmer Terminal muss dann das Kommando `st 0` eingegeben werden. Danach muss das Programm über `sp` wieder gestoppt werden, um dann einen Breakpoint setzen zu können.
+
+
+
+## PDP-13 Hard Disk
+
+Die Hard Disk vervollständigt als weitere Block den Rechneraufbau. Damit verfügt der Rechner jetzt über einen zweiten Massenspeicher mit mehr Kapazität. Der Rechner ist auch hier mit Hilfe des BIOS ROM Chips in der Lage, von diesem Speichermedium zu booten.
+
+Um den Hard Disk Block craften zu können, wird ein "Hard Disk Program" Tape benötigt. Diese Tape (du ahnst es schon :D) gibt es nur, wenn du Aufgabe 4 gelöst hast.
+
+Es kann maximal eine Hard Disk am Rechner angeschlossen werden. Der Zugriff auf die Hard Disk erfolgt über `h/`, also bspw. `h/myfile.txt`
+
+Wird dieser Block abgebaut, bleiben die Daten erhalten. Wird der Block zerstört, sind die Daten auch weg.
 
 
 
@@ -560,7 +606,7 @@ Um das Tape für das PDP-13 Monitor ROM zu erhalten, musst du folgende Aufgabe l
 
 *Berechne die Summe zweier 32-Bit Zahlen ohne Vorzeichen.*
 
-Die Zahlen sind so gewählt, dass es zu keinem 32-Bit Überlauf kommt. Die zwei Zahlen müssen über `sys #$300` anfordern und am Ende das Ergebnis wieder über `sys #$301` ausgeben werden. 
+Die Zahlen sind so gewählt, dass es zu keinem 32-Bit Überlauf kommt. Die zwei Zahlen müssen über `sys #$300` anfordert werden. Nach Berechnung des Ergebnisses muss dieses über `sys #$301` ausgeben werden. 
 
 ```assembly
 ; nach sys #$300 stehen die Zahlen wie folgt im Speicher
@@ -611,6 +657,8 @@ Um die OS Install Tapes zu erhalten, musst du folgende Aufgabe lösen:
 
 *Wandle die übergebenen Wert (0..65535) um in einen String mit der dezimalen Darstellung der Zahl (das was bspw. auch die Lua-Funktion `tostring()` macht).*
 
+Die Tapes werden in eine Tape Chest gelegt, daher muss eine Tape Chest bei der CPU platziert sein (max. 3 Blöcke Abstand von der CPU)!
+
 Das Programm muss zuerst den Wert über `sys #$304` anfordern und am Ende das Ergebnis wieder über `sys #$305` ausgeben. Wenn die Umwandlung passt und eine leere "Tape Chest" vorhanden ist, dann werden bei passendem Ergebnis die Tapes in die Kiste gelegt. In jedem Falle erfolgt eine Chat-Ausgabe mit den Strings. Hier der Rahmen des Programms:
 
 ```assembly
@@ -618,6 +666,23 @@ sys   #$304     ; den Werte anfordern, dieser steht dann in A
 ....
 move  A, #$nnn  ; A mit der String-Adresse laden
 sys   #$305     ; Ergebnis übergeben
+halt            ; wichtig, sonst läuft das Programm unkontrolliert weiter
+```
+
+
+
+### Aufgabe 4: PDP-13 Hard Drive Programm
+
+Um das Tape für das PDP-13 Hard Drive Programm zu erhalten, musst du folgende Aufgabe lösen:
+
+*tbd.*
+
+Das Programm muss zuerst ... über `sys #$306` anfordern und am Ende das Ergebnis wieder über `sys #$307` ausgeben. Wenn ... passt und im "Telewriter Operator" befindet sich ein leeres Tape, dann wird bei passendem Ergebnis das Tape geschrieben. In jedem Falle erfolgt eine Chat-Ausgabe über die berechneten Werte. Hier der Rahmen des Programms:
+
+```assembly
+sys   #$306     ; ...
+....
+sys   #$307     ; Ergebnis übergeben
 halt            ; wichtig, sonst läuft das Programm unkontrolliert weiter
 ```
 

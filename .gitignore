@@ -1,8 +1,9 @@
 *.bak
 *.o
 *.lst
-*.h16
-*.com
 trash/
 test/
 examples/exam*.*
+examples/*.lst
+examples/*.h16
+examples/*.com

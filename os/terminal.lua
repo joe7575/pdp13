@@ -96,10 +96,16 @@ end
 local function sys_editor_start(cpu_pos, address, val1)
 	local fname = vm16.read_ascii(cpu_pos, val1, pdp13.MAX_FNAME_LEN)
 	local items = pdp13.pop_pipe(cpu_pos, pdp13.MAX_PIPE_LEN)
-	local text = table.concat(items, "\n")
 	local mem = techage.get_nvm(cpu_pos)
-	send_terminal_command(cpu_pos, mem, "edit", {text = text, fname = fname})
-	return 1
+	if not next(items) or vm16.is_ascii(items[1]) then
+		local text = table.concat(items or {}, "\n")
+		send_terminal_command(cpu_pos, mem, "edit", {text = text, fname = fname})
+		return 1
+	else
+		send_terminal_command(cpu_pos, mem, "println", "format error")
+		pdp13.sys_call(cpu_pos, pdp13.PROMPT, 0, 0)
+		return 0
+	end
 end
 
 local function sys_input_string(cpu_pos, address, val1)
