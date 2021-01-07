@@ -38,7 +38,7 @@ secure.trusted_mods = vm16,pdp13
 
 ### See also:
 
-- Virtual maschine [vm16](https://github.com/joe7575/vm16)
+- Virtual machine [vm16](https://github.com/joe7575/vm16)
 - Macro Assembler [vm16asm](https://github.com/joe7575/vm16asm)
 
 
