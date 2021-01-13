@@ -32,6 +32,9 @@ dofile(MP.."/lib/history.lua")
 -- OS
 dofile(MP.."/os/defines.lua")
 dofile(MP.."/os/asm_help.lua")
+dofile(MP.."/os/fs_backend.lua")
+dofile(MP.."/os/filesystem.lua")
+dofile(MP.."/os/fs_frontend.lua")
 dofile(MP.."/os/pipes.lua")
 dofile(MP.."/os/opcodes.lua")
 dofile(MP.."/os/assemble.lua")
@@ -40,10 +43,9 @@ dofile(MP.."/os/monitor.lua")
 dofile(MP.."/os/telewriter.lua")
 dofile(MP.."/os/terminal.lua")
 dofile(MP.."/os/comm.lua")
-dofile(MP.."/os/filesystem.lua")
 dofile(MP.."/os/boot.lua")
 dofile(MP.."/os/install.lua")
-assert(loadfile(MP.."/os/tools.lua"))(IE)
+dofile(MP.."/assemlber/asm.lua")
 IE = nil
 
 -- PDP-13

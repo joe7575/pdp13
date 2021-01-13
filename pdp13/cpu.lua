@@ -12,7 +12,6 @@
 
 ]]--
 
-
 -- for lazy programmers
 local M = minetest.get_meta
 local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
@@ -31,7 +30,6 @@ function pdp13.operator_cmnd(pos, cmd, payload)
 	local own_num = M(pos):get_string("node_number")
 	return techage.send_single(own_num, dst_num, cmd, payload)
 end
-
 
 local function leds(address, opcode, operand)
 	local lLed = {}
@@ -350,7 +348,6 @@ local function add_periphery_settings(pos, meta, cmnd, data)
 		return false
 	end
 end
-
 
 local function selftest(pos, mem, number)
 	if pos and mem then

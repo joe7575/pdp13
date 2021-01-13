@@ -46,12 +46,15 @@ pdp13.COPY_FILE    = 0x59
 pdp13.MOVE_FILE    = 0x5A
 pdp13.CHANGE_DIR   = 0x5B
 pdp13.READ_WORD    = 0x5C
+pdp13.CHANGE_DRIVE = 0x5D
+pdp13.CURR_DRIVE   = 0x5E
+pdp13.CURR_DIR     = 0x5F
 
 pdp13.COLD_START   = 0x70
 pdp13.WARM_START   = 0x71
 pdp13.ROM_SIZE     = 0x72
 pdp13.RAM_SIZE     = 0x73
-pdp13.CURR_DRIVE   = 0x74
+--pdp13.CURR_DRIVE   = 0x74
 pdp13.LOAD_H16     = 0x75
 pdp13.LOAD_COM     = 0x76
 pdp13.H16_SIZE     = 0x77

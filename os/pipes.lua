@@ -19,15 +19,6 @@ local MAX_PIPE_LEN = pdp13.MAX_PIPE_LEN  -- lines of text
 
 local Pipes = {}
 
-local function read_and_remove_file(fname)
-	local f = io.open(fname, "rb")
-	if f then
-		local s = f:read("*all")
-		f:close()
-		os.remove(fname)
-		return s
-	end
-end
 
 function pdp13.init_pipe(pos)
 	local number = tonumber(M(pos):get_string("node_number"))
@@ -76,7 +67,8 @@ end
 
 function pdp13.file_to_pipe(pos, path)
 	local fname = path.."pipe.sys"
-	local s = read_and_remove_file(fname)
+	local s = pdp13.read_file(pos, fname)
+	pdp13.remove_files(pos, fname)
 	if s then
 		local items = pdp13.text2table(s)
 		return pdp13.push_pipe(pos, items)

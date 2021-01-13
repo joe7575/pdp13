@@ -15,7 +15,7 @@
 --
 -- OP-codes
 --
-pdp13.VM13Opcodes = {[0] =
+pdp13.VM16Opcodes = {[0] =
     "nop:-:-", "brk:CNST:-", "sys:CNST:-", "res2:CNST:-",
 	"jump:ADR:-", "call:ADR:-", "ret:-:-", "halt:-:-",
     "move:DST:SRC", "xchg:DST:DST", "inc:DST:-", "dec:DST:-",
@@ -31,7 +31,7 @@ pdp13.VM13Opcodes = {[0] =
 --
 -- Operands
 --
-pdp13.VM13Operands = {[0] =
+pdp13.VM16Operands = {[0] =
     "A", "B", "C", "D", "X", "Y", "PC", "SP",
     "[X]", "[Y]", "[X]+", "[Y]+", "#0", "#1", "-", "-", 
     "IMM", "IND", "REL", "[SP+n]",

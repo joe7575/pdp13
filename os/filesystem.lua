@@ -12,43 +12,41 @@
 
 ]]--
 
+-- On file system level, we always work with fname strings, 
+-- which could include drive or dir information, but not
+-- with uids or real file paths!
+
 -- for lazy programmers
 local M = minetest.get_meta
+local MP = minetest.get_modpath("pdp13")
 
-local WP = minetest.get_worldpath() .. "/pdp13/"  -- to store the files
-local gen_filepattern = pdp13.gen_filepattern
-local fmatch = pdp13.fmatch
-local filename = pdp13.filename
-local filespattern = pdp13.filespattern
-local max_num_files = pdp13.max_num_files
-local max_fs_size = pdp13.max_fs_size
-local kbyte = pdp13.kbyte
+local Files = {}  -- t[uid][dir][fname] = file_size
+local mpath = dofile(MP .. "/os/path.lua")
+local backend = dofile(MP .. "/os/fs_backend.lua")
 
-local Files = {}  -- t[uid][fname] = filesize
-local OpenFiles = {}  -- {fpos, uid, drive, fname}
-local OpenFilesRef = 1
+pdp13.path = mpath -- make it global available
 
-local function fsize(fname)
-	local f = io.open(WP..fname, "rb")
-	if f then
-		local size = f:seek("end")
-		f:close()
-		return size
+local function kbyte(val)
+	if val > 9999 then
+		return tostring(math.floor(val / 1024) + 1).."K"
+	else
+		return tostring(val)
 	end
-	return 0
 end
 
--- Generate a list in memory with all files
-local function scan_file_system()
-	-- For the case it doesn't exist
-	minetest.mkdir(WP)
+local function max_num_files(drive)
+	if drive == "h" then
+		return 512
+	else
+		return 64
+	end
+end
 	
-	for _,name in ipairs(minetest.get_dir_list(WP, false)) do
-		local uid, fname = unpack(string.split(name, "_", false, 1))
-		if uid and fname then
-			Files[uid] = Files[uid] or {}
-			Files[uid][fname] = fsize(name)
-		end
+local function max_filesystem_size(drive)
+	if drive == "h" then
+		return 500  -- kByte
+	else
+		return 60  -- kByte
 	end
 end
 
@@ -91,169 +89,76 @@ local function set_uid(pos, drive, uid)
 	end
 end
 
-local function read_file_real(uid, fname)
-	local f = io.open(WP..uid.."_"..fname, "rb")
-	if f then
-		local s = f:read("*all")
-		f:close()
-		return s
-	end
-end
-	
-local function write_file_real(uid, fname, s)
-	local path = WP..uid.."_"..fname
-	-- Consider unit test
-	if not pcall(minetest.safe_file_write, path, s) then
-		local f = io.open(path, "wb")
-		if f then
-			f:write(s)
-			f:close()
-			return true
-		end
-	end
-end
-
-local function remove_file_real(uid, fname)
-	os.remove(WP..uid.."_"..fname)
-end
-
--- Size of all files of one drive
-local function total_size(tDirectory)
-	local size = 0
-	for _,v in pairs(tDirectory or {}) do
-		size = size + (tonumber(v) or 0)
-	end
-	return size
-end
-
-local function fopen(pos, address, val1, val2)
-	local mem = techage.get_nvm(pos)
-	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
-	local drive, fname = filename(s, mem.current_drive)
-	if drive then
-		local uid = get_uid(pos, drive)
-		local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
-		
-		if mounted and Files[uid] then
-			if val2 == 119 then -- 'w' for write
-				Files[uid][fname] = ""
-			elseif Files[uid][fname] then
-				Files[uid][fname] = read_file_real(uid, fname) or ""
-			else
-				return 0
-			end
-			if not OpenFiles[OpenFilesRef] then
-				OpenFiles[OpenFilesRef] = {fpos = 1, uid = uid, drive = drive, fname = fname}
-				OpenFilesRef = OpenFilesRef + 1
-				return OpenFilesRef - 1
-			end
-		end
-	end
-	return 0
-end
-
-local function fclose(pos, address, val1)
-	if OpenFiles[val1] then
-		local uid = OpenFiles[val1].uid
-		local drive = OpenFiles[val1].drive
-		local fname = OpenFiles[val1].fname
-		local s = Files[uid][fname] or ""
-		local size = string.len(s)
-		if total_size(Files[uid]) + size <= (pdp13.max_fs_size(drive) * 1024) then
-			write_file_real(uid, fname, s)
-			Files[uid][fname] = size
-			OpenFiles[val1] = nil
-			return 1
-		end
-		Files[uid][fname] = nil
-		OpenFiles[val1] = nil
-	end
-	return 0
-end
-
--- Read into pipe to be used by other sys commands
-local function read_file(pos, address, val1, val2)
-	if OpenFiles[val1] then
-		local uid = OpenFiles[val1].uid
-		local fname = OpenFiles[val1].fname
-		local items = pdp13.text2table(Files[uid][fname])
-		pdp13.push_pipe(pos, items)
-		return 1
-	end
-	return 0
-end
-
-local function read_line(pos, address, val1, val2)
-	if OpenFiles[val1] then
-		local uid = OpenFiles[val1].uid
-		local fname = OpenFiles[val1].fname
-		local first = OpenFiles[val1].fpos
-		local last  = OpenFiles[val1].fpos + pdp13.MAX_LINE_LEN
-		local s = string.sub(Files[uid][fname], first, last)
-		if s then
-			s = s:gmatch("[^\n]+")()
-			if s then
-				local size = string.len(s)
-				OpenFiles[val1].fpos = OpenFiles[val1].fpos + size + 1
-				vm16.write_ascii(pos, val2, s)
-				return size
-			end
-		end
-		return 0
-	end
-	return 65535
-end
-
--- Write from shared memory, prepared by other sys commands
-local function write_file(pos, address, val1, val2)
-	if OpenFiles[val1] then
-		local uid = OpenFiles[val1].uid
-		local fname = OpenFiles[val1].fname
-		local items = pdp13.pop_pipe(pos, pdp13.MAX_PIPE_LEN)
-		if uid and fname and items then
-			Files[uid][fname] = table.concat(items, "\n")
-			return 1
-		end
-	end
-	return 0
-end
-
-local function write_line(pos, address, val1, val2)
-	local s = vm16.read_ascii(pos, val2, pdp13.MAX_LINE_LEN)
-
-	if s and OpenFiles[val1] then
-		local uid = OpenFiles[val1].uid
-		local fname = OpenFiles[val1].fname
-		local t = Files[uid]
-		if t[fname] == "" then
-			t[fname] = s
+local function scan_file_system()	
+	for _, item in ipairs(backend.scan_file_system()) do
+		-- dir$fname is used for dir/fname
+		local t = string.split(item.path, "$", false, 1)
+		local uid, dir, fname
+		if #t == 2 then
+			uid, dir, fname = item.uid, t[1], t[2]
 		else
-			t[fname] = t[fname].."\n"..s
+			uid, dir, fname = item.uid, "", item.path
 		end
-		return 1
+		Files[uid] = Files[uid] or {}
+		Files[uid][dir] = Files[uid][dir] or {}
+		Files[uid][dir][fname] = item.size
 	end
-	return 0
 end
-	
-local function file_size(pos, address, val1, val2)
+
+pcall(scan_file_system)
+
+-------------------------------------------------------------------------------
+-- Export
+-------------------------------------------------------------------------------
+pdp13.get_uid = get_uid
+pdp13.set_uid = set_uid
+pdp13.kbyte = kbyte
+pdp13.max_num_files = max_num_files
+pdp13.max_filesystem_size = max_filesystem_size
+pdp13.Files = Files
+
+-- Size and number of all dirs/files of one drive
+function pdp13.total_num_and_size(pos, drive)
+	local uid = get_uid(pos, drive)
+	local total_num = -1
+	local total_size = 0
+	for dir, item in pairs(Files[uid] or {}) do
+		total_num = total_num + 1
+		for name, size in pairs(item) do
+			total_num = total_num + 1
+			total_size = total_size + (tonumber(size) or 0)
+		end
+	end
+	return total_num, total_size
+end
+
+-- Return  uid, dir, list of filenames, and list of full pathnames
+function pdp13.get_files(pos, path)
 	local mem = techage.get_nvm(pos)
-	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
-	local drive, fname = filename(s, mem.current_drive)
-	if drive then
-		local uid = get_uid(pos, drive)
-		local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
-
-		if mounted and Files[uid] then
-			return tonumber(Files[uid][fname]) or 0
+	local drive, dir, fname = mpath.splitpath(mem, path)
+	local uid = get_uid(pos, drive)
+	local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
+	
+	if uid and mounted and Files[uid] and Files[uid][dir] then
+		local t1 = {}
+		local t2 = {}
+		local pattern = mpath.gen_filepattern(fname)
+		
+		for fname,_ in pairs(Files[uid][dir]) do
+			if mpath.filename_match(fname, pattern) then
+				t1[#t1+1] = fname
+				t2[#t2+1] = drive .. "/" .. mpath.join_fe(dir, fname)
+			end
 		end
+		return uid, dir, t1, t2
 	end
-	return 0
+	return uid, dir, {}, {}
 end
 
-local function list_files(pos, address, val1, val2)
+function pdp13.list_files(pos, path)
 	local order = function(a, b)
-		local base1, ext1 = unpack(string.split(a, ".", false, 1))
-		local base2, ext2 = unpack(string.split(b, ".", false, 1))
+		local _, _, base1, ext1 = string.find(a, "(.+)%.?(.*)")
+		local _, _, base2, ext2 = string.find(b, "(.+)%.?(.*)")
 		ext1 = ext1 or ""
 		ext2 = ext2 or ""
 		if ext1 ~= ext2 then
@@ -263,177 +168,223 @@ local function list_files(pos, address, val1, val2)
 		end
 	end
 	
-	local mem = techage.get_nvm(pos)
-	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
-	local drive, fname = filespattern(s, mem.current_drive)
-	local uid = get_uid(pos, drive)
-	local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
-
-	if mounted and Files[uid] then
-		local t = {}
-		local total_size = 0
-		local pattern = gen_filepattern(fname)
-		
-		for name,str in pairs(Files[uid]) do
-			if fmatch(name, pattern) then
-				local size = tonumber(str) or 0
-				total_size = total_size + size
-				t[#t+1] = string.format("%-12s  %4s", name, kbyte(size))
-			end
-		end
-		table.sort(t, function(a,b) return order(a, b) end)
-		t = pdp13.table_2rows(t, "     ")
-		t[#t+1] = string.format("%u/%u files  %s/%uK", 
-				#t, max_num_files(drive), kbyte(total_size), max_fs_size(drive))
-		pdp13.push_pipe(pos, t)
-		return #t - 1
+	local uid, dir, files = pdp13.get_files(pos, path)
+	local ref = Files[uid][dir]
+	local t = {}
+	
+	for _, fname in ipairs(files) do
+		local size = tonumber(ref[fname])
+		t[#t+1] = string.format("%-12s  %4s", fname, kbyte(size))
 	end
-	return 0
+	table.sort(t, function(a,b) return order(a, b) end)
+	return t
+end	
+
+function pdp13.pipe_filelist(pos, path, files)
+	local mem = techage.get_nvm(pos)
+	local drive, dir, fname = mpath.splitpath(mem, path)
+	local total_num, total_size = pdp13.total_num_and_size(pos, drive)
+	if files then
+		files = pdp13.table_2rows(files, "     ")
+		files[#files+1] = string.format("%u/%u files  %s/%uK", 
+				#files, pdp13.max_num_files(drive), 
+				kbyte(total_size), max_filesystem_size(drive))
+		pdp13.push_pipe(pos, files)
+		return #files - 1
+	end
+end	
+	
+function pdp13.remove_files(pos, path)
+	local uid, dir, files = pdp13.get_files(pos, path)
+	local ref = Files[uid][dir]
+		
+	for _,fname in ipairs(files) do
+		Files[uid][dir][fname] = nil
+		local abspath = mpath.join_be(dir, fname)
+		backend.remove_file(uid, abspath)
+	end
+	return #files
 end
 
-local function remove_files(pos, address, val1, val2)
-	local mem = techage.get_nvm(pos)
-	local s = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
-	local drive, fname = filespattern(s, mem.current_drive)
-	local uid = get_uid(pos, drive)
-	local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
-
-	if mounted and Files[uid] then
-		local t = {} -- For post-deletion
-		local pattern = gen_filepattern(fname)
-		
-		for name,_ in pairs(Files[uid]) do
-			if fmatch(name, pattern) then
-				t[#t+1] = name
-			end
-		end
-		for _,name in ipairs(t) do
-			Files[uid][name] = nil
-			remove_file_real(uid, name)
-		end
-		return #t
-	end
-	return 0
-end
-
-local function copy_file(pos, address, val1, val2)
+function pdp13.copy_file(pos, path1, path2)
 	local mem = techage.get_nvm(pos)
 	
-	local s1 = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
-	local drive1, fname1 = filename(s1, mem.current_drive)
+	local drive1, dir1, fname1 = mpath.splitpath(mem, path1)
 	local uid1 = get_uid(pos, drive1)
 	local mounted1 = drive1 == 'h' or M(pos):get_int("mounted_t") == 1
 	
-	local s2 = vm16.read_ascii(pos, val2, pdp13.MAX_FNAME_LEN)
-	local drive2, fname2 = filename(s2, mem.current_drive)
+	local drive2, dir2, fname2 = mpath.splitpath(mem, path2)
 	local uid2 = get_uid(pos, drive2)
 	local mounted2 = drive2 == 'h' or M(pos):get_int("mounted_t") == 1
 
 	if drive1 and drive2 and mounted1 and mounted2 then
-		if Files[uid1] and Files[uid1][fname1] and Files[uid2] then
-			Files[uid2][fname2] = Files[uid1][fname1]
-			local s = read_file_real(uid1, fname1)
-			write_file_real(uid2, fname2, s)
-			return 1
+		if Files[uid1] and Files[uid1][dir1] and Files[uid2] and Files[uid2][dir2] then
+			Files[uid2][dir2][fname2] = Files[uid1][dir1][fname1]
+			local abspath1 = mpath.join_be(dir1, fname1)
+			local abspath2 = mpath.join_be(dir2, fname2)
+			local s = backend.read_file(uid1, abspath1)
+			backend.write_file(uid2, abspath2, s)
+			return true
 		end
 	end
-	return 0
 end
 
-local function move_file(pos, address, val1, val2)
+function pdp13.move_file(pos, path1, path2)
 	local mem = techage.get_nvm(pos)
 	
-	local s1 = vm16.read_ascii(pos, val1, pdp13.MAX_FNAME_LEN)
-	local drive1, fname1 = filename(s1, mem.current_drive)
+	local drive1, dir1, fname1 = mpath.splitpath(mem, path1)
 	local uid1 = get_uid(pos, drive1)
 	local mounted1 = drive1 == 'h' or M(pos):get_int("mounted_t") == 1
 	
-	local s2 = vm16.read_ascii(pos, val2, pdp13.MAX_FNAME_LEN)
-	local drive2, fname2 = filename(s2, mem.current_drive)
+	local drive2, dir2, fname2 = mpath.splitpath(mem, path2)
 	local uid2 = get_uid(pos, drive2)
 	local mounted2 = drive2 == 'h' or M(pos):get_int("mounted_t") == 1
 	
 	if drive1 and drive2 and mounted1 and mounted2 then
-		if Files[uid1] and Files[uid1][fname1] and Files[uid2] then
-			Files[uid2][fname2] = Files[uid1][fname1]
-			Files[uid1][fname1] = nil
-			local s = read_file_real(uid1, fname1)
-			write_file_real(uid2, fname2, s)
-			remove_file_real(uid1, fname1)
-			return 1
+		if Files[uid1] and Files[uid1][dir1] and Files[uid2] and Files[uid2][dir2] then
+			Files[uid2][dir2][fname2] = Files[uid1][dir1][fname1]
+			Files[uid1][dir1][fname1] = nil
+			local abspath1 = mpath.join_be(dir1, fname1)
+			local abspath2 = mpath.join_be(dir2, fname2)
+			local s = backend.read_file(uid1, abspath1)
+			backend.write_file(uid2, abspath2, s)
+			backend.remove_file(uid1, abspath1)
+			return true
+		end
+	end
+end
+
+-- check if file is visible for CPU
+function pdp13.file_exists(pos, path)
+	local mem = techage.get_nvm(pos)
+	local drive, dir, fname = mpath.splitpath(mem, path)
+	if drive then
+		local uid = get_uid(pos, drive)
+		local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
+		if mounted and Files[uid] and Files[uid][dir] then
+			return Files[uid][dir][fname] ~= nil
+		end
+	end
+end
+
+function pdp13.file_size(pos, path)
+	local mem = techage.get_nvm(pos)
+	local drive, dir, fname = mpath.splitpath(mem, path)
+	if drive then
+		local uid = get_uid(pos, drive)
+		local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
+		if mounted and Files[uid] and Files[uid][dir] then
+			return tonumber(Files[uid][dir][fname]) or 0
 		end
 	end
 	return 0
 end
 
-local function change_dir(pos, address, val1, val2)
+function pdp13.read_file(pos, path)
 	local mem = techage.get_nvm(pos)
-	local drive = string.char(val1)
+	local drive, dir, fname = mpath.splitpath(mem, path)
+	if drive then
+		local uid = get_uid(pos, drive)
+		local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
+		if mounted and Files[uid] and Files[uid][dir] and Files[uid][dir][fname] then
+			local abspath = mpath.join_be(dir, fname)
+			return backend.read_file(uid, abspath)
+		end
+	end
+end
+
+function pdp13.write_file(pos, path, s)
+	local mem = techage.get_nvm(pos)
+	local drive, dir, fname = mpath.splitpath(mem, path)
+	if drive then
+		local uid = get_uid(pos, drive)
+		local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
+		if mounted and Files[uid] then
+			Files[uid][dir] = Files[uid][dir] or {}
+			local abspath = mpath.join_be(dir, fname)
+			if backend.write_file(uid, abspath, s) then
+				Files[uid][dir][fname] = string.len(s)
+				return true
+			end
+		end
+	end
+end
+
+function pdp13.make_dir(pos, dir)
+	local mem = techage.get_nvm(pos)
+	if mem.curr_drive  == "h" and mem.curr_dir == "" then
+		local uid = get_uid(pos, mem.curr_drive)
+		if Files[uid] and not Files[uid][dir] then
+			Files[uid][dir] = Files[uid][dir] or {}
+			return true
+		end
+	end
+end
+
+function pdp13.remove_dir(pos, dir)
+	local mem = techage.get_nvm(pos)
+	if mem.curr_drive  == "h" and mem.curr_dir == "" then
+		local uid = get_uid(pos, mem.curr_drive)
+		if Files[uid] and Files[uid][dir] and not next(Files[uid][dir]) then
+			if dir ~= "" then
+				Files[uid][dir] = nil
+			end
+			return true
+		end
+	end
+end
+
+function pdp13.change_drive(pos, drive)
+	local mem = techage.get_nvm(pos)
 	if drive == "t" or drive == "h" then
-		mem.current_drive = drive
-		return 1
+		mem.curr_drive = drive
+		mem.curr_dir = ""
+		return true
 	end
-	return 0
 end
 
-local function read_word(pos, address, val1, val2)
-	if OpenFiles[val1] then
-		local uid = OpenFiles[val1].uid
-		local fname = OpenFiles[val1].fname
-		local idx = OpenFiles[val1].fpos
-		local s = string.sub(Files[uid][fname], idx, idx+1)
-		if s then
-			OpenFiles[val1].fpos = OpenFiles[val1].fpos + 2
-			local val = string.byte(s, 1) + string.byte(s, 2) * 256
-			return val
+function pdp13.change_dir(pos, dir)
+	local mem = techage.get_nvm(pos)
+	if mpath.is_dir(dir) and mem.curr_drive == "h" then
+		local uid = get_uid(pos, mem.curr_drive)
+		if Files[uid] and Files[uid][dir] then
+			mem.curr_dir = dir
+			return true
 		end
-		return 65535
+	elseif dir == ".." then
+		mem.curr_dir = ""
+		return true
 	end
-	return 65535
 end
 
-local help = [[+-----+----------------+-------------+------+
-|sys #| File System    | A    | B    | rtn  |
-+-----+----------------+-------------+------+
- $50   file open        @fname  mode  fref
- $51   file close       fref    -     1=ok
- $52   read file (>p)   fref    -     1=ok
- $53   read line        fref   @dest  1=ok
- $54   write file (<p)  fref    -     1=ok
- $55   write line       fref   @text  1=ok    
- $56   file size        @fname  -     size
- $57   list files (>p)  @fname  -     num f
- $58   remove files     @fname  -     num f
- $59   copy file        @from  @to    1=ok
- $5A   move file        @from  @to    1=ok
- $5B   change dir       drive   -     1=ok
- $5C   read word        fref    -     word]]
-
-pdp13.register_SystemHandler(0x50, fopen, help)
-pdp13.register_SystemHandler(0x51, fclose)
-pdp13.register_SystemHandler(0x52, read_file)
-pdp13.register_SystemHandler(0x53, read_line)
-pdp13.register_SystemHandler(0x54, write_file)
-pdp13.register_SystemHandler(0x55, write_line)
-pdp13.register_SystemHandler(0x56, file_size)
-pdp13.register_SystemHandler(0x57, list_files)
-pdp13.register_SystemHandler(0x58, remove_files)
-pdp13.register_SystemHandler(0x59, copy_file)
-pdp13.register_SystemHandler(0x5A, move_file)
-pdp13.register_SystemHandler(0x5B, change_dir)
-pdp13.register_SystemHandler(0x5C, read_word)
-
+function pdp13.make_file_visible(pos, path)
+	local mem = techage.get_nvm(pos)
+	local drive, dir, fname = mpath.splitpath(mem, path)
+	if drive then
+		local uid = get_uid(pos, drive)
+		local abspath = mpath.join_be(dir, fname)
+		local size = backend.file_size(uid, abspath)
+		if size > 0 then
+			Files[uid] = Files[uid] or {}
+			Files[uid][dir] = Files[uid][dir] or {}
+			Files[uid][dir][fname] = size
+			return true
+		end
+	end
+end
 
 function pdp13.init_filesystem(pos, has_tape, has_hdd)
 	if has_tape then
 		local uid = get_uid(pos, "t")
 		Files[uid] = Files[uid] or {}
-		write_file_real(uid, "pipe.sys", uid)
+		Files[uid][""] = Files[uid][""] or {}
+		backend.write_file(uid, "pipe.sys", uid)
 	end
 	if has_hdd then
 		local uid = get_uid(pos, "h")
 		Files[uid] = Files[uid] or {}
-		write_file_real(uid, "pipe.sys", uid)
+		Files[uid][""] = Files[uid][""] or {}
+		backend.write_file(uid, "pipe.sys", uid)
 	end
 end
 
@@ -443,79 +394,3 @@ function pdp13.mount_drive(pos, drive, mount)
 	end
 end
 	
-pcall(scan_file_system)
-
--------------------------------------------------------------------------------
--- Export
--------------------------------------------------------------------------------
--- pdp13.get_uid(pos, drive)
-pdp13.get_uid = get_uid
--- pdp13.set_uid(pos, drive, uid)
-pdp13.set_uid = set_uid
-
-
-function pdp13.real_file_path(pos, file_name)
-	local mem = techage.get_nvm(pos)
-	local drive, _ = filename(file_name, mem.current_drive)
-	if drive then
-		local uid = get_uid(pos, drive)
-		if uid then
-			return WP..uid.."_"
-		end
-	end
-end
-
-function pdp13.real_file_filename(pos, file_name)
-	local mem = techage.get_nvm(pos)
-	local drive, fname = filename(file_name, mem.current_drive)
-	if drive then
-		local uid = get_uid(pos, drive)
-		if uid then
-			return WP..uid.."_"..fname
-		end
-	end
-end
-
--- check if file is visible for CPU
-function pdp13.file_exists(pos, file_name)
-	local mem = techage.get_nvm(pos)
-	local drive, fname = filename(file_name, mem.current_drive)
-	if drive then
-		local uid = get_uid(pos, drive)
-		local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
-		if uid and mounted and Files[uid] then
-			return Files[uid][fname] ~= nil
-		end
-	end
-end
-
-function pdp13.read_file(pos, fref)
-	if OpenFiles[fref] then
-		local uid = OpenFiles[fref].uid
-		local fname = OpenFiles[fref].fname
-		return Files[uid][fname]
-	end
-end
-
-function pdp13.write_file(pos, fref, s)
-	if OpenFiles[fref] then
-		local uid = OpenFiles[fref].uid
-		local fname = OpenFiles[fref].fname
-		Files[uid][fname] = s
-		return true
-	end
-end
-
-function pdp13.make_file_visible(pos, file_name)
-	local mem = techage.get_nvm(pos)
-	local drive, fname = filename(file_name, mem.current_drive)
-	if drive then
-		local uid = get_uid(pos, drive)
-		local s = read_file_real(uid, fname)
-		if s then
-			Files[uid] = Files[uid] or {}
-			Files[uid][fname] = string.len(s)
-			return true
-		end
-	end
-end

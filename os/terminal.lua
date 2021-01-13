@@ -132,7 +132,7 @@ end
 
 local function sys_prompt(cpu_pos, address, val1)
 	local mem = techage.get_nvm(cpu_pos)
-	local drive = mem.current_drive or 't'
+	local drive = mem.curr_drive or 't'
 	send_terminal_command(cpu_pos, mem, "print", drive..">")
 	mem.stdout = ""
 	return 1

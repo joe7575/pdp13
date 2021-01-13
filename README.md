@@ -17,22 +17,14 @@ A computer simulation that will take you back to the beginnings of programming:
 - Communication possibilities between computers
 - Output possibilities like color lamp and 7-segment node
 - Compatible to TechAge to be able control machines
-- Installable macro assembler application `vm16asm` (on your PC) and in-game
 - J/OS operating system to be able to boot from drive
 - commands like: ls, cat, rm, rm, cd, cp, ...
+- Macro assembler application
 - Many ASM stdlib and example files
 
 On client side Minetest 5.4 is recommended (font=mono)
 
 This mod is based on vm16, a virtual CPU implemented as Lua library with an outstanding performance.
-
-
-To be able to use the external `vm16asm` assembler tool in-game,
-add 'pdp13' to the list of trusted mods in minetest.conf:
-
-```
-secure.trusted_mods = vm16,pdp13
-```
 
 
 
@@ -62,7 +54,7 @@ licensed under the Attribution License.
 
 ### Dependencies
 
-Required: default,tubelib2,techage,vm16,vm16asm
+Required: default,tubelib2,techage,vm16
 
 
 
@@ -76,4 +68,5 @@ Required: default,tubelib2,techage,vm16,vm16asm
 - 2020-12-28  v0.06  * Add terminal, tape drive, hard dirk, and more
 - 2021-01-03  v0.07  * Add terminal history buffer, update manual, fix bugs
 - 2021-01-07  v0.08  * Add macro asm, OS install process, and many more
+- 2021-01-13  v0.09  * Add new macro asm, add dir level for drive 'h'
 
