@@ -95,8 +95,8 @@ DCOM:
 DH16:
     ".h16\0"
 
-$include "../system/cmdstr.asm"
-$include "../system/strcat.asm"
-$include "../system/strlen.asm"
+$include "cmdstr.asm"
+$include "strcat.asm"
+$include "strlen.asm"
 
 

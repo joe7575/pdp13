@@ -66,7 +66,9 @@ function backend.write_file(uid, path, s)
 			f:close()
 			return true
 		end
+		return false
 	end
+	return true
 end
 
 function backend.remove_file(uid, path)

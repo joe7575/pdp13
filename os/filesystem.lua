@@ -139,6 +139,7 @@ function pdp13.get_files(pos, path)
 	local uid = get_uid(pos, drive)
 	local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
 	
+	print("get_files", uid, drive, mounted)
 	if uid and mounted and Files[uid] and Files[uid][dir] then
 		local t1 = {}
 		local t2 = {}
@@ -150,17 +151,27 @@ function pdp13.get_files(pos, path)
 				t2[#t2+1] = drive .. "/" .. mpath.join_fe(dir, fname)
 			end
 		end
+		if dir == "" then
+			for fname,_ in pairs(Files[uid]) do
+				print("dir", fname)
+				if mpath.filename_match(fname, pattern) then
+					t1[#t1+1] = "*" .. fname .. "/"
+				end
+			end
+		end
 		return uid, dir, t1, t2
 	end
-	return uid, dir, {}, {}
 end
 
 function pdp13.list_files(pos, path)
 	local order = function(a, b)
-		local _, _, base1, ext1 = string.find(a, "(.+)%.?(.*)")
-		local _, _, base2, ext2 = string.find(b, "(.+)%.?(.*)")
+		local _, _, base1, ext1 = string.find(a, "(.+)%.(.*)")
+		local _, _, base2, ext2 = string.find(b, "(.+)%.(.*)")
 		ext1 = ext1 or ""
 		ext2 = ext2 or ""
+		base1 = base1 or a
+		base2 = base2 or b
+		print(base1, ext1, base2, ext2)
 		if ext1 ~= ext2 then
 			return ext1 < ext2
 		else
@@ -169,15 +180,17 @@ function pdp13.list_files(pos, path)
 	end
 	
 	local uid, dir, files = pdp13.get_files(pos, path)
-	local ref = Files[uid][dir]
-	local t = {}
-	
-	for _, fname in ipairs(files) do
-		local size = tonumber(ref[fname])
-		t[#t+1] = string.format("%-12s  %4s", fname, kbyte(size))
+	if files then
+		local t = {}
+		local ref = Files[uid][dir]
+		table.sort(files, function(a,b) return order(a, b) end)
+		
+		for _, fname in ipairs(files) do
+			local size = tonumber(ref[fname]) or 5
+			t[#t+1] = string.format("%-12s  %4s", fname, kbyte(size))
+		end
+		return t
 	end
-	table.sort(t, function(a,b) return order(a, b) end)
-	return t
 end	
 
 function pdp13.pipe_filelist(pos, path, files)
@@ -192,31 +205,38 @@ function pdp13.pipe_filelist(pos, path, files)
 		pdp13.push_pipe(pos, files)
 		return #files - 1
 	end
+	return 0
 end	
 	
 function pdp13.remove_files(pos, path)
 	local uid, dir, files = pdp13.get_files(pos, path)
-	local ref = Files[uid][dir]
-		
-	for _,fname in ipairs(files) do
-		Files[uid][dir][fname] = nil
-		local abspath = mpath.join_be(dir, fname)
-		backend.remove_file(uid, abspath)
+	if files then
+		local ref = Files[uid][dir]
+			
+		for _,fname in ipairs(files) do
+			Files[uid][dir][fname] = nil
+			local abspath = mpath.join_be(dir, fname)
+			backend.remove_file(uid, abspath)
+		end
+		return #files
 	end
-	return #files
+	return 0
 end
 
 function pdp13.copy_file(pos, path1, path2)
 	local mem = techage.get_nvm(pos)
 	
+	print("copy_file", path1, path2)
 	local drive1, dir1, fname1 = mpath.splitpath(mem, path1)
 	local uid1 = get_uid(pos, drive1)
 	local mounted1 = drive1 == 'h' or M(pos):get_int("mounted_t") == 1
 	
 	local drive2, dir2, fname2 = mpath.splitpath(mem, path2)
+	if fname2 == "" then fname2 = fname1 end
 	local uid2 = get_uid(pos, drive2)
 	local mounted2 = drive2 == 'h' or M(pos):get_int("mounted_t") == 1
 
+	print("copy_file", drive1, dir1, fname1, drive2, dir2, fname2)
 	if drive1 and drive2 and mounted1 and mounted2 then
 		if Files[uid1] and Files[uid1][dir1] and Files[uid2] and Files[uid2][dir2] then
 			Files[uid2][dir2][fname2] = Files[uid1][dir1][fname1]
@@ -316,7 +336,13 @@ function pdp13.make_dir(pos, dir)
 		local uid = get_uid(pos, mem.curr_drive)
 		if Files[uid] and not Files[uid][dir] then
 			Files[uid][dir] = Files[uid][dir] or {}
-			return true
+			local s = "_dir_"
+			local fname = "@@"
+			local abspath = mpath.join_be(dir, fname)
+			if backend.write_file(uid, abspath, s) then
+				Files[uid][dir][fname] = string.len(s)
+				return true
+			end
 		end
 	end
 end
@@ -352,6 +378,10 @@ function pdp13.change_dir(pos, dir)
 			return true
 		end
 	elseif dir == ".." then
+		mem.curr_dir = ""
+		return true
+	elseif dir == "t" or dir == "h" then
+		mem.curr_drive = dir
 		mem.curr_dir = ""
 		return true
 	end
@@ -394,3 +424,26 @@ function pdp13.mount_drive(pos, drive, mount)
 	end
 end
 	
+function pdp13.set_boot_path(pos, path)
+	local mem = techage.get_nvm(pos)
+	local drive, dir, _ = mpath.splitpath(mem, path)
+	print("set_boot_path", path, drive, dir)
+	if dir ~= "" then
+		mem.boot_path = drive .. "/" .. dir .. "/"
+	else
+		mem.boot_path = drive .. "/"
+	end
+	print("set_boot_path2", mem.boot_path)
+end	
+
+function pdp13.get_boot_path(pos, path)
+	local mem = techage.get_nvm(pos)
+	if mpath.is_filename(path) then
+		-- return standard boot path
+		print("get_boot_path1", (mem.boot_path or "t/") .. path)
+		return (mem.boot_path or "t/") .. path
+	end
+	-- return the given path
+	print("get_boot_path2", path)
+	return path  
+end	

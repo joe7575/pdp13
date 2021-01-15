@@ -55,7 +55,7 @@ function pdp13.assembler(pos, fname)
 	
 	asm.address = 0
 	asm.lineno = 0
-	asm.fname = ""
+	asm.fname = fname
 	asm.type = asm.CODE
 	asm.section = asm.CODESEC
 	
@@ -70,9 +70,10 @@ function pdp13.assembler(pos, fname)
 				asm.outp(pos, "Code size [words]:  " .. string.format("$%04X", size))
 			end
 		end
-		return not asm.error
+	else
+		asm.err_msg(pos, "Invalid file")
 	end
-	return false
+	return true
 end
 
 local function sys_asm(pos, address, val1, val2)

@@ -19,7 +19,6 @@
 
     .org $0C
     ;=== load .h16 file ===
-    move  A, #cmdstr.BUF
     sys   #$75              ; load .h16 file
     move  SP, #0
     jump  $100              ; start of program on $100
@@ -72,6 +71,6 @@ ROM:
 NEWLINE:
     "\0"
 SHELL2:
-    "t/shell2.com\0"
+    "shell2.com\0"
 
 $include "cmdstr.asm"

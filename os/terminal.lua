@@ -121,9 +121,10 @@ local function sys_print_pipe(cpu_pos, address, val1)
 	local mem = techage.get_nvm(cpu_pos)
 	local items = pdp13.pop_pipe(cpu_pos, val1)
 	for _,s in ipairs(items) do
-		if vm16.is_ascii(s) then
+		if s == "" or vm16.is_ascii(s) then
 			send_terminal_command(cpu_pos, mem, "println", s)
 		else
+			print(dump(s))
 			send_terminal_command(cpu_pos, mem, "println", "invalid data")
 		end
 	end
@@ -132,8 +133,8 @@ end
 
 local function sys_prompt(cpu_pos, address, val1)
 	local mem = techage.get_nvm(cpu_pos)
-	local drive = mem.curr_drive or 't'
-	send_terminal_command(cpu_pos, mem, "print", drive..">")
+	local cwd = pdp13.path.get_curr_wdir(mem)
+	send_terminal_command(cpu_pos, mem, "print", cwd..">")
 	mem.stdout = ""
 	return 1
 end

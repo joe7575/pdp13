@@ -207,6 +207,16 @@ local function remove_dir(pos, address, val1, val2)
 	return pdp13.remove_dir(pos, dir) and 1 or 0
 end
 
+local function get_files(pos, address, val1, val2)
+	local path = vm16.read_ascii(pos, val1, mpath.MAX_PATH_LEN)
+	local uid, dir, t1, t2 = pdp13.get_files(pos, path)
+	if t2 then
+		pdp13.push_pipe(pos, t2)
+		return #t2 > 0 and 1 or 0
+	end
+	return 0
+end
+
 local help = [[+-----+----------------+-------------+------+
 |sys #| File System    | A    | B    | rtn  |
 +-----+----------------+-------------+------+
@@ -226,6 +236,9 @@ local help = [[+-----+----------------+-------------+------+
  $5D   change dir       @dir    -     1=ok 
  $5E   cur_drive         -      -     drive
  $5F   cur_dir          @dest   -     1=ok
+ $60   make dir         @dir    -     1=ok
+ $61   remove dir       @dir    -     1=ok
+ $62   get files (>p)   @fname  -     1=ok
  ]]
  
 
@@ -245,4 +258,16 @@ pdp13.register_SystemHandler(0x5C, read_word)
 pdp13.register_SystemHandler(0x5D, change_dir)
 pdp13.register_SystemHandler(0x5E, get_current_drive)
 pdp13.register_SystemHandler(0x5F, get_current_dir)
+pdp13.register_SystemHandler(0x60, make_dir)
+pdp13.register_SystemHandler(0x61, remove_dir)
+pdp13.register_SystemHandler(0x62, get_files)
 
+vm16.register_sys_cycles(0x52, 10000)
+vm16.register_sys_cycles(0x54, 10000)
+vm16.register_sys_cycles(0x57, 10000)
+vm16.register_sys_cycles(0x58, 10000)
+vm16.register_sys_cycles(0x59, 10000)
+vm16.register_sys_cycles(0x5A, 10000)
+vm16.register_sys_cycles(0x60, 10000)
+vm16.register_sys_cycles(0x61, 10000)
+vm16.register_sys_cycles(0x62, 10000)

@@ -105,6 +105,6 @@ READY:
 ERROR:
     "Tape error \0"
     
-$include "../system/cmdstr.asm"
+$include "cmdstr.asm"
 $include "strcpy.asm"
 $include "strcat.asm"

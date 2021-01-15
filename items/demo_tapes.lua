@@ -126,7 +126,7 @@ Start:
 
 0003: 2010, 0100    move  A, #$100
 0005: 0801          sys   #1        ; read string from telewriter
-0006: 5C12, FFFB    bneg  A, -5     ; val >= $8000: branch to move
+0006: 5412, FFFB    bze   A, -5     ; val == 0: branch to move
 
 0008: 2090, 0100    move  X, #$100  ; src ptr
 000A: 20B0, 002D    move  Y, #TEXT3 ; dst ptr

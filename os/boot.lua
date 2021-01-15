@@ -29,19 +29,35 @@ local function h16_size(s)
 	return 0
 end
 
-local function load_comfile(pos, path)
+local function load_comfile(pos, fname)
+	local path = pdp13.get_boot_path(pos, fname)
+	local s = pdp13.read_file(pos, path)
+	if s and #s > 2 then
+		local word = string.byte(s, 1) + string.byte(s, 2) * 256
+		if word == pdp13.COMTAG_V1 then
+			vm16.write_mem_bin(pos, pdp13.START_ADDR, s)
+			return 1
+		end
+	end
+	return 0
+end
+
+local function load_h16file(pos, fname)
+	local path = pdp13.get_boot_path(pos, fname)
 	local s = pdp13.read_file(pos, path)
 	if s then
-		vm16.write_mem_bin(pos, pdp13.START_ADDR, s)
+		vm16.write_h16(pos, s)
 		return 1
 	end
 	return 0
 end
 
-local function load_h16file(pos, path)
+local function load_batfile(pos, fname)
+	local path = pdp13.get_boot_path(pos, fname)
 	local s = pdp13.read_file(pos, path)
 	if s then
-		vm16.write_h16(pos, s)
+		local items = pdp13.text2table(s)
+		pdp13.push_pipe(pos, items)
 		return 1
 	end
 	return 0
@@ -86,6 +102,7 @@ function pdp13.cold_start(pos)
 	local mem = techage.get_mem(pos)
 	local drive, _, _ = pdp13.path.splitpath(mem, fname)
 	pdp13.change_drive(pos, drive)
+	pdp13.set_boot_path(pos, fname)
 	
 	local regs = vm16.get_cpu_reg(pos)
 	regs.A = 0
@@ -126,21 +143,31 @@ local function sys_load_h16file(pos, address, val1, val2)
 	end
 end
 
-local function sys_h16_size(pos, address, val1, val2)
+local function sys_load_batfile(pos, address, val1, val2)
 	local path = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
+	if path then
+		return load_batfile(pos, path)
+	end
+end
+
+local function sys_h16_size(pos, address, val1, val2)
+	local fname = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
+	local path = pdp13.get_boot_path(pos, fname)
 	local s = pdp13.read_file(pos, path)
 	return h16_size(s)
 end
 
 local function sys_com_size(pos, address, val1, val2)
-	local path = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
+	local fname = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
+	local path = pdp13.get_boot_path(pos, fname)
 	return pdp13.file_size(pos, path)
 end
 
 -- Fileame via A Reg
 -- Size via B Reg
 local function sys_store_as_com(pos, address, val1, val2)
-	local path = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
+	local fname = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
+	local path = pdp13.get_boot_path(pos, fname)
 	local s = vm16.read_mem_bin(pos, pdp13.START_ADDR, val2)
 	if path and s then
 		return pdp13.write_file(pos, path, s) and 1 or 0
@@ -151,12 +178,21 @@ end
 -- Fileame via A Reg
 -- Size via B Reg
 local function sys_store_as_h16(pos, address, val1, val2)
-	local path = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
+	local fname = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
+	local path = pdp13.get_boot_path(pos, fname)
 	local s = vm16.read_h16(pos. pdp13.START_ADDR, val2)
 	if path and s then
 		return pdp13.write_file(pos, path, s) and 1 or 0
 	end
 	return 0
+end
+
+
+local function sys_file_exists(pos, address, val1, val2)
+	local fname = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
+	local path = pdp13.get_boot_path(pos, fname)
+	print("sys_file_exists", fname, path, pdp13.file_exists(pos, path))
+	return pdp13.file_exists(pos, path) and 1 or 0
 end
 
 local help = [[+-----+----------------+-------------+------+
@@ -171,7 +207,9 @@ local help = [[+-----+----------------+-------------+------+
  $77   size .h16 file   @fname  -     size
  $78   size .com file   @fname  -     size
  $79   store .h16 file  @fname  size  1=ok
- $7A   store .com file  @fname  size  1=ok]]
+ $7A   store .com file  @fname  size  1=ok
+ $7B   load .bat (>p)   @fname  -     1=ok
+ $7C   file exists      @fname  -     1=ok]]
  
 pdp13.register_SystemHandler(0x70, pdp13.cold_start, help)
 pdp13.register_SystemHandler(0x71, sys_warm_start)
@@ -183,4 +221,13 @@ pdp13.register_SystemHandler(0x77, sys_h16_size)
 pdp13.register_SystemHandler(0x78, sys_com_size)
 pdp13.register_SystemHandler(0x79, sys_store_as_h16)
 pdp13.register_SystemHandler(0x7A, sys_store_as_com)
+pdp13.register_SystemHandler(0x7B, sys_load_batfile)
+pdp13.register_SystemHandler(0x7C, sys_file_exists)
 
+vm16.register_sys_cycles(0x70, 10000)
+vm16.register_sys_cycles(0x71, 10000)
+vm16.register_sys_cycles(0x75, 10000)
+vm16.register_sys_cycles(0x76, 10000)
+vm16.register_sys_cycles(0x79, 10000)
+vm16.register_sys_cycles(0x7A, 10000)
+vm16.register_sys_cycles(0x7B, 10000)

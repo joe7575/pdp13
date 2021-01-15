@@ -47,27 +47,41 @@ function path.splitpath(mem, s)
     for w in s:gmatch("[^/]+") do
 		table.insert(words, w)
     end
+	if s:byte(-1) == 47 then -- '/'
+		table.insert(words, "")
+	end
 	local w1, w2, w3, w4 = unpack(words,1,4)
-	mem.curr_drive = mem.curr_drive or "t"
-	mem.curr_dir = mem.curr_dir or ""
+	local drive = mem.curr_drive or "t"
+	local dir = mem.curr_dir or ""
 	
 	if not w2 then
 		if string.find(w1, ptrn_fptrn) and string.len(w1) <= MAX_FNAME_LEN then
-			return mem.curr_drive, mem.curr_dir, w1
+			if drive == "t" then dir = "" end
+			return drive, dir, w1
 		end
 	elseif not w3 then
+		if w2 == "" then -- t/ or h/
+			return w1, "", ""
+		end
 		if string.find(w2, ptrn_fptrn) and string.len(w2) <= MAX_FNAME_LEN  then
 			if string.find(w1, ptrn_drive) then
-				return w1, mem.curr_dir, w2
+				if w1 == "t" then dir = "" end
+				return w1, dir, w2
 			end
 			if string.find(w1, ptrn_dir) then
-				return mem.curr_drive, w1, w2
+				if drive == "t" then dir = "" end
+				return drive, w1, w2
 			end
 		end
 	elseif not w4 then
 		if string.find(w1, ptrn_drive) then
 			if string.find(w2, ptrn_dir) then
+				if w3 == "" then
+					if w1 == "t" then dir = "" end
+					return w1, w2, w3
+				end
 				if string.find(w3, ptrn_fptrn) and string.len(w3) <= MAX_FNAME_LEN then
+					if w1 == "t" then dir = "" end
 					return w1, w2, w3
 				end
 			end
@@ -112,6 +126,17 @@ end
 
 function path.is_dir(s)
 	return string.find(s, ptrn_dir) ~= nil
+end
+
+function path.get_curr_wdir(mem)
+	mem.curr_drive = mem.curr_drive or "t"
+	mem.curr_dir = mem.curr_dir or ""
+	
+	if mem.curr_dir ~= "" then
+		return mem.curr_drive .. "/" .. mem.curr_dir
+	else
+		return mem.curr_drive
+	end
 end
 
 return path

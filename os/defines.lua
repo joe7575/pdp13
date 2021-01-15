@@ -44,9 +44,9 @@ pdp13.LIST_FILES   = 0x57
 pdp13.REMOVE_FILES = 0x58
 pdp13.COPY_FILE    = 0x59
 pdp13.MOVE_FILE    = 0x5A
-pdp13.CHANGE_DIR   = 0x5B
+pdp13.CHANGE_DRIVE = 0x5B
 pdp13.READ_WORD    = 0x5C
-pdp13.CHANGE_DRIVE = 0x5D
+pdp13.CHANGE_DIR   = 0x5D
 pdp13.CURR_DRIVE   = 0x5E
 pdp13.CURR_DIR     = 0x5F
 
@@ -74,5 +74,6 @@ pdp13.WR  = 119  -- 'w'
 pdp13.RD  = 114  -- 'r'
 
 -- COM
+pdp13.COMTAG_V1  = 0x2001
 pdp13.PARAM_BUFF = 0x00c0
 pdp13.START_ADDR = 0x0100

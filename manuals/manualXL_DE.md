@@ -296,8 +296,14 @@ Zur Verfügung stehen ab sofort bspw. folgende zusätzliche sys-Kommandos (Das Z
 | $58   | remove files              | @file name pattern         | -               | number of files |
 | $59   | copy file                 | @source file name          | @dest file name | 1=ok, 0=error   |
 | $5A   | move file                 | @source file name          | @dest file name | 1=ok, 0=error   |
-| $5B   | change drive              | drive character `t` or `h` |                 | 1=ok, 0=error   |
-| $5B   | read word                 | file reference             |                 | word            |
+| $5B   | change drive              | drive character `t` or `h` | -               | 1=ok, 0=error   |
+| $5C   | read word                 | file reference             | -               | word            |
+| $5D   | change dir                | @dir                       | -               | 1=ok, 0=error   |
+| $5E   | current drive             | -                          | -               | drive           |
+| $5F   | current dir               | @destination               | -               | 1=ok, 0=error   |
+| $60   | make dir                  | @dir                       | -               | 1=ok, 0=error   |
+| $61   | remove dir                | @dir                       | -               | 1=ok, 0=error   |
+| $62   | get files (in die pipe)   | @file name                 | -               | 1=ok, 0=error   |
 
 
 
@@ -310,11 +316,10 @@ Sofern das BIOS ROM verfügbar ist, kann am Rechner auch ein Terminal angeschlos
 
 Beide Terminals können an einer CPU angeschlossen sein, wobei es pro Typ wieder maximal ein Gerät sein darf, also in der Summe maximal zwei. Das Terminal Programmer ersetzt dabei den Telewriter Programmer, es kann also nur ein Programmer Gerät genutzt werden.
 
-Das Terminal besitzt quasi 3 Betriebsarten:
+Das Terminal besitzt 2 Betriebsarten:
 
 - Editor-Mode
 - Terminal-Mode 1 mit zeilenweise Ausgabe von Texten
-- Terminal-Mode 2 mit Bildschirmspeicher (48 Zeichen x 16 Zeilen) Hierbei wird immer der komplette Bildschirmspeicher an das Terminal übertragen (WIP).
 
 Das Terminal besitzt auch zusätzliche Tasten mit folgenden Codierung:  `RTN` = 26, `ESC` = 27, `F1` = 28, `F2` = 29, `F3` = 30, `F4` = 31.
 `RTN` oder der Wert 26 wird gesendet, wenn nur "enter" gedrückt wurde, ohne dass zuvor Zeichen in die Eingabezeile eingegeben wurden.
@@ -382,24 +387,6 @@ Damit das Tape Drive genutzt werden kann, muss es mit einem Magnetic Tape bestü
 
 Es kann maximal ein Tape Drive am Rechner angeschlossen werden. Das Tape Drive muss bei der Pfadangabe über `t/`, also bspw. `t/myfile.txt` angesprochen werden.
 
-Für den Zugriff auf das Filesystem (Tape Drive und Hard Disk) gibt es folgende sys-Kommandos:
-
-| sys # | Bedeutung          | Parameter in A  | Parameter in B   | Ergebnis in A  |
-| ----- | ------------------ | --------------- | ---------------- | -------------- |
-| $50   | file open          | @file name      | mode ("r" / "w") | file reference |
-| $51   | file close         | file reference  | -                | 1=ok, 0=error  |
-| $52   | read file (>pipe)  | file reference  | -                | 1=ok, 0=error  |
-| $53   | read line          | file reference  | @destination     | 1=ok, 0=error  |
-| $54   | write file (<pipe) | file reference  | -                | 1=ok, 0=error  |
-| $55   | write line         | file reference  | @text            | 1=ok, 0=error  |
-| $56   | file size          | @file name      | -                | size in bytes  |
-| $57   | list files (>pipe) | @file name      | -                | number files   |
-| $58   | remove files       | @file name      | -                | number files   |
-| $59   | copy file          | @file name from | @file name to    | 1=ok, 0=error  |
-| $5A   | move file          | @file name from | @file name to    | 1=ok, 0=error  |
-| $5B   | change dir         | drive           | -                | 1=ok, 0=error  |
-| $5C   | read word          | file reference  | -                | word           |
-
 
 
 ## J/OS-13 Betriebssystem
@@ -415,6 +402,8 @@ Befindet sich auf einem der Laufwerte eine Textdatei `boot`, so wird diese vom B
 ```
 t/shell1.h16
 ```
+
+Die Datei wird bei Booten immer zuerst auf `t`, dann `h` und zuletzt in `h/bin` gesucht und so fern gefunden, auch geladen. Dort wo die Datei `shell1.h16` liegt, werden auch alle weiteren ausführbaren Programme erwartet. Es müssen also immer alle ausführbaren Programme mit verschoben werden.
 
 
 
@@ -449,14 +438,13 @@ Die Zeile `move  A, B` macht nichts sinnvolles, außer dass der Wert $2001 gener
 
 Da das Ladeprogramm über keine Kommandos verfügt (der Adressbereich $0000 - $00BF ist dafür viel zu klein), wird nach einem Kaltstart ein zweiter Teil in den Adressbereich ab $0100 nachgeladen. Dieses Programm besitzt eine Kommandozeile mit Kommandos und kann andere Programme von einem Laufwerk laden und ausführen.
 
-Es werden 2 Typen von ausführbaren Programmen unterstützt:
+Es werden 3 Typen von ausführbaren Programmen unterstützt:
 
 - `.h16` Files sind Textfiles im H16  Format. Dieses Format erlaubt ein Programm an eine definierte Adresse zu laden, wie dies bspw. bei `shell1.h16` der Fall ist. Auch alle Punch Tape Programme sind im H16 Format. Nur so lassen sich technisch Programme über Punch Tapes austauschen.
 - `.com` Files sind Files im Binärformat. Das Binärformat ist deutlich kompakter (ca. Faktor 3) und deshalb für Programme die bessere Wahl. `.com` Files werden immer ab Adresse $0100 geladen und müssen dafür entsprechend vorbereitet sein (Anweisung `.org $100`).
+- `.bat` Files sind Textfiles mit einem ausführbaren Kommando in der ersten Zeile (mehr geht bis jetzt noch nicht). Bspw. die Datei `help.bat` beinhaltet den Text `cat help.txt` . Wird `help` eingegeben, wird das Batchfile geöffnet und das Kommando `cat help.txt`  ausgeführt, so dass der Hilfetext ausgegeben wird.
 
-(geplant sind noch Batch Files mit der Endung `.bat`)
-
-Für beide Typen von Programmen gilt:  Die Anwendung muss bei Adresse $0100 starten, darf den Adressbereich unterhalb von $00C0 nicht verändern und muss am Ende über `sys #$71` wieder zum Betriebssystem zurückkehren.
+Für `.com` und `.h16` Files gilt:  Die Anwendung muss bei Adresse $0100 starten, darf den Adressbereich unterhalb von $00C0 nicht verändern und muss am Ende über `sys #$71` wieder zum Betriebssystem zurückkehren.
 
 
 
@@ -467,10 +455,11 @@ Für beide Typen von Programmen gilt:  Die Anwendung muss bei Adresse $0100 star
 - `ed <file>` um den Editor zu starten. Das angegebene File wird dabei in den Editor geladen. Existiert das File noch nicht, wird es angelegt.
 - `<name>.h16` bzw. `<name>.com` um ein Programm von einem der Laufwerke auszuführen. Bei `.com` Programmen kann die `.com` Endung auch weggelassen werden.
 - `mv <old> <new>` um ein File umzubenennen oder zu verschieben
-- `rm <file>` um File(s) zu löschen
-- `ls [<wc>]` um die Filenamen als Liste auszugeben. Mit `ls` werden alle Files des aktuellen Laufwerks ausgegeben. mit `ls h/*` werden bspw. alle Files des Hard Drives ausgegeben.  Mit `ls test.*` nur Files mit dem Namen "test" und mit  `ls *.com` nur `.com` Files.
-- `cp <from> <to>` Um eine Datei zu kopieren. 
-- `cd t/h` Um das Laufwerk zu wechseln. Also bspw.  `ls h` für das Hard Drive.
+- `rm <file>` um File(s) zu löschen. Hier geht auch `rm *.lst` oder `rm test.*`
+- `ls [<wc>]` um die Filenamen als Liste auszugeben. Mit `ls` werden alle Files des aktuellen Laufwerks ausgegeben. mit `ls t/*` werden bspw. alle Files des Tape Drives ausgegeben.  Mit `ls test.*` nur Files mit dem Namen "test" und mit  `ls *.com` nur `.com` Files.
+- `cp <from> <to>` Um eine Datei zu kopieren, also bspw. `cp t/test.txt  h/test.txt`
+- `cpn <from> <to>` Um meherer Dateien zu kopieren, also bspw. `cpn t/*.asm  h/asm/`. Wichtig ist hier, das als 2. Parameter ein Pfad mit einem abschließenden `/`-Zeichen eingegeben wird.
+- `cd t/h` Um das Laufwerk zu wechseln. Also bspw.  `ls h` für das Hard Drive. Beim Hard Drive werden auch Verzeichnisse unterstützt. Damit geht auch bspw. `cd bin`.
 
 Weitere Kommandos sind als Programm (`.com` File) implementiert und werden daher erst vom Laufwerk geladen, bevor sie ausgeführt werden.
 
@@ -478,7 +467,7 @@ Weitere Kommandos sind als Programm (`.com` File) implementiert und werden daher
 
 ### Kommandos vom Laufwerk
 
-- `asm <file>`  um ein File zu h16 zu übersetzen (ohne ext)
+- `asm <file>`  um ein File zu h16 zu übersetzen
 - `cat <file>` um den Inhalt einer Datei auszugeben
 - `ptrd <file>` um ein ASCII File vom Punch Tape in das Filesystem zu kopieren
 - `ptwr <file>` um ein ASCII File vom Filesystem auf ein Punch Tape zu kopieren
@@ -526,7 +515,15 @@ Das wars! Du hast J/OS erfolgreich installiert!
 
 ### Debugging
 
-Um eine J/OS Anwendung zu debuggen, kann der Rechner an der CPU auch über das Kommando `mon` gestartet werden. Am Programmer Terminal muss dann das Kommando `st 0` eingegeben werden. Danach muss das Programm über `sp` wieder gestoppt werden, um dann einen Breakpoint setzen zu können.
+Um eine J/OS Anwendung zu debuggen, kann der Rechner an der CPU auch über das Kommando `mon` gestartet werden. Dazu wie folgt vorgehen:
+
+- das Programm, das debuggt werden soll, mit einem `btk #0` an der Stelle erweitern, an der der Debugger anhalten soll
+- das Programm mit dem Assembler neu übersetzen
+
+- wichtig: der Rechner wurde damit einmal normal gebooten, so dass sich das Programm `shell1.h16` im Speicher befindet
+- den Rechner an der CPU stoppen und mit dem  Kommando `mon` neu starten
+- Im Programmer Terminal das Kommando `st 0` eingegeben, der Rechner läuft wie im Normalbetrieb
+- Das Programm über das Operator Terminal starten. Der Debugger steht danach auf dem eingefügten `brk #0`
 
 
 
@@ -539,6 +536,50 @@ Um den Hard Disk Block craften zu können, wird ein "Hard Disk Program" Tape ben
 Es kann maximal eine Hard Disk am Rechner angeschlossen werden. Der Zugriff auf die Hard Disk erfolgt über `h/`, also bspw. `h/myfile.txt`
 
 Wird dieser Block abgebaut, bleiben die Daten erhalten. Wird der Block zerstört, sind die Daten auch weg.
+
+Die Hard Disk unterstützt eine Ebene von Verzeichnissen. Verzeichnissenamen müssen 2 oder 3 Zeichen lang sein, wobei Buchstaben und Zahlen zulässig sind.  Es empfiehlt sich, folgende Verzeichnisse anzulegen:
+
+```
+h/bin  - für alle ausführbaren Programme, inklusive dem boot File (Achtung: boot selbst muss auch angepasst werden)
+h/asm  - für alle .asm Files
+h/usr  - für eigene Files
+h/lib  - für 
+```
+
+
+
+Mit dem `cd` Kommando kann zwischen Laufwerken und Verzeichnissen gewechselt werden:
+
+```
+cd t
+cd h
+cd bin  (sofern auf h/)
+cd ..   (sofern in einem Verzeichnis)
+```
+
+Was nicht geht, ist bspw. `cd ../asm` oder `cd h/bin`, also alle Kombinationen.
+
+
+
+### Umziehen mit J/OS von `t` nach `h/bin`
+
+Wenn alle ausführbaren Files von `t` nach `h/bin` kopiert sind und das boot File angepasst ist, kann der Rechner auch vom Hard Drive booten. Hier die Kommandos, die der Reihe nach ausgeführt werden müssen:
+
+```
+cd h
+mkdir bin
+cd t
+cp boot h/bin/boot
+cpn *.h16 h/bin/
+cpn *.com h/bin/
+cd h
+cd bin
+ed boot   -> h/bin/boot
+--> stop tape drive
+--> reboot CPU
+```
+
+Das Tape mit den boot-Files gut aufheben. Falls der Rechner mal nicht vom Hard Drive bootet...
 
 
 

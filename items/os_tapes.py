@@ -47,13 +47,13 @@ def generate_file(path, file_type, file_name, item_name, item_desc, hidden):
         asm_file = path + file_name + ".asm"
         dst_file = path + file_name + ".h16"
         lst_file = path + file_name + ".lst"
-        if os.system("vm16asm %s" % asm_file) != 0:
+        if os.system("vm16asm %s --lst" % asm_file) != 0:
             sys.exit(0)
     elif file_type == "com":
         asm_file = path + file_name + ".asm"
         dst_file = path + file_name + ".com"
         lst_file = path + file_name + ".lst"
-        if os.system("vm16asm %s --com" % asm_file) != 0:
+        if os.system("vm16asm %s --com --lst" % asm_file) != 0:
             sys.exit(0)
     elif file_type == "":
         asm_file = path + file_name
@@ -73,16 +73,17 @@ def compile_file(path, file_type, file_name):
         asm_file = path + file_name + ".asm"
         dst_file = path + file_name + ".h16"
         lst_file = path + file_name + ".lst"
-        if os.system("vm16asm %s" % asm_file) != 0:
+        if os.system("vm16asm %s --lst" % asm_file) != 0:
             sys.exit(0)
     elif file_type == "com":
         asm_file = path + file_name + ".asm"
         dst_file = path + file_name + ".com"
         lst_file = path + file_name + ".lst"
-        if os.system("vm16asm %s --com" % asm_file) != 0:
+        if os.system("vm16asm %s --com --lst" % asm_file) != 0:
             sys.exit(0)
 
 def copy_file(src_path, dst_path, file_type, file_name, uid):
+    print("copy " + file_name + "." + file_type)
     if file_type == "":
         src_file = src_path + file_name
         dst_file = dst_path + uid + "_" + file_name
@@ -91,15 +92,19 @@ def copy_file(src_path, dst_path, file_type, file_name, uid):
         asm_file = src_path + file_name + ".asm"
         src_file = src_path + file_name + ".com"
         dst_file = dst_path + uid + "_" + file_name + ".com"
-        if os.system("vm16asm %s --com" % asm_file) != 0:
+        if os.system("vm16asm %s --com --lst" % asm_file) != 0:
             sys.exit(0)
         shutil.copy(src_file, dst_file)
     elif file_type == "h16":
         asm_file = src_path + file_name + ".asm"
         src_file = src_path + file_name + ".h16"
         dst_file = dst_path + uid + "_" + file_name + ".h16"
-        if os.system("vm16asm %s" % asm_file) != 0:
+        if os.system("vm16asm %s --lst" % asm_file) != 0:
             sys.exit(0)
+        shutil.copy(src_file, dst_file)
+    else:
+        src_file = src_path + file_name + "." + file_type
+        dst_file = dst_path + uid + "_" + file_name + "." + file_type
         shutil.copy(src_file, dst_file)
 
 ################################################################################
@@ -163,18 +168,25 @@ CopyFiles = [
 
 lOut = []
 for file_type, file_name in CopyFiles:
-    #copy_file("../system/", "../../../worlds/pdp13_test/pdp13/", file_type, file_name, "00000002")
+    copy_file("../system/", "../../../worlds/pdp13_test/pdp13/", file_type, file_name, "00000004")
     pass
 
 ################################################################################
-## Example files to copy to files system for testing
+## ASM files to copy to files system for testing
 ################################################################################
 CopyFiles = [
-    ("com", "hellow"),
+    ("asm", "hellow"),
+    ("asm", "h16com"),
+    ("asm", "shell1"),
+    ("asm", "shell2"),
+    ("asm", "cat"),
+    ("asm", "ptrd"),
+    ("asm", "ptwr"),
+    ("asm", "asm"),
 ]
 
 lOut = []
 for file_type, file_name in CopyFiles:
-    #copy_file("../examples/", "../../../worlds/pdp13_test/pdp13/", file_type, file_name, "00000002")
+    copy_file("../system/", "../../../worlds/pdp13_test/pdp13/", file_type, file_name, "00000004")
     pass
 

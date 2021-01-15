@@ -226,17 +226,9 @@ end
 local function edit_save(pos, mem, text)
 	local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 	if mem.fname == "" then mem.fname = "new.txt" end
-	
-	local fref = pdp13.sys_call(cpu_pos, pdp13.FOPEN, mem.fname, WR, 0x00C0)
-	if fref then
-		pdp13.write_file(pos, fref, text)
-		pdp13.sys_call(cpu_pos, pdp13.FCLOSE, fref, 0)
-		print_string_ln(pos, mem, "File stored.")
-		pdp13.sys_call(cpu_pos, pdp13.PROMPT, 0, 0)
-	else
-		print_string_ln(pos, mem, "Store error!")
-		pdp13.sys_call(cpu_pos, pdp13.PROMPT, 0, 0)
-	end
+	pdp13.write_file(cpu_pos, mem.fname, text)
+	print_string_ln(pos, mem, "File stored.")
+	pdp13.sys_call(cpu_pos, pdp13.PROMPT, 0, 0)
 end
 
 local function function_keys(fields)

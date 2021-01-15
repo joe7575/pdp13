@@ -16,12 +16,12 @@ local tOpcodes = {}
 local tOperands = {}
 local SymbolTbl = {}
 
-for idx,s in pairs(pdp13.VM13Opcodes) do
+for idx,s in pairs(pdp13.VM16Opcodes) do
 	local opc = string.split(s, ":")[1] 
 	tOpcodes[opc] = idx
 end
 
-for idx,s in pairs(pdp13.VM13Operands) do
+for idx,s in pairs(pdp13.VM16Operands) do
 	tOperands[s] = idx
 end
 

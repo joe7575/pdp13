@@ -3,9 +3,43 @@
 ; File name: shell2.com
 ;--------------------------------------
 ; Loaded as application and later
-; be replaced by a .com file.
+; Will be replaced by a .com file.
+
+; checkext ext next_lbl
+$macro checkext 2
+    move  A, #cmdstr.BUF    ; A <- @cmd
+    move  B, #%1            ; B <- @ext
+    call  strrstr           ; check ext
+    skeq  A, #1             ; match?
+    jump  %2                ; try next
+$endmacro
+
+; addext ext next_lbl
+; (and check if file exists)
+$macro addext 2
+    ; split old ext
+    move  X, #cmdstr.BUF2   ; A <- @dest
+    add   X, cmdstr.LEN
+    move  [X], #0
+    ; add new ext
+    move  A, #cmdstr.BUF2   ; A <- @dest
+    move  B, #%1            ; B <- @ext
+    move  C, #13            ; max fname length with '\0'
+    call  strcat
+
+    ; check if file exists
+    move  A, #cmdstr.BUF2
+    sys   #$7C              ; file exists (A <- res)
+    bze   A, %2             ; file does not exist
+$endmacro
+
+
+
     .org $100
     .code
+
+    move  A, B              ; com v1 tag $2001
+    
 Prompt:
     ;=== Prompt 1 ===
     sys   #$1A              ; output prompt
@@ -14,7 +48,7 @@ Prompt:
 Input:
     move  A, #cmdstr.BUF
     sys   #$17              ; input string (a <- len)
-    move  cmdstr.LEN, A          ; command length
+    move  cmdstr.LEN, A     ; command length
     nop
     bze   A, Input
     inc   A                 ; no terminal?
@@ -36,6 +70,7 @@ out_cmd:
     sys   #$14              ; println command
 
     ;=== Process command ===
+exe_cmd:
     call  cmdstr.process    ; cmdstr.POS <- @cmnd
                             ; cmdstr.NUM <- num str
     
@@ -118,7 +153,7 @@ cmd_cp:
     move  A, #cmdstr.BUF
     move  B, #CMD_CP
     call  strcmp            ; 0 = match
-    bnze  A, cmd_rm
+    bnze  A, cmd_cpn
 
     move  A, cmdstr.NUM     ; check num param
     skeq  A, #3
@@ -134,6 +169,41 @@ cmd_cp:
     bze   A, ferror
 
     move  A, #COPIED
+    sys   #$14              ; println
+
+    jump  Prompt
+
+    ;=== cmd cpn ===
+cmd_cpn:
+    move  A, #cmdstr.BUF
+    move  B, #CMD_CPN
+    call  strcmp            ; 0 = match
+    bnze  A, cmd_rm
+
+    move  A, cmdstr.NUM     ; check num param
+    skeq  A, #3
+    jump  serror 
+
+    call  cmdstr.next       ; cmdstr.POS <- @from
+    move  C, cmdstr.POS
+    call  cmdstr.next       ; cmdstr.POS <- @to
+    move  B, cmdstr.POS     ; B <- @to
+    move  A, C              ; A <- @from
+
+    sys   #$62              ; get files (>pipe)
+    bze   A, ferror
+
+    move  A, B              ; A <- @to
+    call  cpyfiles          ; copy files (<pipe)
+    bze   A, ferror
+
+    move  B, #10            ; base
+    sys   #$12              ; print num
+    
+    move  A, #32            ; blank
+    sys   #$11              ; print char
+    
+    move  A, #COPIED2
     sys   #$14              ; println
 
     jump  Prompt
@@ -165,22 +235,83 @@ cmd_cd:
     move  A, #cmdstr.BUF
     move  B, #CMD_CD
     call  strcmp            ; 0 = match
-    bnze  A, load_cmd
+    bnze  A, cmd_mkdir
 
     move  A, cmdstr.NUM     ; check num param
     skeq  A, #2
     jump  serror 
 
-    call  cmdstr.next       ; cmdstr.POS <- @file
-    move  X, cmdstr.POS
-    move  A, [X]            ; A <- drive
+    call  cmdstr.next       ; cmdstr.POS <- @dir
+    move  A, cmdstr.POS
 
-    sys   #$5B              ; change dir
+    sys   #$5D              ; change dir
     bze   A, ferror
 
     jump  Prompt
 
-    ;=== check for cmd file ===
+    ;=== cmd mkdir ===
+cmd_mkdir:
+    move  A, #cmdstr.BUF
+    move  B, #CMD_MKDIR
+    call  strcmp            ; 0 = match
+    bnze  A, cmd_rmdir
+
+    move  A, cmdstr.NUM     ; check num param
+    skeq  A, #2
+    jump  serror 
+
+    call  cmdstr.next       ; cmdstr.POS <- @dir
+    move  A, cmdstr.POS     ; A <- dir
+
+    sys   #$60              ; make dir
+    bze   A, ferror
+
+    jump  Prompt
+
+    ;=== cmd rmdir ===
+cmd_rmdir:
+    move  A, #cmdstr.BUF
+    move  B, #CMD_RMDIR
+    call  strcmp            ; 0 = match
+    bnze  A, load_com
+
+    move  A, cmdstr.NUM     ; check num param
+    skeq  A, #2
+    jump  serror 
+
+    call  cmdstr.next       ; cmdstr.POS <- @dir
+    move  X, cmdstr.POS     ; A <- dir
+
+    sys   #$61              ; remove dir
+    bze   A, ferror
+
+    jump  Prompt
+
+    ;=== check for .com file ===
+load_com:
+    checkext DCOM load_bat
+
+    ; load .com file
+    move  A, #cmdstr.BUF    ; cmd in cmdstr.BUF
+    jump  $4                ; routine resides before $100
+
+    ;=== check for .bat file ===
+load_bat:
+    checkext DBAT load_h16
+
+    ; load .bat file
+    move  A, #cmdstr.BUF    ; cmd in cmdstr.BUF
+    jump exe_bat
+
+    ;=== check for .h16 file ===
+load_h16:
+    checkext DH16 load_cmd
+
+    ;=== load .h16 file ===
+    move  A, #cmdstr.BUF
+    jump  $0C               ; routine resides before $100
+
+    ;=== check for .com/.bat files ===
 load_cmd:
     ; copy cmd to BUFF2
     move  A, #cmdstr.BUF2   ; @dest
@@ -188,63 +319,23 @@ load_cmd:
     move  C, cmdstr.LEN     ; C = max length
     inc   C                 ; consider '\0'
     call  strcpy
-    
-    ; add .com extension
-    move  A, #cmdstr.BUF2   ; @dest
-    move  B, #DCOM          ; @appendix
-    move  C, #13            ; max fname length with '\0'
-    call  strcat
 
-    ; check if file exists
-    move  A, #cmdstr.BUF2
-    sys   #$56              ; file size (A <- size)
-    bze   A, load_com       ; file does not exist
-    
-    ; open cmd file
-    move  A, #cmdstr.BUF2
-    move  B, #114           ; read
-    sys   #$50              ; fopen (A <- fref)
+    ; check for .com
+test_com:
+    addext DCOM test_bat
 
-    ; read word
-    move  B, A
-    sys   #$5C              ; read word (A <- word)
-    xchg  B, A              ; B = word, A = fref
-
-    ; close file
-    sys   #$51  
-    
-    ; check tag
-    skne  A, #cmdstr.COMV1
-    jump load_com
-
-    ;=== load .com file ===
-    move  A, #cmdstr.BUF2   ; cmd in cmdstr.BUF2
-    jump  $4                ; routine resides before $100
-
-    
-    ;=== check for .com file ===
-load_com:
-    move  A, #cmdstr.BUF
-    move  B, #DCOM
-    call  strrstr           ; check ext
-    skeq  A, #1             ; com file?
-    jump  load_dh16         ; try .h16
-
-    ;=== load .com file ===
-    move  A, #cmdstr.BUF    ; cmd in cmdstr.BUF
+    ; load .com file
+    move  A, #cmdstr.BUF2   ; fname in cmdstr.BUF2
     jump  $4                ; routine resides before $100
     
-    ;=== check for .h16 file ===
-load_dh16:
-    move  A, #cmdstr.BUF
-    move  B, #DH16
-    call  strrstr           ; check ext
-    skeq  A, #1             ; h16 file?
-    jump  serror
+    ; check for .bat
+test_bat:
+    addext DBAT serror
 
-    ;=== load .h16 file ===
-    jump  $0C               ; routine resides before $100
-
+    ; load .bat file
+    move  A, #cmdstr.BUF2   ; fname in cmdstr.BUF2
+    jump exe_bat
+    
     ;=== error ===
 serror:
     move  A, #SERROR
@@ -255,6 +346,20 @@ ferror:
     move  A, #FERROR
     sys   #$14              ; println
     jump  Prompt
+
+    ;=== load and exe bat file ===
+exe_bat:
+    ; load .bat
+    sys   #$7B              ; load bat (pipe <- text)
+    bze   A, ferror
+
+    ; read file line
+    move  A, #cmdstr.BUF   ; A = dest
+    sys   #$81             ; read line (<pipe)
+    bze   A, ferror
+    
+    jump  exe_cmd           ; restart shell
+
 
   
     .text
@@ -270,10 +375,16 @@ CMD_MV:
     "mv\0"
 CMD_CP:
     "cp\0"
+CMD_CPN:
+    "cpn\0"
 CMD_RM:
     "rm\0"
 CMD_CD:
     "cd\0"
+CMD_MKDIR:
+    "mkdir\0"
+CMD_RMDIR:
+    "rmdir\0"
 SERROR:
     "Syntax error!\0"
 FERROR:
@@ -284,10 +395,14 @@ REMOVED:
     "File(s) removed\0"
 COPIED:
     "File copied\0"
+COPIED2:
+    "Files copied\0"
 DCOM:
     ".com\0"
 DH16:
     ".h16\0"
+DBAT:
+    ".bat\0"
 
 $include "cmdstr.asm"
 $include "strstrip.asm"
@@ -298,3 +413,4 @@ $include "strrstr.asm"
 $include "strcpy.asm"
 $include "strcat.asm"
 $include "less.asm"
+$include "cpyfiles.asm"

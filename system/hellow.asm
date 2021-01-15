@@ -32,4 +32,4 @@ TEXT:
     "Hello "
     "World\0"
 
-$include "../system/cmdstr.asm"
+$include "cmdstr.asm"

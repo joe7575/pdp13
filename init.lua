@@ -45,7 +45,7 @@ dofile(MP.."/os/terminal.lua")
 dofile(MP.."/os/comm.lua")
 dofile(MP.."/os/boot.lua")
 dofile(MP.."/os/install.lua")
-dofile(MP.."/assemlber/asm.lua")
+dofile(MP.."/assembler/asm.lua")
 IE = nil
 
 -- PDP-13
