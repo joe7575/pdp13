@@ -47,7 +47,9 @@ local Tape3Files = {
 	"hellow.asm",
 	"shell1.asm",
 	"shell2.asm",
-	"",
+	"cpyfiles.asm",
+	"ptrd.asm",
+	"ptwr.asm",
 }
 
 

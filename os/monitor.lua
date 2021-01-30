@@ -386,7 +386,12 @@ Commands["sy"] = function(pos, mem, cmd, rest, is_terminal)
 		regB = pdp13.string_to_number(regB, true) or 0
 		
 		if num and num < 0x300 then
-			return pdp13.sys_call(pos, num, regA, regB)
+			local sts, resp = pcall(pdp13.sys_call, pos, num, regA, regB)
+			if sts then
+				return {"result = "..(resp or 65535)}
+			else
+				return {"sys error", resp:sub(1, 48)}
+			end
 		end
 		return {"error!"}
 	end
@@ -395,19 +400,15 @@ end
 -- load file
 Commands["ld"] = function(pos, mem, cmd, rest, is_terminal)
 	if techage.get_nvm(pos).monitor and is_terminal then
-		local sts, resp
-		if pdp13.is_com_file(rest) and pdp13.file_exists(pos, rest) then
-			sts, resp = pcall(pdp13.sys_call, pos, pdp13.LOAD_COM, rest, 0, pdp13.PARAM_BUFF)
-		elseif pdp13.is_h16_file(rest) and pdp13.file_exists(pos, rest) then
-			sts, resp = pcall(pdp13.sys_call, pos, pdp13.LOAD_H16, rest, 0, pdp13.PARAM_BUFF)
+		local resp
+		if pdp13.path.has_ext(rest, "com") and pdp13.boot.file_exists(pos, rest) then
+			resp = pdp13.boot.load_comfile(pos, rest)
+		elseif pdp13.path.has_ext(rest, "h16") and pdp13.boot.file_exists(pos, rest) then
+			resp = pdp13.boot.load_h16file(pos, rest)
 		else
 			return {"error!"}
 		end
-		if sts then
-			return {"result = "..resp}
-		else
-			return {"sys error", resp:sub(1, 48)}
-		end
+		return {"result = "..resp}
 	end
 end
 

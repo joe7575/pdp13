@@ -8,7 +8,7 @@
 	AGPL v3
 	See LICENSE.txt for more information
 	
-	PDP-13 Punch Tapes
+	Compile/copy all kind of asm files
 
 ]]--
 

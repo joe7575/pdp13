@@ -139,4 +139,5 @@ function path.get_curr_wdir(mem)
 	end
 end
 
-return path
+
+pdp13.path = path

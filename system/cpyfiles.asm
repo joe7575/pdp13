@@ -43,4 +43,5 @@ exit:
     ret
 
 $include "cmdstr.asm"
+$include "strcpy.asm"
 

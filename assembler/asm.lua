@@ -34,6 +34,8 @@ asm.CODESYMSEC = 5
 asm.FILENAME   = 6
 asm.EOFILE     = 7
 
+asm.TITLE = "VM16 ASSEMBLER v1.3.0 (c) 2019-2021 by Joe"
+
 assert(loadfile(MP .. "/assembler/pass1.lua"))(asm)
 assert(loadfile(MP .. "/assembler/pass2.lua"))(asm)
 assert(loadfile(MP .. "/assembler/pass3.lua"))(asm)
@@ -51,8 +53,9 @@ end
 
 
 function pdp13.assembler(pos, fname)
-	asm.outp(pos, "VM16 ASSEMBLER v1.3.0 (c) 2019-2021 by Joe")
+	asm.outp(pos, asm.TITLE)
 	
+	asm.error = nil
 	asm.address = 0
 	asm.lineno = 0
 	asm.fname = fname

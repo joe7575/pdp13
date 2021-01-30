@@ -4,6 +4,6 @@
 trash/
 test/
 examples/exam*.*
-examples/*.lst
 examples/*.h16
+system/*.h16
 examples/*.com

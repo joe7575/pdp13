@@ -36,7 +36,7 @@ Das I/O-Rack verbindet die CPU mit der Welt, also anderen Blöcken und Maschinen
 - Das erste I/O-Rack belegt die I/O-Adressen #0 bis #7. Diesen Adressen können über das Menü des I/O-Racks Blocknummern zugeordnet werden
 - Werte, welche über das `out` Kommando an Adresse #0 bis #7 ausgegeben werden, werden dann vom I/O-Rack an den entsprechenden Block weitergegeben
 - Kommandos, die an die CPU bzw. an die Nummer der CPU gesendet werden (bspw. von einem Schalter) können so über ein `in` Kommando wieder eingelesen werden
-- Das Description Feld ist optional und muss nicht beschrieben werden. Im unkonfigurierten Fall zeigt es den Blocknamen an, mit dem der Port über die Blocknummer verbunden ist
+- Das Description Feld ist optional und muss nicht beschrieben werden. Im nicht-konfigurierten Fall zeigt es den Blocknamen an, mit dem der Port über die Blocknummer verbunden ist
 - Das "OUT" Feld zeigt den zuletzt ausgegebenen Wert/das zuletzt ausgegebene Kommando
 - Das "IN" Feld zeigt entweder das empfangene Kommando oder die Antwort auf ein gesendetes Kommando. Wird 65535 ausgegeben, wurde kein Antwort empfangen (viele Blöcke senden keine Anwort auf ein "on"/"off" Kommando)
 - Das "help" Register zeigt eine Tabelle mit Informationen zur Umsetzung von Ein/Ausgabe Werten der CPU zu Techage Kommandos (Die CPU kann nur Nummern ausgeben, diese werden dann in Techage Text-Kommandos umgesetzt und umgekehrt)
@@ -124,7 +124,7 @@ loop:
 000C: 1200, 0004    jump loop
 ```
 
-Die Ausgabe erfolgt immer nach folgendem Schema:
+Die Ausgabe des Codes erfolgt immer nach folgendem Schema:
 
 ```assembly
 <addr>: <opcodes>   <asm code>    ; <comment>
@@ -136,7 +136,7 @@ Die Ausgabe erfolgt immer nach folgendem Schema:
 
 Neben den Demo Tapes mit festen, kleinen Programmen gibt es auch die beschreibbaren und editierbaren Punch Tapes. Diese können (im Gegensatz zum Original) mehrfach geschrieben/geändert werden.
 
-Die Punch Tapes besitzen ein Menü so dass diese auch von Hand beschrieben werden können. Dies dient dazu:
+Die Punch Tapes besitzen ein Menü, so dass diese auch von Hand beschrieben werden können. Dies dient dazu:
 
 - dem Tape einen eindeutigen Namen zu geben
 - zu beschreiben, wie das Programm genutzt werden kann (Description)
@@ -148,7 +148,7 @@ Die Punch Tapes besitzen ein Menü so dass diese auch von Hand beschrieben werde
 
 Über diesen Block kann eine HEX-Ziffer, also 0-9 und A-F ausgegeben werden, indem Werte von 0 bis 15 über das Kommando `value` an den Block gesendet werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. Werte größer 15 löschen die Ausgabe.
 
-Lua: `$send_cmnd(num, "value", 0..16)`
+Dies geht auch mit dem Techage Lua Controller: `$send_cmnd(num, "value", 0..16)`
 
 Asm:
 
@@ -164,7 +164,7 @@ out #00, A      ; output on port #0
 
 Dieser Lampenblock kann in verschiedenen Farben leuchten. Dazu müssen Werte von 1-64 über das Kommando `value`an den Block gesendet werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. Der Werte 0 schaltet die Lampe aus.
 
-Lua: `$send_cmnd(num, "value", 0..64)`
+Dies geht auch mit dem Techage Lua Controller: `$send_cmnd(num, "value", 0..64)`
 
 Asm:
 
@@ -191,16 +191,16 @@ Das Inventar des Speicherblocks lässt sich nur in der vorgegebenen Reihenfolge 
 Hier ein konkretes Beispiel, das den Umgang mit der Mod zeigt. Ziel ist es, die TechAge Signallampe (nicht die PDP-13 Color Lamp!) einzuschalten. Dazu muss man den Wert 1 über ein `out` Befehl an dem Port ausgeben, wo die Lampe "angeschlossen" ist. Das Assembler-Programm dazu sieht aus wie folgt:
 
 ```assembly
-mov A, #1   ; Lade das A-Register mit den Wert 1
-out #0, A   ; Gebe den Wert aus dem A-Register auf I/O-Adresse 0 aus
-halt        ; Stoppe die CPU nach der Ausgabe
+move A, #1   ; Lade das A-Register mit den Wert 1
+out  #0, A   ; Gebe den Wert aus dem A-Register auf I/O-Adresse 0 aus
+halt         ; Stoppe die CPU nach der Ausgabe
 ```
 
 Da der Rechner diese Assemblerbefehle nicht direkt versteht, muss das Programm in Maschinencode übersetzt werden. Dazu dient die Hilfeseite im Menü des CPU-Blocks. Das Ergebnis sieht dann so aus (der Assemblercode steht als Kommentar dahinter):
 
 ```assembly
-2010 0001   ; mov A, #1  
-6600 0000   ; out #0, A
+2010 0001   ; move A, #1  
+6600 0000   ; out  #0, A
 1C00        ; halt
 ```
 
@@ -213,7 +213,7 @@ Diese 5 Maschinenbefehle müssen bei der CPU eingegeben werden, wobei für `0000
 Dazu sind die folgenden Schritte notwendig:
 
 - Rechner mit Power, CPU, und einem IO-Rack aufbauen wie oben beschrieben
-- 7-Segment Bock in die Nähe setzen und die Nummer des Blockes im Menü des I/O-Racks in der obersten Zeile bei Adresse #0 eingeben
+- TechAge Signallampe in die Nähe setzen und die Nummer des Blockes im Menü des I/O-Racks in der obersten Zeile bei Adresse #0 eingeben
 - Den Rechner am Power Block einschalten
 - Die CPU gegebenenfalls stoppen und mit "reset" auf die Adresse 0 setzen
 - Den 1. Befehl eingeben und mit "enter" bestätigen: `2010 1`
@@ -222,7 +222,20 @@ Dazu sind die folgenden Schritte notwendig:
 - Die Tasten "reset" und "dump" drücken und die Eingaben überprüfen
 - Nochmals die Taste "reset" und dann die Taste "start" drücken
 
-Wenn du alles richtig gemacht hast, leuchtet danach die Lampe. Das "OUT" Feld im Menü des I/O-Racks zeigt die ausgegebene 1, das "IN" Feld zeigt eine 65535, da von der Lampe keine Antwort gesendet wird.
+Wenn du alles richtig gemacht hast, leuchtet danach die Lampe. Das "OUT" Feld im Menü des I/O-Racks zeigt die ausgegebene 1, das "IN" Feld zeigt eine 65535, da von der Lampe keine Antwort empfangen wurde.
+
+### Übungsaufgabe
+
+Ändere das Programm so, dass die PDP-13 Color Lamp angesteuert wird. Die Nummer der PDP-13 Color Lamp musst du am I/O-Rack bei Port #1 eingeben:
+
+```asm
+2010 0080   ; move A, #80  ('value' command)
+2030 0005   ; move B, #5   (value 5 in B)
+6600 0001   ; out  #1, A   (output A on port #1)
+1C00        ; halt
+```
+
+Hast du alles richtig eingegeben, leuchtet die Lampe orange.
 
 
 
@@ -350,7 +363,7 @@ Auf dem "Terminal Programmer" läuft die Version 2 des Monitors. Diese bietet fo
 | Kommando   | Bedeutung                                                    |
 | ---------- | ------------------------------------------------------------ |
 | `ld name`  | (load) Laden einer `.com` oder `.h16` Datei in den Speicher  |
-| `sy # # #` | (sys) Aufrufen eines `sys` Kommandos mit Nummer, Wert für Reg A, Wert für Reg B (nur sys-Nummern kleiner $300) |
+| `sy # # #` | (sys) Aufrufen eines `sys` Kommandos mit Nummer (nur sys-Nummern kleiner $300), sowie die Werte für Reg A, und Reg B (optional). Beispiel: `sy 1B` für beep |
 | `br #`     | (breakpoint) Setzen eines Breakpoints an der angegebenen Adresse. Es kann nur ein Breakpoint gesetzt werden |
 | `br`       | (breakpoint) Löschen des Breakpoints                         |
 | `so`       | (step over) Springe über die nächste `call` Anweisung. Steht der Debugger aktuell an einer `call` Anweisung, würde man mit einem `n(ext)` dem call folgen und die Funktion im Einzelschritt durchlaufen. Mit `so` wird die Funktion komplett ausgeführt und der Debugger bleibt in der nächsten Zeile wieder stehen. Technisch sind dies zwei Kommandos: `br PC+2` und `st`. Das bedeutet, der zuvor gesetzte Breakpoint ist damit gelöscht (siehe auch Breakpoints). |
@@ -513,6 +526,21 @@ Das wars! Du hast J/OS erfolgreich installiert!
 
 
 
+### CPU Fehlermeldungen
+
+Kommt es beim Booten des Rechners zu einem Fehler, wird eine Fehlernummer an der CPU ausgegeben.
+
+| Nummer | Fehler                                                       |
+| ------ | ------------------------------------------------------------ |
+| 2      | Die Datei `boot` konnte nicht gefunden werden                |
+| 3      | Die Datei `boot` konnte nicht korrekt gelesen werden (Datei defekt) |
+| 4      | Die Datei `boot` enthält keine Referenz auf ein `.h16` File  |
+| 5      | Das in der Datei `boot` referenzierte `.h16` File existiert nicht |
+| 6      | Das in der Datei `boot` referenzierte `.h16` File ist korrupt (kein ASCII Format) |
+| 7      | Das in der Datei `boot` referenzierte `.h16` File ist korrupt (kein gültiges `.h16` Format) |
+
+
+
 ### Debugging
 
 Um eine J/OS Anwendung zu debuggen, kann der Rechner an der CPU auch über das Kommando `mon` gestartet werden. Dazu wie folgt vorgehen:
@@ -520,7 +548,7 @@ Um eine J/OS Anwendung zu debuggen, kann der Rechner an der CPU auch über das K
 - das Programm, das debuggt werden soll, mit einem `btk #0` an der Stelle erweitern, an der der Debugger anhalten soll
 - das Programm mit dem Assembler neu übersetzen
 
-- wichtig: der Rechner wurde damit einmal normal gebooten, so dass sich das Programm `shell1.h16` im Speicher befindet
+- wichtig: der Rechner muss einmal normal gebootet worden sein, so dass sich das Programm `shell1.h16` im Speicher befindet. Alternativ muss `shell1.h16` über das Monitor-Kommando `ld` in den Speicher geladen werden.
 - den Rechner an der CPU stoppen und mit dem  Kommando `mon` neu starten
 - Im Programmer Terminal das Kommando `st 0` eingegeben, der Rechner läuft wie im Normalbetrieb
 - Das Programm über das Operator Terminal starten. Der Debugger steht danach auf dem eingefügten `brk #0`
@@ -531,19 +559,18 @@ Um eine J/OS Anwendung zu debuggen, kann der Rechner an der CPU auch über das K
 
 Die Hard Disk vervollständigt als weitere Block den Rechneraufbau. Damit verfügt der Rechner jetzt über einen zweiten Massenspeicher mit mehr Kapazität. Der Rechner ist auch hier mit Hilfe des BIOS ROM Chips in der Lage, von diesem Speichermedium zu booten.
 
-Um den Hard Disk Block craften zu können, wird ein "Hard Disk Program" Tape benötigt. Diese Tape (du ahnst es schon :D) gibt es nur, wenn du Aufgabe 4 gelöst hast.
-
 Es kann maximal eine Hard Disk am Rechner angeschlossen werden. Der Zugriff auf die Hard Disk erfolgt über `h/`, also bspw. `h/myfile.txt`
 
 Wird dieser Block abgebaut, bleiben die Daten erhalten. Wird der Block zerstört, sind die Daten auch weg.
 
-Die Hard Disk unterstützt eine Ebene von Verzeichnissen. Verzeichnissenamen müssen 2 oder 3 Zeichen lang sein, wobei Buchstaben und Zahlen zulässig sind.  Es empfiehlt sich, folgende Verzeichnisse anzulegen:
+Die Hard Disk unterstützt eine Ebene von Verzeichnissen. Verzeichnisnamen müssen 2 oder 3 Zeichen lang sein, wobei Buchstaben und Zahlen zulässig sind.  Es empfiehlt sich, folgende Verzeichnisse anzulegen:
 
 ```
 h/bin  - für alle ausführbaren Programme, inklusive dem boot File (Achtung: boot selbst muss auch angepasst werden)
-h/asm  - für alle .asm Files
-h/usr  - für eigene Files
-h/lib  - für 
+h/lib  - für alle .asm Files, die als Bibliothek genutzt werden (strcpy.asm, usw.)
+h/prj  - für alle eigenen .asm Projekt Files
+h/usr  - für alle andere, eigenen Files
+
 ```
 
 
@@ -587,7 +614,7 @@ Das Tape mit den boot-Files gut aufheben. Falls der Rechner mal nicht vom Hard D
 
 Eine Einführung in die Assembler Programmierung ist ein umfangreiches Thema. Grundsätzlich empfehlenswert ist die Seite [Assembly Programming Tutorial](https://www.tutorialspoint.com/assembly_programming/index.htm). Diese behandelt zwar eine ganz andere CPU und viele Dinge sind sicher nicht übertragbar. Aber mit dem Wissen aus dem Tutorial kommt man evtl. mit der knappen Dokumentation zur VM16 CPU und zum `vm16asm` Assembler besser zurecht.
 
-Der `vm16asm` Assembler ist sowohl in-game, also auf dem PDP-13 System, als auch zur Installation auf dem eigenen Rechner verfügbar. Es empfielt sich, den Assembler auf dem eigenen Rechner zu installieren, sofern man Python3 installiert hat.  Entwickelte und assemblierbare Files können dann per copy/paste in den Editor des PDP-13 Terminals kopiert werden.
+Der `vm16asm` Assembler ist sowohl in-game, also auf dem PDP-13 System, als auch zur Installation auf dem eigenen Rechner verfügbar. Es empfiehlt sich, den Assembler auf dem eigenen Rechner zu installieren, sofern man Python3 installiert hat.  Entwickelte und assemblierbare Files können dann per copy/paste in den Editor des PDP-13 Terminals kopiert werden.
 
 
 
@@ -713,19 +740,4 @@ halt            ; wichtig, sonst läuft das Programm unkontrolliert weiter
 ```
 
 
-
-### Aufgabe 4: PDP-13 Hard Drive Programm
-
-Um das Tape für das PDP-13 Hard Drive Programm zu erhalten, musst du folgende Aufgabe lösen:
-
-*tbd.*
-
-Das Programm muss zuerst ... über `sys #$306` anfordern und am Ende das Ergebnis wieder über `sys #$307` ausgeben. Wenn ... passt und im "Telewriter Operator" befindet sich ein leeres Tape, dann wird bei passendem Ergebnis das Tape geschrieben. In jedem Falle erfolgt eine Chat-Ausgabe über die berechneten Werte. Hier der Rahmen des Programms:
-
-```assembly
-sys   #$306     ; ...
-....
-sys   #$307     ; Ergebnis übergeben
-halt            ; wichtig, sonst läuft das Programm unkontrolliert weiter
-```
 

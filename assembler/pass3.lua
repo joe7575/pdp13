@@ -45,8 +45,8 @@ local function generate_h16(pos, lToken2, filename)
 	local first = 0xFFFF
 	local last  = 0
 	local size = 0
-	local nextaddr
-	local lastaddr
+	local nextaddr  -- next expected address (without gap)
+	local curraddr  -- currently writing to
 	
 	filename = filename .. ".h16"
 	asm.outp(pos, " - write " .. filename .. "...")
@@ -61,7 +61,7 @@ local function generate_h16(pos, lToken2, filename)
 		else
 			first = math.min(first, address)
 			last = math.max(last, address + #code)
-			nextaddr = nextaddr or address
+			curraddr = curraddr or address  -- initial value
 			
 			if ttype == asm.CODESYMSEC then
 				if not asm.tSymbols[code[2]] then
@@ -71,14 +71,26 @@ local function generate_h16(pos, lToken2, filename)
 				code[2] = asm.tSymbols[code[2]]
 			end
 			
-			tbl_append(curr, code)
-			curr, nextaddr = add_h16lines(t, nextaddr, curr)
+			if nextaddr == address then
+				-- append code
+				tbl_append(curr, code)
+				curr, curraddr = add_h16lines(t, curraddr, curr)
+			else
+				-- start new line
+				curr, curraddr = add_h16lines(t, curraddr, curr, true)
+				tbl_append(curr, code)
+				nextaddr = address
+				curraddr = address
+			end
 			
+			-- next calculated addess
+			nextaddr = nextaddr + #code
 			size = size + #code
 		end
 	end
 	
-	add_h16lines(t, nextaddr, curr, true)
+	-- write the rest
+	add_h16lines(t, curraddr, curr, true)
 	
 	last = last - 1
 	local s = string.format(":2000001%04X%04X", first, last)
@@ -104,7 +116,7 @@ local function listing(pos, lToken2, filename)
 		return table.concat(t, " ")
 	end	
 
-	local t = {}
+	local t = {asm.TITLE, ""}
 	for _,tok in ipairs(lToken2) do 
 		if tok[5] then
 			if tok[1] == 3 then

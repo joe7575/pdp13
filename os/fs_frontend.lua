@@ -17,7 +17,7 @@ local M = minetest.get_meta
 
 local MP = minetest.get_modpath("pdp13")
 local backend = dofile(MP .. "/os/fs_backend.lua")
-local mpath = dofile(MP .. "/os/path.lua")
+local mpath = pdp13.path
 
 local Files = pdp13.Files
 local OpenFiles = {}  -- {fpos, uid, drive, dir, fname, data}

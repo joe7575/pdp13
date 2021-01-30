@@ -21,7 +21,7 @@ local M = minetest.get_meta
 local MP = minetest.get_modpath("pdp13")
 
 local Files = {}  -- t[uid][dir][fname] = file_size
-local mpath = dofile(MP .. "/os/path.lua")
+local mpath = pdp13.path
 local backend = dofile(MP .. "/os/fs_backend.lua")
 
 pdp13.path = mpath -- make it global available

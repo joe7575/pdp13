@@ -12,7 +12,7 @@ Header = """--[[
 	AGPL v3
 	See LICENSE.txt for more information
 	
-	PDP-13 Punch Tapes
+	Compile/copy all kind of asm files
 
 ]]--
 
@@ -116,8 +116,8 @@ OsFiles = [
 
 lOut = []
 for file_type, file_name, item_name, item_desc in OsFiles:
-    lOut.append(generate_file("../system/", file_type, file_name, item_name, item_desc, "true"))
-open("os_tapes.lua", "w").write(Header + "\n\n".join(lOut))
+    lOut.append(generate_file("./system/", file_type, file_name, item_name, item_desc, "true"))
+open("./items/os_tapes.lua", "w").write(Header + "\n\n".join(lOut))
 
 ################################################################################
 ## System files to be build
@@ -134,7 +134,7 @@ SystemFiles = [
 ]
 
 for file_type, file_name in SystemFiles:
-    compile_file("../system/", file_type, file_name)
+    compile_file("./system/", file_type, file_name)
 
 ################################################################################
 ## Demo files for demo_tapes.lua
@@ -150,8 +150,8 @@ DemoFiles = [
 
 lOut = []
 for file_type, file_name, item_name, item_desc in DemoFiles:
-    lOut.append(generate_file("../examples/", file_type, file_name, item_name, item_desc, "false"))
-open("demo_tapes.lua", "w").write(Header + "\n\n".join(lOut))
+    lOut.append(generate_file("./examples/", file_type, file_name, item_name, item_desc, "false"))
+open("./items/demo_tapes.lua", "w").write(Header + "\n\n".join(lOut))
 
 ################################################################################
 ## System files to copy to files system for testing
@@ -168,11 +168,11 @@ CopyFiles = [
 
 lOut = []
 for file_type, file_name in CopyFiles:
-    copy_file("../system/", "../../../worlds/pdp13_test/pdp13/", file_type, file_name, "00000004")
+    copy_file("./system/", "../../worlds/pdp13_test/pdp13/", file_type, file_name, "00000004")
     pass
 
 ################################################################################
-## ASM files to copy to files system for testing
+## ASM files to copy to world files system for testing
 ################################################################################
 CopyFiles = [
     ("asm", "hellow"),
@@ -187,6 +187,37 @@ CopyFiles = [
 
 lOut = []
 for file_type, file_name in CopyFiles:
-    copy_file("../system/", "../../../worlds/pdp13_test/pdp13/", file_type, file_name, "00000004")
+    copy_file("./system/", "../../worlds/pdp13_test/pdp13/", file_type, file_name, "00000004")
     pass
 
+
+################################################################################
+## ASM files to copy to test/asm/pdp13 for Lua ASM testing
+################################################################################
+CopyFiles = [
+    ("asm", "asm"),
+    ("asm", "cat"),
+    ("asm", "cmdstr"),
+    ("asm", "h16com"),
+    ("asm", "hellow"),
+    ("asm", "less"),
+    ("asm", "nextstr"),
+    ("asm", "shell1"),
+    ("asm", "shell2"),
+    ("asm", "strcat"),
+    ("asm", "strcmp"),
+    ("asm", "strcpy"),
+    ("asm", "strlen"),
+    ("asm", "strrstr"),
+    ("asm", "strsplit"),
+    ("asm", "strstrip"),
+    ("asm", "ptrd"),
+    ("asm", "ptwr"),
+    ("asm", "cpyfiles"),
+]
+
+lOut = []
+for file_type, file_name in CopyFiles:
+    copy_file("./system/", "./test/asm/pdp13/", file_type, file_name, "00000004")
+    compile_file("./system/", "h16", file_name)
+    pass

@@ -96,7 +96,7 @@ local function pipe_size(cpu_pos, address, val1)
 end
 
 local function flush_pipe(cpu_pos, address, val1)
-	return pdp13.delete_pipe(cpu_pos)
+	return pdp13.delete_pipe(cpu_pos) or 1
 end
 
 local help = [[+-----+----------------+-------------+------+

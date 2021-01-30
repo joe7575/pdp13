@@ -209,7 +209,37 @@ local function decode_text(pos, lToken, lineno, text)
 	end
 end
 
+local function word_val(s, idx)
+	if s:byte(idx) == 0 then
+		return 0 
+	elseif idx == #s then
+		return s:byte(idx)
+	elseif s:byte(idx+1) == 0 then
+		return s:byte(idx)
+	else
+		return (s:byte(idx) * 256) + s:byte(idx+1)
+	end
+end
+
 local function decode_ctext(pos, lToken, lineno, text)
+	if text:byte(1) == 34 and text:byte(-1) == 34 then
+		text = text:gsub("\\0", "\0\0")
+		text = text:gsub("\\n", "\n")
+		text = text:sub(2, -2)
+		local ln = #text
+		
+		for idx = 1, ln, 16 do
+			local tbl = {}
+			for i = idx, math.min(idx + 15, ln), 2 do
+				table.insert(tbl, word_val(text, i))
+			end
+			table.insert(lToken, {asm.type, lineno, asm.address, tbl, text:sub(idx, idx + 15)})
+			asm.address = asm.address + #tbl
+		end
+	else
+		asm.err_msg(pos, "Invalid string")
+		return
+	end
 end
 
 local function address_label(pos, text)

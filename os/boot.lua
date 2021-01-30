@@ -63,6 +63,11 @@ local function load_batfile(pos, fname)
 	return 0
 end
 
+local function file_exists(pos, fname)
+	local path = pdp13.get_boot_path(pos, fname)
+	return pdp13.file_exists(pos, path) and 1 or 0
+end
+
 local function sys_warm_start(pos, address, val1, val2)
 	print("warm_start")
 	local regs = vm16.get_cpu_reg(pos)
@@ -190,9 +195,7 @@ end
 
 local function sys_file_exists(pos, address, val1, val2)
 	local fname = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
-	local path = pdp13.get_boot_path(pos, fname)
-	print("sys_file_exists", fname, path, pdp13.file_exists(pos, path))
-	return pdp13.file_exists(pos, path) and 1 or 0
+	return file_exists(pos, fname)
 end
 
 local help = [[+-----+----------------+-------------+------+
@@ -231,3 +234,10 @@ vm16.register_sys_cycles(0x76, 10000)
 vm16.register_sys_cycles(0x79, 10000)
 vm16.register_sys_cycles(0x7A, 10000)
 vm16.register_sys_cycles(0x7B, 10000)
+
+
+pdp13.boot = {}
+pdp13.boot.file_exists = file_exists
+pdp13.boot.load_comfile = load_comfile
+pdp13.boot.load_h16file = load_h16file
+
