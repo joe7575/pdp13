@@ -69,6 +69,14 @@ local function add_lines(mem, lines)
 	t[#t+1] = ""
 end
 
+local function add_codelines(text)
+	local t = {}
+	for idx, line in ipairs(pdp13.text2table(text)) do
+		table.insert(t, string.format("%3u: %s", idx, line))
+	end
+	return table.concat(t, "\n")
+end
+
 local function register_terminal(pos)
 	local names = {"pdp13:cpu1", "pdp13:cpu1_on"}
 	local cpu_pos = pdp13.send(pos, nil, names,  "reg_term", pos)
@@ -128,18 +136,35 @@ local function formspec1(pos, mem)
 		"field_close_on_enter[command;false]")
 end
 
-local function formspec2(code)
+local function formspec2(pos, code)
 	code = minetest.formspec_escape(code or "")
-	return "size[11,8.5]" ..
+	M(pos):set_string("formspec", "size[11,8.5]" ..
 		default.gui_bg..
 		default.gui_bg_img..
 		default.gui_slots..
 		"background[-0.1,-0.2;11.2,9.15;pdp13_form_term1.png]"..
 		"style_type[textarea;font=mono;textcolor=#FFCC00;border=false]"..
-		"textarea[0.4,0.1;10.8,9.1;edit;;"..code.."]"..
+		"textarea[0.4,0.1;10.8,9.1;text;;"..code.."]"..
 		"background[0.2,0.2;10.6,7.7;pdp13_form_term2.png]"..
+		"button[4.5,7.9;1.8,1;list;List]"..
 		"button[6.4,7.9;1.8,1;exit;Exit]"..
-		"button[8.3,7.9;1.8,1;save;Save]"
+		"button[8.3,7.9;1.8,1;save;Save]")
+end
+
+local function formspec3(pos, code)
+	code = add_codelines(code)
+	code = minetest.formspec_escape(code or "")
+	M(pos):set_string("formspec", "size[11,8.5]" ..
+		default.gui_bg..
+		default.gui_bg_img..
+		default.gui_slots..
+		"background[-0.1,-0.2;11.2,9.15;pdp13_form_term1.png]"..
+		"style_type[textarea;font=mono;textcolor=#FFCC00;border=false]"..
+		"textarea[0.4,0.1;10.8,9.1;;;"..code.."]"..
+		"background[0.2,0.2;10.6,7.7;pdp13_form_term2.png]"..
+		"button[4.5,7.9;1.8,1;edit;Edit]"..
+		"button[6.4,7.9;1.8,1;exit;Exit]"..
+		"button[8.3,7.9;1.8,1;save;Save]")
 end
 
 local function clear_screen(pos, mem)
@@ -174,7 +199,7 @@ local function monitor_print_lines(pos, mem, lines)
 end
 
 local function editor_screen(pos, mem, text)
-	M(pos):set_string("formspec", formspec2(text))
+	formspec2(pos, text)
 end
 
 local tiles = {
@@ -224,11 +249,22 @@ local function on_rightclick(pos)
 end
 
 local function edit_save(pos, mem, text)
-	local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
-	if mem.fname == "" then mem.fname = "new.txt" end
-	pdp13.write_file(cpu_pos, mem.fname, text)
-	print_string_ln(pos, mem, "File stored.")
-	pdp13.sys_call(cpu_pos, pdp13.PROMPT, 0, 0)
+	if text and text ~= "" then
+		local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
+		if mem.fname == "" then mem.fname = "new.txt" end
+		pdp13.write_file(cpu_pos, mem.fname, text)
+		formspec2(pos, "File stored.")
+		minetest.after(1, formspec2, pos, text)
+	end
+end
+
+local function edit_list(pos, mem, text)
+	mem.text = text
+	formspec3(pos, text)
+end
+local function edit_edit(pos, mem, text)
+	formspec2(pos, mem.text)
+	mem.text = nil
 end
 
 local function function_keys(fields)
@@ -269,11 +305,13 @@ local function on_receive_fields(pos, formname, fields, player)
 		
 	if fields.key_enter_field or fields.enter then
 		if M(pos):get_int("monitor") == 1 then
-			local prompt, lines = pdp13.monitor(mem.cpu_pos, mem, fields.command or "", true)
-			if prompt then
-				print_string_ln(pos, mem, prompt)
+			if mem.monitor then
+				local prompt, lines = pdp13.monitor(mem.cpu_pos, mem, fields.command or "", true)
+				if prompt then
+					print_string_ln(pos, mem, prompt)
+				end
+				monitor_print_lines(pos, mem, lines or {})
 			end
-			monitor_print_lines(pos, mem, lines or {})
 		else
 			mem.input = string.sub(fields.command or "", 1, STR_LEN)
 			if mem.input == "" then
@@ -290,10 +328,13 @@ local function on_receive_fields(pos, formname, fields, player)
 		mem.command = pdp13.historybuffer_next(pos)
 		formspec1(pos, mem)
 	elseif fields.save then
-		edit_save(pos, mem, fields.edit)
-		pdp13.cpu_freeze(pos, false)
+		edit_save(pos, mem, fields.text)
+	elseif fields.list then
+		edit_list(pos, mem, fields.text)
+	elseif fields.edit then
+		edit_edit(pos, mem, fields.text)
 	elseif fields.exit then
-		print_string_ln(pos, mem, "canceled")
+		print_string_ln(pos, mem, "completed.")
 		local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 		pdp13.sys_call(cpu_pos, pdp13.PROMPT, 0, 0)
 		mem.edit = false
@@ -342,11 +383,16 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 		local mem = techage.get_nvm(pos)
 		mem.lLines = {""}
 		if data == "on" then
-			print_string_ln(pos, mem, "PDP13 Terminal")
+			if M(pos):get_int("monitor") == 1 then
+				print_string_ln(pos, mem, "PDP13 Terminal Programmer")
+			else
+				print_string_ln(pos, mem, "PDP13 Terminal Operator")
+			end
 		else
 			clear_screen(pos, mem)
 		end
 		mem.input = nil
+		mem.monitor = nil
 		return true
 	end
 end

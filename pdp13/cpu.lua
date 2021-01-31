@@ -315,6 +315,8 @@ local function reset_periphery_settings(meta)
 	meta:set_string("programmer_number", "")
 	meta:set_string("tape_pos", "")
 	meta:set_string("hdd_pos", "")
+	meta:set_string("uid_t", "")
+	meta:set_string("uid_h", "")
 	meta:set_int("has_tape", 0)
 	meta:set_int("has_hdd", 0)
 	meta:set_int("ram_size", 0)
@@ -389,9 +391,8 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 			local number = meta:get_string("node_number")
 			pdp13.io_store(pos, number)
 			selftest(pos, mem, number)
-			local has_tape = meta:get_int("has_tape") == 1 and rom_size >= 2
 			local has_hdd = meta:get_int("has_hdd") == 1 and rom_size >= 2
-			pdp13.init_filesystem(pos, has_tape, has_hdd)
+			pdp13.init_filesystem(pos, false, has_hdd)
 			return true
 		elseif data == "off" then
 			minetest.get_node_timer(pos):stop()
@@ -411,7 +412,20 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 	elseif cmnd == "cpu_num" then
 		return M(pos):get_string("node_number")
 	elseif cmnd == "mount_t" then
-		pdp13.mount_drive(pos, "t", data)
+		if data and data ~= "" then
+			local uid
+			if data ~= true then
+				uid = pdp13.set_uid(pos, "t", data)
+			else
+				uid = pdp13.get_uid(pos, "t")
+			end	
+			pdp13.mount_drive(pos, "t", true)
+			pdp13.init_filesystem(pos, true)
+			return uid
+		else
+			pdp13.del_uid(pos, "t")
+			pdp13.mount_drive(pos, "t", false)
+		end
 	else
 		return add_periphery_settings(pos, M(pos), cmnd, data)
 	end

@@ -84,7 +84,7 @@ end
 local function pop_pipe(cpu_pos, address, val1)
 	local items = pdp13.pop_pipe(cpu_pos, 1)
 	if next(items) then
-		print("pop_pipe", items[1])
+		--print("pop_pipe", items[1])
 		vm16.write_ascii(cpu_pos, val1, items[1])
 		return 1
 	end

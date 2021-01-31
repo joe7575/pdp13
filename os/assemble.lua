@@ -104,7 +104,7 @@ function pdp13.assemble(s, addr)
 	end
 	-- some checks
 	if val1 and val2 then return end
-	if not opnd1 and not opnd2 then return end
+	if not opnd1 or not opnd2 then return end
 	-- code correction for all jump/branch opcodes: from '0' to '#0'
 	if pdp13.JumpInst[words[1]] then
 		if opnd1 == tOperands["IND"] then opnd1 = tOperands["IMM"] end

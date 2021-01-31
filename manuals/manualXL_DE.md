@@ -31,7 +31,7 @@ Aufgrund der Länge dieses Anleitung ist diese nicht in-game, sondern nur über 
 
 ## I/O Rack
 
-Das I/O-Rack verbindet die CPU mit der Welt, also anderen Blöcken und Maschinen. Es können mehrere I/O-Blöcke pro CPU genutzt werden
+Das I/O-Rack verbindet die CPU mit der Welt, also anderen Blöcken und Maschinen. Es können mehrere I/O-Blöcke pro CPU genutzt werden.
 
 - Das erste I/O-Rack belegt die I/O-Adressen #0 bis #7. Diesen Adressen können über das Menü des I/O-Racks Blocknummern zugeordnet werden
 - Werte, welche über das `out` Kommando an Adresse #0 bis #7 ausgegeben werden, werden dann vom I/O-Rack an den entsprechenden Block weitergegeben
@@ -60,7 +60,7 @@ Hier werden Kommandos aber über die 6 Tasten links und Maschinenbefehle über d
 
 Das "help" Register zeigt die wichtigsten Assemblerbefehle und jeweils den Maschinencode dazu. Mit diesem Subset an Befehlen kann man bereits arbeiten. Weitere Informationen zum Befehlssatz findest du [hier](https://github.com/joe7575/vm16/blob/master/doc/introduction.md) und [hier](https://github.com/joe7575/vm16/blob/master/doc/opcodes.md).
 
-Am Ende der Tabelle werden die System-Kommandos aufgeführt. Dies sind quasi Betriebssystemtaufrufe, welche zusätzliche Befehle ausführen, die sonst nicht möglich wären, wie bspw. einen Text auf dem Telewriter auszugeben. 
+Am Ende der Tabelle werden die System-Kommandos aufgeführt. Dies sind quasi Betriebssystemtaufrufe, welche zusätzliche Befehle ausführen, die sonst nicht möglich, oder aufwändig zu implementieren wären, wie bspw. einen Text auf dem Telewriter auszugeben. 
 
 ### Performance
 
@@ -93,7 +93,7 @@ Der Telewriter kann über folgende `sys` Befehle angesprochen werden:
 
 ```assembly
 ; Ausgabe Text
-move    A, #100     ; Lade A mit der Adresse des Textes
+move    A, #100     ; Lade A mit der Adresse des Textes (Null terminiert)
 sys     #0          ; Ausgabe Text auf dem Telewriter
 
 ; Einlesen Text
@@ -162,7 +162,7 @@ out #00, A      ; output on port #0
 
 ## PDP-13 Color Lamp
 
-Dieser Lampenblock kann in verschiedenen Farben leuchten. Dazu müssen Werte von 1-64 über das Kommando `value`an den Block gesendet werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. Der Werte 0 schaltet die Lampe aus.
+Dieser Lampenblock kann in verschiedenen Farben leuchten. Dazu müssen Werte von 1-64 über das Kommando `value` an den Block gesendet werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. Der Werte 0 schaltet die Lampe aus.
 
 Dies geht auch mit dem Techage Lua Controller: `$send_cmnd(num, "value", 0..64)`
 
@@ -178,7 +178,7 @@ out #00, A      ; output on port #0
 
 ## PDP-13 Memory Rack
 
-Dieser Block vervollständigt als 4. Block den Rechneraufbau. Der Block hat ein Inventar für Chips zur Speichererweiterung. Der Rechner hat intern 4 KWords an Speicher (4096 Worte) und kann durch einen 4 K RAM Chip auf 8 KWords erweitert werden. Mit einem zusätzlichen 8 K RAM Chip kann der Speicher dann auf 16 KWords erweitert werden. Theoretisch sind bis zu 64 KWords möglich.
+Dieser Block vervollständigt als vierter Block den Rechneraufbau. Der Block hat ein Inventar für Chips zur Speichererweiterung. Der Rechner hat intern 4 KWords an Speicher (4096 Worte) und kann durch einen 4 K RAM Chip auf 8 KWords erweitert werden. Mit einem zusätzlichen 8 K RAM Chip kann der Speicher dann auf 16 KWords erweitert werden. Theoretisch sind bis zu 64 KWords möglich.
 
 In der unteren Reihe kann das Rack bis zu 4 ROM Chips aufnehmen. Diese ROM Chips beinhalten Programme und sind quasi das BIOS (basic input/output system) des Rechners. ROM Chips kann man nur auf der TA3 Elektronikfabrik produzieren. Das Programm für den Chip muss man dazu auf Tape besitzen, welches dann mit Hilfe der Elektronikfabrik auf den Chip "gebrannt" wird. An diese Programme kommt man nur, wenn man entsprechende Programmieraufgaben gelöst hat (dazu später mehr).
 
@@ -186,7 +186,7 @@ Das Inventar des Speicherblocks lässt sich nur in der vorgegebenen Reihenfolge 
 
 
 
-## Minimal Beipiel
+## Minimal Beispiel
 
 Hier ein konkretes Beispiel, das den Umgang mit der Mod zeigt. Ziel ist es, die TechAge Signallampe (nicht die PDP-13 Color Lamp!) einzuschalten. Dazu muss man den Wert 1 über ein `out` Befehl an dem Port ausgeben, wo die Lampe "angeschlossen" ist. Das Assembler-Programm dazu sieht aus wie folgt:
 
@@ -256,13 +256,13 @@ Das Monitor Programm unterstützt folgende Kommandos, die auch mit Eingabe von `
 | `sp`       | (stop) Stoppen der CPU (entspricht der "stop" Taste an der CPU) |
 | `rt`       | (reset) Rücksetzen des Programm Counters (entspricht der "reset" Taste an der CPU) |
 | `n`        | (next) Nächsten Befehl ausführen (entspricht der "step" Taste an der CPU). Wird  danach "enter" gedrückt, wird der nächste Befehl ausgeführt. |
-| `r`        | (registers) Inhalt der CPU Register ausgeben                 |
+| `r`        | (register) Inhalt der CPU Register ausgeben                  |
 | `ad #`     | (address) Setzen des Programm Counters (entspricht der "address" Taste an der CPU). `#` ist dabei die Adresse |
 | `d #`      | (dump) Speicher ausgeben (entspricht der "dump" Taste an der CPU). `#` ist dabei die Startadresse. Wird danach "enter" gedrückt, wird der nächste Speicherblock ausgegeben |
 | `en #`     | (enter) Daten eingeben. `#` ist dabei die Adresse. Danach können Werte (Zahlen) eingegeben und mit "enter" übernommen werden |
-| `as #`     | (assembler) Starten des Assemblers. Für `#` muss die Startadresse angegeben werden Danach können Assemblerbefehle eingegeben werden. Aus diesem Mode kommt man durch Eingabe eines anderen Kommandos |
-| `di #`     | (disassemble) Ausgabe eines Speicherbereichs der CPU in Assemblerschreibweise. Es werden immer 8 Befehle ausgegeben. Wird danach "enter" gedrückt, werden die nächsten 8 Befehle ausgegeben |
-| `ct # txt` | (copy text) Kopieren von Text in den Speicher, also mit `ct 100 Hallo Welt,` wird der Text an die Adresse 100  kopiert |
+| `as #`     | (assembler) Starten des Assemblers. Für `#` muss die Startadresse angegeben werden Danach können Assemblerbefehle eingegeben werden. Aus diesem Mode kommt man durch Eingabe eines anderen Kommandos wieder heraus |
+| `di #`     | (disassemble) Ausgabe eines Speicherbereichs der CPU in Assemblerschreibweise. Es werden immer 4 Befehle ausgegeben. Wird danach "enter" gedrückt, werden die nächsten 4 Befehle ausgegeben |
+| `ct # txt` | (copy text) Kopieren von Text in den Speicher. Mit `ct 100 Hallo Welt,` wird der Text "Hallo Welt" an die Adresse $100  kopiert und mit einer Null abgeschlossen |
 | `cm # # #` | (copy memory) Speicher kopieren. Die drei `#` bedeuten: Quell-Adresse, Ziel-Adresse, Anzahl Worte |
 | `ex`       | (exit) Monitor Mode vom Terminal aus beenden                 |
 
@@ -270,9 +270,9 @@ Das Monitor Programm unterstützt folgende Kommandos, die auch mit Eingabe von `
 
 Jetzt können auch umfangreichere Programme in Assembler am "Telewriter Programmer" eingegeben und getestet werden, fast wie [Dennis Ritchie](https://www.wired.com/2011/10/thedennisritchieeffect/). Um Programme zu testen, können diese mit mit `n` Kommando im Einzelschrittverfahren durchgearbeitet werden. Das Kommando `r` zeigt dir bei Bedarf die Registerwerte.
 
-Du kannst aber auch den Assemblerbefehl `brk #0` in dein Programm einbauen. Das Programm wird dann an dieser Stelle unterbrochen und der Monitor zeigt dir die nächste Assemblerzeile, so dass du dann mit `n` weiter im Einzelschrittverfahren testen kannst.
+Du kannst aber auch den Assemblerbefehl `brk #0` in dein `.asm` Programm einbauen. Das Programm wird dann an dieser Stelle unterbrochen und der Monitor zeigt dir die nächste Assemblerzeile an, so dass du dann mit `n` weiter im Einzelschrittverfahren testen kannst.
 
-Ist dann dein Programm fertig, kannst du die  `brk #0`  Anweisung bspw. durch ein `move A, A` ersetzen, so dass dein Programm nicht mehr anhält.
+Ist dann dein Programm fertig, kannst du die  `brk #0`  Anweisung bspw. durch ein `move A, A` ersetzen, so dass dein Programm an dieser Stelle nicht mehr anhält.
 
 Selbst geschriebene Programme kannst du auf Punch Tape kopieren, um diese zu sichern, oder an andere Spieler weiterzugeben.
 
@@ -363,25 +363,25 @@ Auf dem "Terminal Programmer" läuft die Version 2 des Monitors. Diese bietet fo
 | Kommando   | Bedeutung                                                    |
 | ---------- | ------------------------------------------------------------ |
 | `ld name`  | (load) Laden einer `.com` oder `.h16` Datei in den Speicher  |
-| `sy # # #` | (sys) Aufrufen eines `sys` Kommandos mit Nummer (nur sys-Nummern kleiner $300), sowie die Werte für Reg A, und Reg B (optional). Beispiel: `sy 1B` für beep |
-| `br #`     | (breakpoint) Setzen eines Breakpoints an der angegebenen Adresse. Es kann nur ein Breakpoint gesetzt werden |
+| `sy # # #` | (sys) Aufrufen eines `sys` Kommandos mit Nummer (nur sys-Nummern kleiner $300), sowie die Werte für Reg A und Reg B (optional). Beispiel: `sy 1B` für beep |
+| `br #`     | (breakpoint) Setzen eines Breakpoints an der angegebenen Adresse. Es kann immer nur ein Breakpoint gesetzt werden |
 | `br`       | (breakpoint) Löschen des Breakpoints                         |
-| `so`       | (step over) Springe über die nächste `call` Anweisung. Steht der Debugger aktuell an einer `call` Anweisung, würde man mit einem `n(ext)` dem call folgen und die Funktion im Einzelschritt durchlaufen. Mit `so` wird die Funktion komplett ausgeführt und der Debugger bleibt in der nächsten Zeile wieder stehen. Technisch sind dies zwei Kommandos: `br PC+2` und `st`. Das bedeutet, der zuvor gesetzte Breakpoint ist damit gelöscht (siehe auch Breakpoints). |
+| `so`       | (step over) Springe über die nächste `call` Anweisung. Steht der Debugger aktuell an einer `call` Anweisung, würde man mit einem `n(ext)` dem call folgen und die aufgerufene Funktion im Einzelschritt durchlaufen. Mit `so` wird die Funktion komplett ausgeführt und der Debugger bleibt in der nächsten Zeile wieder stehen. Technisch sind dies zwei Kommandos: `br PC+2` und `st`. Das bedeutet, der zuvor gesetzte Breakpoint ist damit gelöscht (siehe auch Breakpoints) |
 | ps         | (pipe size) Den Füllstand der Pipe in (Anzahl von Textzeilen) ausgeben |
 
 **Alle Zahlenangaben sind in hexadezimaler Form  einzugeben!**
 
 #### Breakpoints
 
-Das Monitor Programm V2 (Terminal) unterstützt einen Software Breakpoint. Dies bedeutet, dass bei Eingabe von bspw. `br 100` an der Adresse $100 der Code mit dem neuen Wert $0400 (`brk #0`) überschrieben wird. Mit `br` (Breakpoint löschen) wird wieder der Originalwert eingetragen. Wird von der CPU der Opcode `$0400` ausgeführt, wird das Programm unterbrochen und der Debugger/Monitor zeigt die Adresse an (der Stern zeigt an, dass hier ein Breakpoint gesetzt wurde). Allerdings wird vom Disassembler der Original Code angezeigt und nicht der `brk`. Bei einem Speicherdump sieht mal allerdings den Wert `$0400`. Der Opcode an der Position wird nach Ausführung dieser Originalanweisung wieder auf `$0400` gesetzt, so dass der Breakpoint auch mehrfach genutzt werden kann. 
+Das Monitor Programm V2 (Terminal) unterstützt einen Software Breakpoint. Dies bedeutet, dass bei Eingabe von bspw. `br 100` an der Adresse $100 der Code mit dem neuen Wert $0400 (`brk #0`) überschrieben wird. Mit `br` (Breakpoint löschen) wird wieder der Originalwert eingetragen. Wird von der CPU der Opcode `$0400` ausgeführt, wird das Programm unterbrochen und der Debugger/Monitor zeigt die Adresse an (der Stern zeigt an, dass hier ein Breakpoint gesetzt wurde). Allerdings wird vom Disassembler der Original Code angezeigt und nicht der `brk`. Bei einem Speicher-Dump sieht mal allerdings den Wert `$0400`. Der Opcode an der Position wird nach Ausführung dieser Originalanweisung wieder auf `$0400` gesetzt, so dass der Breakpoint auch mehrfach genutzt werden kann. 
 
-Der Breakpoint ist allerdings wieder weg, wenn das Programm neu geladen wurde. 
+Der Breakpoint ist allerdings wieder weg, wenn das Programm neu in den Speicher geladen wurde. 
 
 
 
 ## Pipe
 
-Um die Speicherverwaltung für eine in ASM geschriebene Anwendung bei bestimmten Terminal-Ein-/Ausgaben zu vereinfachen, gibt es einen zusätzlichen Datenpuffer, hier als "pipe" bezeichnet. Dieser Puffer wird als FIFO verwaltet. Über sys-Kommandos kann man Texte zeilenweise in die Pipe schieben bzw. von dort lesen.  
+Um die Speicherverwaltung für eine in ASM geschriebene Anwendung bei bestimmten Terminal-Ein-/Ausgaben zu vereinfachen, gibt es einen zusätzlichen Datenpuffer, hier als "pipe" bezeichnet. Dieser Puffer wird als FIFO verwaltet. Über sys-Kommandos kann man Texte zeilenweise in die Pipe schreiben bzw. von dort lesen.  
 
 | sys # | Bedeutung                                | Parameter in A | Parameter in B | Ergebnis in A |
 | ----- | ---------------------------------------- | -------------- | -------------- | ------------- |
@@ -394,7 +394,7 @@ Um die Speicherverwaltung für eine in ASM geschriebene Anwendung bei bestimmten
 
 ## PDP-13 Tape Drive
 
-Das Tape Drive vervollständigt als weitere Block den Rechneraufbau. Damit verfügt der Rechner jetzt über einen echten Massenspeicher, auf dem Daten und Programme wiederholt gespeichert und gelesen werden können. Der Rechner ist mit Hilfe des BIOS ROM Chips auch in der Lage, von diesem Speichermedium zu booten. 
+Das Tape Drive vervollständigt als weiterer Block den Rechneraufbau. Damit verfügt der Rechner jetzt über einen echten Massenspeicher, auf dem Daten und Programme wiederholt gespeichert und gelesen werden können. Der Rechner ist mit Hilfe des BIOS ROM Chips auch in der Lage, von diesem Speichermedium zu booten. 
 
 Damit das Tape Drive genutzt werden kann, muss es mit einem Magnetic Tape bestückt und über das Menü gestartet werden. Wird das Tape Drive wieder gestoppt, kann das Tape mit den Daten auch wieder entnommen werden. Damit dienen Tapes auch der Datensicherung und Weitergabe.
 
@@ -408,109 +408,13 @@ Wie jeder echte Rechner macht auch PDP-13 ohne Programme oder Betriebssystem gar
 
 
 
-### Datei `boot`
-
-Befindet sich auf einem der Laufwerte eine Textdatei `boot`, so wird diese vom BIOS eingelesen und interpretiert. Die Datei hat nur eine Textzeile mit dem Dateinamen des Programms, welches als erstes ausgeführt werden soll. Bei J/OS-13 sieht diese Datei auf dem Tape Drive so aus:
-
-```
-t/shell1.h16
-```
-
-Die Datei wird bei Booten immer zuerst auf `t`, dann `h` und zuletzt in `h/bin` gesucht und so fern gefunden, auch geladen. Dort wo die Datei `shell1.h16` liegt, werden auch alle weiteren ausführbaren Programme erwartet. Es müssen also immer alle ausführbaren Programme mit verschoben werden.
-
-
-
-### Datei `shell1.h16`
-
-Damit wird als nächstes die Datei `shell1.16` vom Tape Drive geladen und ab Adresse $0000 ausgeführt. `shell1.h16` ist ein Ladeprogramm, das sich im Adressbereich $0000 - $00BF einnistet und dort auch verbleibt. Jede Anwendung muss, sofern sie beendet wird, wieder zu diesem Ladeprogramm zurückkehren. Dies erfolgt normalerweise über die Anweisung `sys #$71`.
-
-Hier das berühmte "Hello World" Programm für J/OS-13 in `vm16asm` Assembler:
-
-```assembly
-; Hello world for the Terminal in COM format
-
-    .org $100         ; start at address $100
-    .code
-    
-    move  A, B        ; com v1 tag $2001
-    move  A, #TEXT
-    sys   #$14        ; println
-    sys   #$71        ; warm start
-
-    .text
-TEXT:
-    "Hello "
-    "World\0"
-```
-
-Die Zeile `move  A, B` macht nichts sinnvolles, außer dass der Wert $2001 generiert wird. Steht dieser Wert am Anfang eines `.com` Files, wird dieses File als ausführbare Datei akzeptiert, geladen und ausgeführt (com v1 version tag) .
-
-
-
-### Datei `shell2.com`
-
-Da das Ladeprogramm über keine Kommandos verfügt (der Adressbereich $0000 - $00BF ist dafür viel zu klein), wird nach einem Kaltstart ein zweiter Teil in den Adressbereich ab $0100 nachgeladen. Dieses Programm besitzt eine Kommandozeile mit Kommandos und kann andere Programme von einem Laufwerk laden und ausführen.
-
-Es werden 3 Typen von ausführbaren Programmen unterstützt:
-
-- `.h16` Files sind Textfiles im H16  Format. Dieses Format erlaubt ein Programm an eine definierte Adresse zu laden, wie dies bspw. bei `shell1.h16` der Fall ist. Auch alle Punch Tape Programme sind im H16 Format. Nur so lassen sich technisch Programme über Punch Tapes austauschen.
-- `.com` Files sind Files im Binärformat. Das Binärformat ist deutlich kompakter (ca. Faktor 3) und deshalb für Programme die bessere Wahl. `.com` Files werden immer ab Adresse $0100 geladen und müssen dafür entsprechend vorbereitet sein (Anweisung `.org $100`).
-- `.bat` Files sind Textfiles mit einem ausführbaren Kommando in der ersten Zeile (mehr geht bis jetzt noch nicht). Bspw. die Datei `help.bat` beinhaltet den Text `cat help.txt` . Wird `help` eingegeben, wird das Batchfile geöffnet und das Kommando `cat help.txt`  ausgeführt, so dass der Hilfetext ausgegeben wird.
-
-Für `.com` und `.h16` Files gilt:  Die Anwendung muss bei Adresse $0100 starten, darf den Adressbereich unterhalb von $00C0 nicht verändern und muss am Ende über `sys #$71` wieder zum Betriebssystem zurückkehren.
-
-
-
-### Kommandos auf der Konsole
-
-`shell2.com` verfügt über die folgenden Kommandos:
-
-- `ed <file>` um den Editor zu starten. Das angegebene File wird dabei in den Editor geladen. Existiert das File noch nicht, wird es angelegt.
-- `<name>.h16` bzw. `<name>.com` um ein Programm von einem der Laufwerke auszuführen. Bei `.com` Programmen kann die `.com` Endung auch weggelassen werden.
-- `mv <old> <new>` um ein File umzubenennen oder zu verschieben
-- `rm <file>` um File(s) zu löschen. Hier geht auch `rm *.lst` oder `rm test.*`
-- `ls [<wc>]` um die Filenamen als Liste auszugeben. Mit `ls` werden alle Files des aktuellen Laufwerks ausgegeben. mit `ls t/*` werden bspw. alle Files des Tape Drives ausgegeben.  Mit `ls test.*` nur Files mit dem Namen "test" und mit  `ls *.com` nur `.com` Files.
-- `cp <from> <to>` Um eine Datei zu kopieren, also bspw. `cp t/test.txt  h/test.txt`
-- `cpn <from> <to>` Um meherer Dateien zu kopieren, also bspw. `cpn t/*.asm  h/asm/`. Wichtig ist hier, das als 2. Parameter ein Pfad mit einem abschließenden `/`-Zeichen eingegeben wird.
-- `cd t/h` Um das Laufwerk zu wechseln. Also bspw.  `ls h` für das Hard Drive. Beim Hard Drive werden auch Verzeichnisse unterstützt. Damit geht auch bspw. `cd bin`.
-
-Weitere Kommandos sind als Programm (`.com` File) implementiert und werden daher erst vom Laufwerk geladen, bevor sie ausgeführt werden.
-
-
-
-### Kommandos vom Laufwerk
-
-- `asm <file>`  um ein File zu h16 zu übersetzen
-- `cat <file>` um den Inhalt einer Datei auszugeben
-- `ptrd <file>` um ein ASCII File vom Punch Tape in das Filesystem zu kopieren
-- `ptwr <file>` um ein ASCII File vom Filesystem auf ein Punch Tape zu kopieren
-
-Weitere Programme folgen...
-
-
-
-### Weitere Tools
-
-- `h16com.h16 <name>` um ein `.h16` File in ein `.com` File umzuwandeln. Der Dateiname `<name>` muss ohne Endung eingegeben werden.
-- `hellow`  "Hello world" Testprogramm, das zeigt, wie die Parameterübergabe funktioniert. Das Programm kann ohne `.com` Erweiterung mit mehreren Parametern gestartet werden. Diese werden dann zeilenweise wieder ausgegeben.
-
-Weitere Tools folgen...
-
-
-
-### Bereich für die Parameterübergabe
-
-Jedes eingegebene Kommando mit seinen Parametern wird von der shell in den Bereich $00C0 - $00FF geladen. Kommandos können daher max. 63 Zeichen lang sein. Das Kommando wird dabei bereits an den Leerzeichen (blanks) in einzelne Strings geteilt. Aus `cp test.txt  h/test.txt` wird damit: `cp`,  `test.txt`  und  `h/test.txt`.
-
-
-
 ### Installation
 
 Um das Betriebssystem installieren zu können, werden die OS Tapes benötigt. Diese gibt es aber nur, wenn Aufgabe 3 gelöst wurde. Außerdem muss:
 
 - der Rechner eingeschaltet sein
 - der Rechner über "Monitor" und "BIOS" ROM Chips verfügen
--  ein Tape Drive "angeschlossen" und gestartet sein
+- ein Tape Drive "angeschlossen" und gestartet sein
 - ein Terminal Operator "angeschlossen" sein
 
 Um das Betriebssystem zu installieren, musst du wie folgt vorgehen:
@@ -526,13 +430,46 @@ Das wars! Du hast J/OS erfolgreich installiert!
 
 
 
+### Kommandos auf der Konsole
+
+Mit J/OS können über das Operator Terminal die folgenden Kommandos eingegeben und ausgeführt werden:
+
+- `ed <file>` um den Editor zu starten. Das angegebene Text- oder Assembler-File wird dabei in den Editor geladen. Existiert das File noch nicht, wird es angelegt.
+- `<name>.h16` bzw. `<name>.com` um ein Programm von einem der Laufwerke auszuführen. Bei `.com` Programmen kann die `.com` Endung auch weggelassen werden.
+- `mv <old> <new>` um ein File umzubenennen oder zu verschieben
+- `rm <file>` um File(s) zu löschen. Hier geht auch `rm *.lst` oder `rm test.*`
+- `ls [<wc>]` um die Filenamen der Files eines Laufwerks als Liste auszugeben. Mit `ls` werden alle Files des aktuellen Laufwerks ausgegeben. mit `ls t/*` werden bspw. alle Files des Tape Drives ausgegeben.  Mit `ls test.*` nur Files mit dem Namen "test" und mit  `ls *.com` nur `.com` Files.
+- `cp <from> <to>` Um eine Datei zu kopieren, also bspw. `cp t/test.txt  h/test.txt`
+- `cpn <from> <to>` Um mehrere Dateien zu kopieren, also bspw. `cpn t/*.asm  h/asm/`. Wichtig ist hier, das als 2. Parameter ein Pfad mit einem abschließenden `/`-Zeichen eingegeben wird.
+- `cd t/h` Um das Laufwerk zu wechseln. Also bspw.  `ls h` für das Hard Drive. Beim Hard Drive werden auch Verzeichnisse unterstützt. Damit geht auch bspw. `cd bin`.
+
+- `asm <file>`  um ein File zu h16 zu übersetzen
+- `cat <file>` um den Inhalt einer Text-Datei auszugeben
+- `ptrd <file>` um ein ASCII File vom Punch Tape in das Filesystem zu kopieren
+- `ptwr <file>` um ein ASCII File vom Filesystem auf ein Punch Tape zu kopieren
+
+- `h16com.h16 <name>` um ein `.h16` File in ein `.com` File umzuwandeln. Der Dateiname `<name>` muss ohne Endung eingegeben werden.
+
+Weitere Kommandos folgen...
+
+
+
+### Weitere Programme
+
+- `hellow.asm`  "Hello world" Testprogramm, das zeigt, wie die Parameterübergabe funktioniert. Das Programm kann ohne `.com` Erweiterung mit mehreren Parametern gestartet werden. Diese werden dann zeilenweise wieder ausgegeben.
+- `time.asm` Beispielprogramm, um die Uhrzeit (time of day) an vier 7-Segment-Anzeigen auszugeben. Die 7-Segment-Anzeigen müssen dazu an Port #0 - #3 angeschlossen werden. #0/#1 für Stunden, #2/#3 für Minuten.
+
+Weitere Programme folgen...
+
+
+
 ### CPU Fehlermeldungen
 
 Kommt es beim Booten des Rechners zu einem Fehler, wird eine Fehlernummer an der CPU ausgegeben.
 
 | Nummer | Fehler                                                       |
 | ------ | ------------------------------------------------------------ |
-| 2      | Die Datei `boot` konnte nicht gefunden werden                |
+| 2      | Die Datei `boot` konnte nicht gefunden werden (Laufwerk nicht erkannt oder ausgeschaltet?) |
 | 3      | Die Datei `boot` konnte nicht korrekt gelesen werden (Datei defekt) |
 | 4      | Die Datei `boot` enthält keine Referenz auf ein `.h16` File  |
 | 5      | Das in der Datei `boot` referenzierte `.h16` File existiert nicht |
@@ -616,6 +553,91 @@ Eine Einführung in die Assembler Programmierung ist ein umfangreiches Thema. Gr
 
 Der `vm16asm` Assembler ist sowohl in-game, also auf dem PDP-13 System, als auch zur Installation auf dem eigenen Rechner verfügbar. Es empfiehlt sich, den Assembler auf dem eigenen Rechner zu installieren, sofern man Python3 installiert hat.  Entwickelte und assemblierbare Files können dann per copy/paste in den Editor des PDP-13 Terminals kopiert werden.
 
+
+
+## Grundlagen zu J/OS
+
+
+
+### Datei `boot`
+
+Befindet sich auf einem der Laufwerte eine Textdatei `boot`, so wird diese vom BIOS eingelesen und interpretiert. Die Datei hat nur eine Textzeile mit dem Dateinamen des Programms, welches als erstes ausgeführt werden soll. Bei J/OS-13 sieht diese Datei auf dem Tape Drive so aus:
+
+```
+t/shell1.h16
+```
+
+Die Datei `boot` wird bei Booten immer zuerst auf `t`, dann `h` und zuletzt in `h/bin` gesucht und so fern gefunden, geladen und ausgeführt. 
+
+
+
+### Datei `shell1.h16`
+
+Damit wird als nächstes die Datei `shell1.16` vom Tape Drive geladen und ab Adresse $0000 ausgeführt. `shell1.h16` ist ein Ladeprogramm, das sich im Adressbereich $0000 - $00BF einnistet und dort auch verbleibt. Jede Anwendung muss, sofern sie beendet wird, wieder zu diesem Ladeprogramm zurückkehren. Dies erfolgt normalerweise über die Anweisung `sys #$71`.
+
+Hier das berühmte "Hello World" Programm für J/OS-13 in Assembler:
+
+```assembly
+; Hello world for the Terminal in COM format
+
+    .org $100         ; start at address $100
+    .code
+    
+    move  A, B        ; com v1 tag $2001
+    move  A, #TEXT
+    sys   #$14        ; println
+    sys   #$71        ; warm start
+
+    .text
+TEXT:
+    "Hello "
+    "World\0"
+```
+
+Die Zeile `move  A, B` macht nichts sinnvolles, außer dass der Wert $2001 im Speicher generiert wird. Steht dieser Wert am Anfang eines `.com` Files, wird dieses File als ausführbare Datei akzeptiert, geladen und ausgeführt (com v1 version tag) .
+
+
+
+### Datei `shell2.com`
+
+Da das Ladeprogramm über keine Kommandos verfügt (der Adressbereich $0000 - $00BF ist dafür viel zu klein), wird nach einem Kaltstart ein zweiter Teil in den Adressbereich ab $0100 nachgeladen. Dieses Programm besitzt eine Kommandozeile mit Kommandos und kann andere Programme von einem Laufwerk laden und ausführen.
+
+Es werden 3 Typen von ausführbaren Programmen unterstützt:
+
+- `.h16` Files sind Textfiles im H16  Format. Dieses Format erlaubt ein Programm an eine definierte Adresse zu laden, wie dies bspw. bei `shell1.h16` der Fall ist. Auch alle Punch Tape Programme sind im H16 Format. Nur in diesem Format lassen sich auch Programme über Punch Tapes austauschen.
+- `.com` Files sind Files im Binärformat. Das Binärformat ist deutlich kompakter (ca. Faktor 3) und deshalb für Programme die bessere Wahl. `.com` Files werden immer ab Adresse $0100 geladen und müssen dafür entsprechend vorbereitet sein (Anweisung `.org $100`).
+- `.bat` Files sind Textfiles mit einem ausführbaren Kommando in der ersten Zeile (mehr geht bis jetzt noch nicht). Bspw. die Datei `help.bat` beinhaltet den Text `cat help.txt` . Wird `help` eingegeben, wird das Batchfile geöffnet und das Kommando `cat help.txt`  ausgeführt, so dass der Hilfetext ausgegeben wird.
+
+Für `.com` und `.h16` Files gilt:  Die Anwendung muss bei Adresse $0100 starten, darf den Adressbereich unterhalb von $00C0 nicht verändern und muss am Ende über `sys #$71` wieder zum Betriebssystem zurückkehren.
+
+
+
+### Liste der ASM-Files
+
+Mit dem Betriebssystem werden auch die folgenden `.asm`-Files installiert:
+
+| File         | Beschreibung                                                 |
+| ------------ | ------------------------------------------------------------ |
+| asm.asm      | Assemblerprogramm                                            |
+| cat.asm      | Tool um Textfiles am Terminal auszugeben                     |
+| cmdstr.asm   | Library Funktion für Parameter Handling in `.com` Files      |
+| cpyfiles.asm | Teil der shell2 um Files zu kopieren                         |
+| h16com.asm   | Tool um `.h16` Files nach `.com` zu konvertieren             |
+| hellow.asm   | "Hello World" Beispielprogramm                               |
+| less.asm     | Library Funktion um Text Bildschirmweise auszugeben          |
+| nextstr.asm  | Library Funktion zum String Handling                         |
+| ptrd.asm     | Tool, um `.txt`/`.h16` Files vom Punch Tape ins Filesystem zu kopieren |
+| ptwr.asm     | Tool, um `.txt`/`.h16` Files auf ein Punch Tape zu schreiben |
+| shell1.asm   | Teil von J/OS                                                |
+| shell2.asm   | Teil von J/OS                                                |
+| strcat.asm   | Library Funktion zum String Handling                         |
+| strcmp.asm   | Library Funktion zum String Handling                         |
+| strcpy.asm   | Library Funktion zum String Handling                         |
+| strlen.asm   | Library Funktion zum String Handling                         |
+| strrstr.asm  | Library Funktion zum String Handling                         |
+| strsplit.asm | Library Funktion zum String Handling                         |
+| strstrip.asm | Library Funktion zum String Handling                         |
+| time.asm     | Beispielprogramm, um die Uhrzeit auf 7-Segment Anzeigen auszugeben |
 
 
 
@@ -729,7 +751,7 @@ Um die OS Install Tapes zu erhalten, musst du folgende Aufgabe lösen:
 
 Die Tapes werden in eine Tape Chest gelegt, daher muss eine Tape Chest bei der CPU platziert sein (max. 3 Blöcke Abstand von der CPU)!
 
-Das Programm muss zuerst den Wert über `sys #$304` anfordern und am Ende das Ergebnis wieder über `sys #$305` ausgeben. Wenn die Umwandlung passt und eine leere "Tape Chest" vorhanden ist, dann werden bei passendem Ergebnis die Tapes in die Kiste gelegt. In jedem Falle erfolgt eine Chat-Ausgabe mit den Strings. Hier der Rahmen des Programms:
+Das Programm muss zuerst den Wert über `sys #$304` anfordern und am Ende das Ergebnis wieder über `sys #$305` ausgeben. Wenn die Umwandlung passt und eine leere "Tape Chest" vorhanden ist, dann werden bei passendem Ergebnis die Tapes in die Kiste gelegt. In jedem Falle erfolgt eine Chat-Ausgabe mit dem String. Hier der Rahmen des Programms:
 
 ```assembly
 sys   #$304     ; den Werte anfordern, dieser steht dann in A

@@ -75,18 +75,18 @@ Commands["?"] = function(pos, mem, cmd, rest, is_terminal)
 		mem.mstate = nil
 		if is_terminal then
 			return {
-				"st [#].start            sp.....stop",
-				"rt.....reset            n......next step [F1]",
-				"r......register [F3]    ad #...set address",
-				"d #....dump memory      en #...enter data",
-				"as #...assemble         di #...disassemble",
-				"br #...set brkpoint     br.....rst brkpoint",
-				"so     step over [F2]   ps.....pipe size",
-				"ld name.....load a .com/.h16 file",
-				"ct # txt....copy text to mem",
-				"cm # # #....copy mem from to num",
-				"sy # # #....call 'sys num A B'",
-				"ex..........exit monitor",
+				"st [#].start            sp ....stop",
+				"rt ....reset            n .....next step [F1]",
+				"r .....register [F3]    ad # ..set address",
+				"d # ...dump memory      en # ..enter data",
+				"as # ..assemble         di # ..disassemble",
+				"br # ..set brkpoint     br ....rst brkpoint",
+				"so ....step over [F2]   ps ....pipe size",
+				"ld name ....load a .com/.h16 file",
+				"ct # txt ...copy text to mem",
+				"cm # # # ...copy mem from to num",
+				"sy # # # ...call 'sys num A B'",
+				"ex .........exit monitor",
 			}
 		else
 			return {
@@ -254,7 +254,7 @@ Commands["as"] = function(pos, mem, cmd, rest)
 		if cmd == "as" then
 			mem.mstate = "as"
 			mem.maddr = pdp13.string_to_number(rest, true)
-			return {string.format("%04X: ", mem.maddr)}
+			return {"ASM ('ex' to exit)", string.format("%04X: ", mem.maddr)}
 		else
 			local tbl = pdp13.assemble(rest)
 			if tbl then
@@ -262,6 +262,9 @@ Commands["as"] = function(pos, mem, cmd, rest)
 				local addr = mem.maddr
 				mem.maddr = mem.maddr + #tbl
 				return {string.format("%04X: %-11s %s", addr, hex_dump(tbl), rest)}
+			elseif rest == "ex" then
+				mem.mstate = nil
+				return {"exit."}
 			else
 				return {rest.." <-- syntax error!"}
 			end
@@ -415,6 +418,7 @@ end
 -- exit monitor
 Commands["ex"] = function(pos, mem, cmd, rest)
 	techage.get_nvm(pos).monitor = false
+	mem.monitor = nil
 	pdp13.exit_monitor(pos)
 	return {"finished."}
 end
@@ -432,14 +436,16 @@ function pdp13.monitor(cpu_pos, mem, command, is_terminal)
 		local words = string.split(command, " ", false, 1)
 		local resp
 		
-		if Commands[words[1]] then
+		if mem.mstate == "as" then
+			resp = Commands[mem.mstate](cpu_pos, mem, "", command, is_terminal)
+		elseif Commands[words[1]] then
 			resp = Commands[words[1]](cpu_pos, mem, words[1], words[2] or "", is_terminal)
 		elseif mem.mstate and Commands[mem.mstate] then
 			resp = Commands[mem.mstate](cpu_pos, mem, "", command, is_terminal)
 		else
 			resp = Commands["?"](cpu_pos, mem, words[1], words[2] or "", is_terminal)
 		end
-		if command ~= "" and string.byte(command, 1) > 32 then -- don't return function keys
+		if command ~= "" and mem.mstate ~= "as" and string.byte(command, 1) > 32 then -- don't return function keys
 			return "[mon]$ "..command, resp
 		else
 			return nil, resp

@@ -24,6 +24,7 @@ local OpenFiles = {}  -- {fpos, uid, drive, dir, fname, data}
 local OpenFilesRef = 1
 
 local function fopen(pos, address, val1, val2)
+	--print("fopen")
 	local mem = techage.get_nvm(pos)
 	local path = vm16.read_ascii(pos, val1, mpath.MAX_PATH_LEN)
 	local drive, dir, fname = mpath.splitpath(mem, path)

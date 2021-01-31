@@ -59,6 +59,7 @@ local function get_uid(pos, drive)
 			uid = string.format("%08X", pdp13.UIDCounter)
 			M(pos):set_string("uid_t", uid)
 		end
+		--print("get_uid_t", uid)
 		return uid
 	elseif drive == 'h' then
 		local uid = M(pos):get_string("uid_h")
@@ -67,6 +68,7 @@ local function get_uid(pos, drive)
 			uid = string.format("%08X", pdp13.UIDCounter)
 			M(pos):set_string("uid_h", uid)
 		end
+		--print("get_uid_h", uid)
 		return uid
 	end
 end
@@ -78,6 +80,7 @@ local function set_uid(pos, drive, uid)
 			uid = string.format("%08X", pdp13.UIDCounter)
 		end
 		M(pos):set_string("uid_t", uid)
+		--print("set_uid_t", uid)
 		return uid
 	elseif drive == 'h' then
 		if not uid or uid == "" then
@@ -85,7 +88,16 @@ local function set_uid(pos, drive, uid)
 			uid = string.format("%08X", pdp13.UIDCounter)
 		end
 		M(pos):set_string("uid_h", uid)
+		--print("set_uid_h", uid)
 		return uid
+	end
+end
+
+local function del_uid(pos, drive)
+	if drive == 't' then
+		M(pos):set_string("uid_t", nil)
+	elseif drive == 'h' then
+		M(pos):set_string("uid_h", nil)
 	end
 end
 
@@ -112,6 +124,7 @@ pcall(scan_file_system)
 -------------------------------------------------------------------------------
 pdp13.get_uid = get_uid
 pdp13.set_uid = set_uid
+pdp13.del_uid = del_uid
 pdp13.kbyte = kbyte
 pdp13.max_num_files = max_num_files
 pdp13.max_filesystem_size = max_filesystem_size
@@ -139,7 +152,7 @@ function pdp13.get_files(pos, path)
 	local uid = get_uid(pos, drive)
 	local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
 	
-	print("get_files", uid, drive, mounted)
+	--print("get_files", uid, drive, mounted)
 	if uid and mounted and Files[uid] and Files[uid][dir] then
 		local t1 = {}
 		local t2 = {}
@@ -153,7 +166,7 @@ function pdp13.get_files(pos, path)
 		end
 		if dir == "" then
 			for fname,_ in pairs(Files[uid]) do
-				print("dir", fname)
+				--print("dir", fname)
 				if mpath.filename_match(fname, pattern) then
 					t1[#t1+1] = "*" .. fname .. "/"
 				end
@@ -171,7 +184,7 @@ function pdp13.list_files(pos, path)
 		ext2 = ext2 or ""
 		base1 = base1 or a
 		base2 = base2 or b
-		print(base1, ext1, base2, ext2)
+		--print(base1, ext1, base2, ext2)
 		if ext1 ~= ext2 then
 			return ext1 < ext2
 		else
@@ -226,7 +239,7 @@ end
 function pdp13.copy_file(pos, path1, path2)
 	local mem = techage.get_nvm(pos)
 	
-	print("copy_file", path1, path2)
+	--print("copy_file", path1, path2)
 	local drive1, dir1, fname1 = mpath.splitpath(mem, path1)
 	local uid1 = get_uid(pos, drive1)
 	local mounted1 = drive1 == 'h' or M(pos):get_int("mounted_t") == 1
@@ -276,6 +289,7 @@ end
 
 -- check if file is visible for CPU
 function pdp13.file_exists(pos, path)
+	--print("file_exists")
 	local mem = techage.get_nvm(pos)
 	local drive, dir, fname = mpath.splitpath(mem, path)
 	if drive then
@@ -370,6 +384,7 @@ function pdp13.change_drive(pos, drive)
 end
 
 function pdp13.change_dir(pos, dir)
+	--print("change_dir")
 	local mem = techage.get_nvm(pos)
 	if mpath.is_dir(dir) and mem.curr_drive == "h" then
 		local uid = get_uid(pos, mem.curr_drive)
@@ -388,6 +403,7 @@ function pdp13.change_dir(pos, dir)
 end
 
 function pdp13.make_file_visible(pos, path)
+	--print("make_file_visible")
 	local mem = techage.get_nvm(pos)
 	local drive, dir, fname = mpath.splitpath(mem, path)
 	if drive then
@@ -404,6 +420,7 @@ function pdp13.make_file_visible(pos, path)
 end
 
 function pdp13.init_filesystem(pos, has_tape, has_hdd)
+	--print("init_filesystem", has_tape, has_hdd)
 	if has_tape then
 		local uid = get_uid(pos, "t")
 		Files[uid] = Files[uid] or {}
@@ -419,6 +436,7 @@ function pdp13.init_filesystem(pos, has_tape, has_hdd)
 end
 
 function pdp13.mount_drive(pos, drive, mount)
+	--print("mount_drive")
 	if drive == "t" then
 		M(pos):set_int("mounted_t", mount == true and 1 or 0)
 	end
@@ -427,23 +445,23 @@ end
 function pdp13.set_boot_path(pos, path)
 	local mem = techage.get_nvm(pos)
 	local drive, dir, _ = mpath.splitpath(mem, path)
-	print("set_boot_path", path, drive, dir)
+	--print("set_boot_path", path, drive, dir)
 	if dir ~= "" then
 		mem.boot_path = drive .. "/" .. dir .. "/"
 	else
 		mem.boot_path = drive .. "/"
 	end
-	print("set_boot_path2", mem.boot_path)
+	--print("set_boot_path2", mem.boot_path)
 end	
 
 function pdp13.get_boot_path(pos, path)
 	local mem = techage.get_nvm(pos)
 	if mpath.is_filename(path) then
 		-- return standard boot path
-		print("get_boot_path1", (mem.boot_path or "t/") .. path)
+		--print("get_boot_path1", (mem.boot_path or "t/") .. path)
 		return (mem.boot_path or "t/") .. path
 	end
 	-- return the given path
-	print("get_boot_path2", path)
+	--print("get_boot_path2", path)
 	return path  
 end	

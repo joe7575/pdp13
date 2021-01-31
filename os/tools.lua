@@ -38,7 +38,7 @@ end
 local function assembler(pos, address, val1, val2)
 	local fname = vm16.read_ascii(pos, val1, pdp13.MAX_LINE_LEN)
 	local param = vm16.read_ascii(pos, val2, pdp13.MAX_LINE_LEN)
-	print("assembler", fname, param)
+	--print("assembler", fname, param)
 	
 	if fname and param then
 		local path = pdp13.real_file_path(pos, fname)

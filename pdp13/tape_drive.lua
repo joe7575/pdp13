@@ -30,51 +30,41 @@ end
 local function mount_tapedrive(pos, mount)
 	local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 	if cpu_pos then
-		pdp13.send(pos, cpu_pos, nil, "mount_t", mount)
+		return pdp13.send(pos, cpu_pos, nil, "mount_t", mount)
 	end
 end
 
-local function has_tape(pos)
+local function get_tape_uid(pos)
 	local inv = M(pos):get_inventory()
 	if inv:is_empty("main") then return nil end
-	local stack = inv:get_stack("main", 1)
-	local name = stack:get_name()
-	return minetest.get_item_group(name, "pdp13_mtape") == 1
-end
-
-
-local function copy_uid_to_filesystem(pos)
-	local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
-	local inv = M(pos):get_inventory()
-	if not cpu_pos or inv:is_empty("main") then return nil end
 	local stack = inv:get_stack("main", 1)
 	local name = stack:get_name()
 	if minetest.get_item_group(name, "pdp13_mtape") == 1 then
 		local meta = stack:get_meta()
 		if meta then
-			local data = meta:to_table().fields
-			if data.uid then
-				M(cpu_pos):set_string("uid_t", data.uid)
-				return true
+			local data = meta:to_table().fields or {}
+			if data.uid and data.uid ~= "" then
+				return data.uid
 			end
+			return true  -- no uid, but need one
 		end
 	end
 end
 
-local function copy_uid_to_tape(pos)
-	local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
+local function set_tape_uid(pos, uid)
 	local inv = M(pos):get_inventory()
-	
-	if not cpu_pos or inv:is_empty("main") then return nil end
+	if inv:is_empty("main") then return nil end
 	local stack = inv:get_stack("main", 1)
-	if stack:get_name() == "pdp13:magnetic_tape" then
+	local name = stack:get_name()
+	if minetest.get_item_group(name, "pdp13_mtape") == 1 then
 		local meta = stack:get_meta()
 		if meta then
+			--print(dump(meta:to_table()))
 			local data = meta:to_table().fields or {}
-			data.uid = pdp13.get_uid(cpu_pos, "t")
+			data.uid = uid
+			data.description = "PDP-13 Tape Drive (" .. uid .. ")"
 			meta:from_table({ fields = data })
 			inv:set_stack("main", 1, stack)
-			return true
 		end
 	end
 end
@@ -103,7 +93,6 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 		else
 			M(pos):set_string("formspec", formspec("no power"))
 			M(pos):set_int("running", 0)
-			copy_uid_to_tape(pos)
 			mount_tapedrive(pos, false)
 		end
 		return true
@@ -160,16 +149,21 @@ local function on_receive_fields(pos, formname, fields, player)
 		return 0
 	end
 	
-	if fields.start and has_tape(pos) then
-		M(pos):set_string("formspec", formspec("running"))
-		M(pos):set_int("running", 1)
-		if copy_uid_to_filesystem(pos) then
-			mount_tapedrive(pos, true)
+	if fields.start then
+		local uid = get_tape_uid(pos)
+		if uid then
+			if uid == true then -- need a uid
+				local uid = mount_tapedrive(pos, uid)
+				set_tape_uid(pos, uid)
+			else  -- have a uid
+				mount_tapedrive(pos, uid)
+			end
+			M(pos):set_string("formspec", formspec("running"))
+			M(pos):set_int("running", 1)
 		end
 	elseif fields.stop then
 		M(pos):set_string("formspec", formspec("stopped"))
 		M(pos):set_int("running", 0)
-		copy_uid_to_tape(pos)
 		mount_tapedrive(pos, false)
 	end
 end
@@ -194,7 +188,7 @@ minetest.register_node("pdp13:tape_drive", {
 		"pdp13_side.png",
 		"pdp13_side.png",
 		"pdp13_side.png",
-		"pdp13_back.png",
+		"pdp13_power_back.png",
 		"pdp13_chassis.png^pdp13_tapedrive.png^pdp13_frame_top.png",
 	},
 	after_place_node = after_place_node,

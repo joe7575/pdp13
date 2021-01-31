@@ -33,7 +33,13 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 		return true
 	elseif cmnd == "power" then
 		M(pos):set_int("has_power", data == "on" and 1 or 0)
-		return true
+		local uid = M(pos):get_string("uid_h")
+		local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
+		if cpu_pos then
+			uid = pdp13.set_uid(cpu_pos, "h", uid)
+			M(pos):set_string("uid_h", uid)
+			return true
+		end
 	end
 end
 
@@ -43,11 +49,13 @@ local function after_place_node(pos, placer, itemstack)
 	if itemstack then
 		local stack_meta = itemstack:get_meta()
 		if stack_meta then
-			pdp13.set_uid(pos, "h", stack_meta:get_string("uid_h"))
+			local uid = pdp13.set_uid(pos, "h", stack_meta:get_string("uid_h"))
+			M(pos):set_string("uid_h", uid)
 			return
 		end
 	end
-	pdp13.set_uid(pos, "h")
+	local uid = pdp13.set_uid(pos, "h")
+	M(pos):set_string("uid_h", uid)
 end
 
 local function preserve_metadata(pos, oldnode, oldmetadata, drops)
@@ -55,6 +63,7 @@ local function preserve_metadata(pos, oldnode, oldmetadata, drops)
 	if uid_h then
 		local stack_meta = drops[1]:get_meta()
 		stack_meta:set_string("uid_h", uid_h)
+		stack_meta:set_string("description", "PDP-13 Hard Disk (" .. uid_h .. ")")
 	end
 end
 
@@ -67,6 +76,7 @@ local function after_dig_node(pos, oldnode, oldmetadata)
 	if cpu_pos then
 		pdp13.get_filesystem(cpu_pos, pdp13.HDD_NUM)
 	end
+	pdp13.del_uid(pos, "h")
 end
 
 minetest.register_node("pdp13:hard_disk", {
@@ -85,7 +95,7 @@ minetest.register_node("pdp13:hard_disk", {
 		"pdp13_side.png",
 		"pdp13_side.png",
 		"pdp13_side.png",
-		"pdp13_back.png",
+		"pdp13_power_back.png",
 		"pdp13_chassis.png^pdp13_harddisk.png^pdp13_frame.png",
 	},
 	after_place_node = after_place_node,

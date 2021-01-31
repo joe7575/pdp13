@@ -21,10 +21,14 @@ end
 
 function pdp13.text2table(text)
 	local t = {}
-	text = text or ""
-	for s in text:gmatch("[^\n]+") do
-		table.insert(t, s)
+	local from = 1
+	local delim_from, delim_to = string.find(text, "\n", from)
+	while delim_from do
+		table.insert(t, string.sub(text, from, delim_from - 1))
+		from = delim_to + 1
+		delim_from, delim_to = string.find(text, "\n", from)
 	end
+	table.insert(t, string.sub(text, from))
 	return t
 end
 

@@ -29,7 +29,7 @@ local function add_tape(pos, owner, tape)
 	local names = {"pdp13:tape_chest"}
 	local resp = pdp13.send(pos, nil, names, "add_tape", tape)
 	if not resp then
-		minetest.chat_send_player(owner, "Not enough space in the chest!")
+		minetest.chat_send_player(owner, "Tape Chest missing or not enough space!")
 	end
 end
 

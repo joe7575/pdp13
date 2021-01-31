@@ -21,6 +21,7 @@ local Tape1Files = {
 	"cat.com",
 	"pipe.sys",
 	"help.txt",
+	"help.bat",
 	"ptrd.com",
 	"ptwr.com",
 	"h16com.h16",
@@ -50,6 +51,7 @@ local Tape3Files = {
 	"cpyfiles.asm",
 	"ptrd.asm",
 	"ptwr.asm",
+	"time.asm",
 }
 
 
@@ -62,7 +64,7 @@ local function copy_file(pos, fname)
 		local s = f:read("*all")
 		f:close()
 		-- write file
-                pdp13.write_file(pos, dst_file, s)
+		pdp13.write_file(pos, dst_file, s)
 	end
 end
 

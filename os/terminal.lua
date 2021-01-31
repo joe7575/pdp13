@@ -124,7 +124,7 @@ local function sys_print_pipe(cpu_pos, address, val1)
 		if s == "" or vm16.is_ascii(s) then
 			send_terminal_command(cpu_pos, mem, "println", s)
 		else
-			print(dump(s))
+			--print(dump(s))
 			send_terminal_command(cpu_pos, mem, "println", "invalid data")
 		end
 	end
