@@ -199,7 +199,9 @@ local function monitor_print_lines(pos, mem, lines)
 end
 
 local function editor_screen(pos, mem, text)
+	mem.text = text
 	formspec2(pos, text)
+	mem.editor_active = true
 end
 
 local tiles = {
@@ -242,10 +244,17 @@ local function after_place_node(pos, placer, name)
 	meta:set_string("node_number", own_num)
 end
 
-local function on_rightclick(pos)
+local function on_rightclick(pos, node, clicker)
+	if minetest.is_protected(pos, clicker:get_player_name()) then
+		return
+	end
 	local mem = techage.get_nvm(pos)
 	mem.ttl = minetest.get_gametime() + SCREENSAVER_TIME
-	formspec1(pos, mem)
+	if mem.editor_active then
+		formspec2(pos, mem.text or "")
+	else
+		formspec1(pos, mem)
+	end
 end
 
 local function edit_save(pos, mem, text)
@@ -254,6 +263,7 @@ local function edit_save(pos, mem, text)
 		if mem.fname == "" then mem.fname = "new.txt" end
 		pdp13.write_file(cpu_pos, mem.fname, text)
 		formspec2(pos, "File stored.")
+		mem.text = text
 		minetest.after(1, formspec2, pos, text)
 	end
 end
@@ -334,6 +344,7 @@ local function on_receive_fields(pos, formname, fields, player)
 	elseif fields.edit then
 		edit_edit(pos, mem, fields.text)
 	elseif fields.exit then
+		mem.editor_active = nil
 		print_string_ln(pos, mem, "completed.")
 		local cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 		pdp13.sys_call(cpu_pos, pdp13.PROMPT, 0, 0)
