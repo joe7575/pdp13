@@ -38,7 +38,8 @@ This mod is based on vm16, a virtual CPU implemented as Lua library with an outs
 ### Manuals
 
 Manuals are on [GitHub](https://github.com/joe7575/pdp13/wiki)
-The main manual is currently only available in German, English will follow soon.
+The main manual is available in German and English.
+The English translation was made by Flitzpiepe
 
 
 
