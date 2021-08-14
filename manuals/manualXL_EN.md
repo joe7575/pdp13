@@ -188,7 +188,7 @@ The inventory of the memory block can only be filled in the given order from lef
 
 ## Very Short Example
 
-Here is a concrete example that shows how to use the mod. The aim is to switch on the TechAge signal lamp (not the PDP-13 Color Lamp!). To do this, you have to output the value 1 via an `out` command at the port where the lamp is" connected ". The assembler program for this looks like this: 
+Here is a concrete example that shows how to use the mod. The aim is to switch on the TechAge signal lamp (not the PDP-13 Color Lamp!). To do this, you have to output the value 1 via an `out` command at the port where the lamp is "connected". The assembler program for this looks like this: 
 
 ```assembly
 move A, #1   ; Load the A register with value 1
@@ -296,27 +296,27 @@ For the "BIOS ROM" chip you have to solve task 2.
 
 The following additional sys commands, for example, are now available (the `@` sign means "memory address of"): 
 
-| sys # | Bedeutung                 | Parameter in A             | Parameter in B  | Ergebnis in A   |
-| ----- | ------------------------- | -------------------------- | --------------- | --------------- |
-| $50   | file open                 | @file name                 | mode `w` / `r`  | file reference  |
-| $51   | file close                | file reference             | -               | 1=ok, 0=error   |
-| $52   | read file (in die pipe)   | file reference             | -               | 1=ok, 0=error   |
-| $53   | read line                 | file reference             | @destination    | 1=ok, 0=error   |
-| $54   | write file (aus der pipe) | file reference             | -               | 1=ok, 0=error   |
-| $55   | write line                | file reference             | @text           | 1=ok, 0=error   |
-| $56   | file size                 | @file name                 | -               | size in bytes   |
-| $57   | list files (in die pipe)  | @file name pattern         | -               | number of files |
-| $58   | remove files              | @file name pattern         | -               | number of files |
-| $59   | copy file                 | @source file name          | @dest file name | 1=ok, 0=error   |
-| $5A   | move file                 | @source file name          | @dest file name | 1=ok, 0=error   |
-| $5B   | change drive              | drive character `t` or `h` | -               | 1=ok, 0=error   |
-| $5C   | read word                 | file reference             | -               | word            |
-| $5D   | change dir                | @dir                       | -               | 1=ok, 0=error   |
-| $5E   | current drive             | -                          | -               | drive           |
-| $5F   | current dir               | @destination               | -               | 1=ok, 0=error   |
-| $60   | make dir                  | @dir                       | -               | 1=ok, 0=error   |
-| $61   | remove dir                | @dir                       | -               | 1=ok, 0=error   |
-| $62   | get files (in die pipe)   | @file name                 | -               | 1=ok, 0=error   |
+| sys # | Bedeutung                  | Parameter in A             | Parameter in B  | Ergebnis in A   |
+| ----- | -------------------------- | -------------------------- | --------------- | --------------- |
+| $50   | file open                  | @file name                 | mode `w` / `r`  | file reference  |
+| $51   | file close                 | file reference             | -               | 1=ok, 0=error   |
+| $52   | read file (in the pipe)    | file reference             | -               | 1=ok, 0=error   |
+| $53   | read line                  | file reference             | @destination    | 1=ok, 0=error   |
+| $54   | write file (from the pipe) | file reference             | -               | 1=ok, 0=error   |
+| $55   | write line                 | file reference             | @text           | 1=ok, 0=error   |
+| $56   | file size                  | @file name                 | -               | size in bytes   |
+| $57   | list files (in the pipe)   | @file name pattern         | -               | number of files |
+| $58   | remove files               | @file name pattern         | -               | number of files |
+| $59   | copy file                  | @source file name          | @dest file name | 1=ok, 0=error   |
+| $5A   | move file                  | @source file name          | @dest file name | 1=ok, 0=error   |
+| $5B   | change drive               | drive character `t` or `h` | -               | 1=ok, 0=error   |
+| $5C   | read word                  | file reference             | -               | word            |
+| $5D   | change dir                 | @dir                       | -               | 1=ok, 0=error   |
+| $5E   | current drive              | -                          | -               | drive           |
+| $5F   | current dir                | @destination               | -               | 1=ok, 0=error   |
+| $60   | make dir                   | @dir                       | -               | 1=ok, 0=error   |
+| $61   | remove dir                 | @dir                       | -               | 1=ok, 0=error   |
+| $62   | get files (in the pipe)    | @file name                 | -               | 1=ok, 0=error   |
 
 
 
@@ -333,7 +333,7 @@ The terminal has 2 operating modes:
 - Terminal mode 1 with line-by-line output of texts
 
 The terminal also has additional keys with the following coding: `RTN` = 26,` ESC` = 27, `F1` = 28,` F2` = 29, `F3` = 30,` F4` = 31.
-`RTN` or the value 26 is sent if only" enter "has been pressed without first entering characters in the input line.
+`RTN` or the value 26 is sent if only "enter" has been pressed without first entering characters in the input line.
 
 The following sys commands are available for the terminal:
 
@@ -358,14 +358,14 @@ The following sys commands are available for the terminal:
 
 Version 2 of the monitor runs on the "Terminal Programmer". This offers the following additional commands:
 
-| Command | Meaning |
-| ---------- | -------------------------------------------------- ---------- |
-| `ld name` | (load) Load a `.com` or` .h16` file into memory |
+| Command    | Meaning                                                      |
+| ---------- | ------------------------------------------------------------ |
+| `ld name`  | (load) Load a `.com` or` .h16` file into memory              |
 | `sy # # #` | (sys) Calling a `sys` command with number (only sys numbers less than $300), as well as the values ​​for Reg A and Reg B (optional). Example: `sy 1B` for beep |
-| `br #` | (breakpoint) Setting a breakpoint at the specified address. Only one breakpoint can be set at a time |
-| `br` | (breakpoint) Delete the breakpoint |
-| `so` | (step over) Jump over to the next `call` instruction. If the debugger is currently at a `call` instruction, one would follow the call with an` n (ext) `and run through the called function in single step. With `so` the function is completely executed and the debugger stops again in the next line. Technically there are two commands: `br PC + 2` and` st`. This means that the previously set breakpoint is deleted (see also breakpoints) |
-| ps | (pipe size) Output the fill level of the pipe in (number of text lines) |
+| `br #`     | (breakpoint) Setting a breakpoint at the specified address. Only one breakpoint can be set at a time |
+| `br`       | (breakpoint) Delete the breakpoint |
+| `so`       | (step over) Jump over to the next `call` instruction. If the debugger is currently at a `call` instruction, one would follow the call with an` n (ext) `and run through the called function in single step. With `so` the function is completely executed and the debugger stops again in the next line. Technically there are two commands: `br PC + 2` and` st`. This means that the previously set breakpoint is deleted (see also breakpoints) |
+| ps         | (pipe size) Output the fill level of the pipe in (number of text lines) |
 
 **All figures are to be entered in hexadecimal form! ** 
 
@@ -429,7 +429,7 @@ That's it! You have successfully installed J/OS!
 
 
 
-### Kommandos auf der Konsole
+### Commands on the console
 
 With J/OS the following commands can be entered and executed via the operator terminal:
 
@@ -455,7 +455,7 @@ More commands will follow ...
 
 ### Other Programs
 
-- `hellow.asm`" Hello world "test program that shows how the parameter transfer works. The program can be started with several parameters without the `.com` extension. These are then output line by line.
+- `hellow.asm` "Hello world" test program that shows how the parameter transfer works. The program can be started with several parameters without the `.com` extension. These are then output line by line.
 - `time.asm` sample program to show the time of day on four 7-segment displays. The 7-segment displays must be connected to port #0 - #3 for this. #0 / #1 for hours, #2 / #3 for minutes.
 
 More programs to follow ... 
@@ -467,7 +467,7 @@ More programs to follow ...
 If an error occurs while booting the computer, an error number is output on the CPU.
 
 | Number | Error |
-| ------ | -------------------------------------------------- ---------- |
+| ------ | ------------------------------------------------------------ |
 | 2 | The file `boot` could not be found (drive not recognized or turned off?) |
 | 3 | The file `boot` could not be read correctly (file defective) |
 | 4 | The `boot` file does not contain a reference to a` .h16` file |
@@ -525,11 +525,11 @@ What doesn't work is, for example, `cd ../asm` or` cd h/bin`, i.e. all combinati
 
 
 
-### Moved with J/OS from `t` to` h/bin`
+### Moving with J/OS from `t` to` h/bin`
 
 When all executable files from `t` to` h/bin` have been copied and the boot file has been adapted, the computer can also boot from the hard drive. Here are the commands that must be executed in sequence:
 
-``
+```
 cd h
 mkdir am
 cd t
@@ -541,7 +541,7 @@ cd am
 ed boot -> h/bin/boot
 -> stop tape drive
 -> reboot CPU
-``
+```
 
 Keep the tape with the boot files. If the computer does not boot from the hard drive ... 
 
@@ -561,9 +561,9 @@ An introduction to assembler programming is an extensive topic. The page [Assemb
 
 If there is a text file `boot` on one of the run values, this is read in and interpreted by the BIOS. The file has only one line of text with the file name of the program which is to be executed first. With J/OS-13 this file looks like this on the tape drive:
 
-``
+```
 t/shell1.h16
-``
+```
 
 When booting, the file `boot` is always searched for first on` t`, then `h` and finally in` h/bin` and then found, loaded and executed.
 
