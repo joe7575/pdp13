@@ -66,7 +66,7 @@ The system commands are listed at the end of the table. These are quasi operatin
 
 The CPU is able to execute up to 100,000 commands per second (0.1 MIPS). This applies as long as only internal CPU commands are executed. There are the following exceptions:
 
-- The `sys` and the` in` command "cost" up to 1000 cycles, since external code is executed here.
+- The `sys` and the `in` command "cost" up to 1000 cycles, since external code is executed here.
 - The `out` command interrupts the execution for 100 ms if the value at the output changes and an external action has to be carried out in the game world. Otherwise it is only the 1000 cycles.
 - The `nop` command, which can be used for pauses, also interrupts execution for 100 ms.
 
@@ -204,11 +204,11 @@ Since the computer does not understand these assembler commands directly, the pr
 1C00        ; halt
 ```
 
-`mov A` corresponds to the value` 2010`, the parameter `#1` is then in the second word` 0001`. Values from 0 to 65535 (0000 - FFFF) can be loaded into register A via the second word. For example, a `mov B` is` 2030`. A and B are registers of the CPU, with which the CPU can calculate, but also all `in` and` out` commands go through these registers. The CPU has other registers, but these are not required for simple tasks. 
+`mov A` corresponds to the value `2010`, the parameter `#1` is then in the second word `0001`. Values from 0 to 65535 (0000 - FFFF) can be loaded into register A via the second word. For example, a `mov B` is `2030`. A and B are registers of the CPU, with which the CPU can calculate, but also all `in` and `out` commands go through these registers. The CPU has other registers, but these are not required for simple tasks. 
 
-With all commands with 2 operands, the result of the operation is always in the first operand, with `mov A, #1` that is in A. With` out #0, A`, A is output to I/O port #0. The code for this is `6600 0000`. Since a large number of ports are supported, this value #0 is again in the second word. This means that up to 65535 ports can be addressed again.
+With all commands with 2 operands, the result of the operation is always in the first operand, with `mov A, #1` that is in A. With `out #0, A`, A is output to I/O port #0. The code for this is `6600 0000`. Since a large number of ports are supported, this value #0 is again in the second word. This means that up to 65535 ports can be addressed again.
 
-These 5 machine commands must be entered on the CPU, whereby only `0` may be entered for` 0000` (leading zeros are not relevant).
+These 5 machine commands must be entered on the CPU, whereby only `0` may be entered for `0000` (leading zeros are not relevant).
 
 The following steps are necessary for this:
 
@@ -262,11 +262,11 @@ The monitor program supports the following commands, which are also output by en
 | `en #` | (enter) Enter data. `#` is the address. Then values ​​(numbers) can be entered and accepted with "enter" |
 | `as #` | (assembler) Start the assembler. The start address must be specified for `#`. After that, assembler commands can be entered. You can exit this mode by entering another command |
 | `di #` | (disassemble) Output of a memory area of ​​the CPU in assembler notation. 4 commands are always issued. If "enter" is then pressed, the next 4 commands are issued |
-| `ct # txt` | (copy text) Copy text into memory. With `ct 100 Hello World,` the text "Hello World" is copied to the address $100 and terminated with a zero |
+| `ct # txt` | (copy text) Copy text into memory. With `ct 100 Hello World`, the text "Hello World" is copied to the address $100 and terminated with a zero |
 | `cm # # #` | (copy memory) Copy memory. The three `#` mean: source address, target address, number of words |
 | `ex` | (exit) Exit Monitor Mode from the terminal |
 
-** All numbers are to be entered in hexadecimal form (the '$' character can be omitted)! **
+**All numbers are to be entered in hexadecimal form (the '$' character can be omitted)!**
 
 Now more extensive programs can be entered and tested in assembler on the "Telewriter Programmer", almost like [Dennis Ritchie] (https://www.wired.com/2011/10/thedennisritchieeffect/). In order to test programs, they can be worked through with the `n` command in a single step process. The command `r` shows you the register values ​​if necessary.
 
@@ -296,7 +296,7 @@ For the "BIOS ROM" chip you have to solve task 2.
 
 The following additional sys commands, for example, are now available (the `@` sign means "memory address of"): 
 
-| sys # | Bedeutung                  | Parameter in A             | Parameter in B  | Ergebnis in A   |
+| sys # | Meaning                    | Parameter in A             | Parameter in B  | Result in A     |
 | ----- | -------------------------- | -------------------------- | --------------- | --------------- |
 | $50   | file open                  | @file name                 | mode `w` / `r`  | file reference  |
 | $51   | file close                 | file reference             | -               | 1=ok, 0=error   |
@@ -360,18 +360,18 @@ Version 2 of the monitor runs on the "Terminal Programmer". This offers the foll
 
 | Command    | Meaning                                                      |
 | ---------- | ------------------------------------------------------------ |
-| `ld name`  | (load) Load a `.com` or` .h16` file into memory              |
+| `ld name`  | (load) Load a `.com` or `.h16` file into memory              |
 | `sy # # #` | (sys) Calling a `sys` command with number (only sys numbers less than $300), as well as the values ​​for Reg A and Reg B (optional). Example: `sy 1B` for beep |
 | `br #`     | (breakpoint) Setting a breakpoint at the specified address. Only one breakpoint can be set at a time |
 | `br`       | (breakpoint) Delete the breakpoint |
-| `so`       | (step over) Jump over to the next `call` instruction. If the debugger is currently at a `call` instruction, one would follow the call with an` n (ext) `and run through the called function in single step. With `so` the function is completely executed and the debugger stops again in the next line. Technically there are two commands: `br PC + 2` and` st`. This means that the previously set breakpoint is deleted (see also breakpoints) |
+| `so`       | (step over) Jump over to the next `call` instruction. If the debugger is currently at a `call` instruction, one would follow the call with a `n(ext)` and run through the called function in single step. With `so` the function is completely executed and the debugger stops again in the next line. Technically there are two commands: `br PC + 2` and `st`. This means that the previously set breakpoint is deleted (see also breakpoints) |
 | ps         | (pipe size) Output the fill level of the pipe in (number of text lines) |
 
 **All figures are to be entered in hexadecimal form! ** 
 
 #### Breakpoints
 
-The monitor program V2 (terminal) supports a software breakpoint. This means that if you enter e.g. `br 100` at address $100, the code will be overwritten with the new value $0400 (` brk #0`). With `br` (delete breakpoint) the original value is entered again. If the opcode `$0400` is executed by the CPU, the program is interrupted and the debugger / monitor displays the address (the asterisk indicates that a breakpoint has been set here). However, the disassembler displays the original code and not the `brk`. In the case of a memory dump, however, you will see the value `$0400`. The opcode at the position is set back to `$0400` after this original statement has been executed, so that the breakpoint can also be used multiple times.
+The monitor program V2 (terminal) supports a software breakpoint. This means that if you enter e.g. `br 100` at address $100, the code will be overwritten with the new value $0400 (`brk #0`). With `br` (delete breakpoint) the original value is entered again. If the opcode `$0400` is executed by the CPU, the program is interrupted and the debugger / monitor displays the address (the asterisk indicates that a breakpoint has been set here). However, the disassembler displays the original code and not the `brk`. In the case of a memory dump, however, you will see the value `$0400`. The opcode at the position is set back to `$0400` after this original statement has been executed, so that the breakpoint can also be used multiple times.
 
 However, the breakpoint is gone again when the program has been reloaded into memory. 
 
@@ -382,7 +382,7 @@ However, the breakpoint is gone again when the program has been reloaded into me
 
 In order to simplify memory management for an application written in ASM with certain terminal inputs / outputs, there is an additional data buffer, referred to here as a "pipe". This buffer is managed as a FIFO. Texts can be written line by line into the pipe or read from there using sys commands.   
 
-| sys # | Bedeutung                                | Parameter in A | Parameter in B | Ergebnis in A |
+| sys # | Result                                   | Parameter in A | Parameter in B | Result in A   |
 | ----- | ---------------------------------------- | -------------- | -------------- | ------------- |
 | $80   | push pipe (copy string into the Pipe)    | @text          | -              | 1=ok, 0=error |
 | $81   | pop pipe (read string from the Pipe)     | @dest          | -              | 1=ok, 0=error |
@@ -436,8 +436,8 @@ With J/OS the following commands can be entered and executed via the operator te
 - `ed <file>` to start the editor. The specified text or assembler file is loaded into the editor. If the file does not yet exist, it will be created.
 - `<name> .h16` or` <name> .com` to run a program from one of the drives. With `.com` programs the` .com` extension can also be omitted.
 - `mv <old> <new>` to rename or move a file
-- `rm <file>` to delete file (s). You can also use `rm * .lst` or` rm test. * `
-- `ls [<wc>]` to output the filenames of the files on a drive as a list. With `ls` all files of the current drive are output. with `ls t/*`, for example, all files on the tape drive are output. With `ls test. *` Only files with the name "test" and with `ls * .com` only` .com` files.
+- `rm <file>` to delete file (s). You can also use `rm * .lst` or `rm test. * `
+- `ls [<wc>]` to output the filenames of the files on a drive as a list. With `ls` all files of the current drive are output. with `ls t/*`, for example, all files on the tape drive are output. With `ls test. *` Only files with the name "test" and with `ls * .com` only `.com` files.
 - `cp <from> <to>` To copy a file, e.g. `cp t/test.txt h/test.txt`
 - `cpn <from> <to>` To copy multiple files, e.g. `cpn t/*. asm h/asm/`. It is important here that a path with a final `/` character is entered as the 2nd parameter.
 - `cd t/h` To change the drive. For example, `ls h` for the hard drive. With hard drives, directories are also supported. This also works, for example, with `cd bin`.
@@ -447,7 +447,7 @@ With J/OS the following commands can be entered and executed via the operator te
 - `ptrd <file>` to copy an ASCII file from the punch tape to the file system
 - `ptwr <file>` to copy an ASCII file from the file system to a punch tape
 
-- `h16com.h16 <name>` to convert a `.h16` file into a` .com` file. The file name `<name>` must be entered without an extension.
+- `h16com.h16 <name>` to convert a `.h16` file into a `.com` file. The file name `<name>` must be entered without an extension.
 
 More commands will follow ... 
 
@@ -470,7 +470,7 @@ If an error occurs while booting the computer, an error number is output on the 
 | ------ | ------------------------------------------------------------ |
 | 2 | The file `boot` could not be found (drive not recognized or turned off?) |
 | 3 | The file `boot` could not be read correctly (file defective) |
-| 4 | The `boot` file does not contain a reference to a` .h16` file |
+| 4 | The `boot` file does not contain a reference to a `.h16` file |
 | 5 | The `.h16` file referenced in the` boot` file does not exist |
 | 6 | The `.h16` file referenced in the` boot` file is corrupt (no ASCII format) |
 | 7 | The `.h16` file referenced in the` boot` file is corrupt (no valid `.h16` format) |
@@ -565,7 +565,7 @@ If there is a text file `boot` on one of the run values, this is read in and int
 t/shell1.h16
 ```
 
-When booting, the file `boot` is always searched for first on` t`, then `h` and finally in` h/bin` and then found, loaded and executed.
+When booting, the file `boot` is always searched for first on `t`, then `h` and finally in `h/bin` and then found, loaded and executed.
 
 
 
@@ -604,9 +604,9 @@ Since the loading program does not have any commands (the address range $0000 - 
 
 - `.h16` files are text files in H16 format. This format allows a program to be loaded to a defined address, as is the case with `shell1.h16`, for example. All punch tape programs are also in H16 format. Programs can only be exchanged using punch tapes in this format.
 - `.com` files are files in binary format. The binary format is much more compact (approx. Factor 3) and therefore the better choice for programs. `.com` files are always loaded from address $0100 and must be prepared accordingly (instruction` .org $100`).
-- `.bat` files are text files with an executable command in the first line (more is not possible yet). E.g. the file `help.bat` contains the text` cat help.txt`. If `help` is entered, the batch file is opened and the command` cat help.txt` is executed so that the help text is displayed.
+- `.bat` files are text files with an executable command in the first line (more is not possible yet). E.g. the file `help.bat` contains the text `cat help.txt`. If `help` is entered, the batch file is opened and the command `cat help.txt` is executed so that the help text is displayed.
 
-The following applies to `.com` and` .h16` files: The application must start at address $0100, must not change the address range below $00C0 and must return to the operating system at the end via `sys #$71`.
+The following applies to `.com` and `.h16` files: The application must start at address $0100, must not change the address range below $00C0 and must return to the operating system at the end via `sys #$71`.
 
 
 
@@ -620,12 +620,12 @@ The following `.asm` files are also installed with the operating system:
 | cat.asm | Tool to output text files on the terminal |
 | cmdstr.asm | Library function for parameter handling in `.com` files |
 | cpyfiles.asm | Part of the shell2 to copy files |
-| h16com.asm | Tool to convert `.h16` files to` .com` |
+| h16com.asm | Tool to convert `.h16` files to `.com` |
 | hellow.asm | "Hello World" sample program |
 | less.asm | Library function to output text screen by screen |
 | nextstr.asm | Library function for string handling |
-| ptrd.asm | Tool to copy `.txt` /` .h16` files from the punch tape to the file system |
-| ptwr.asm | Tool to write `.txt` /` .h16` files on a punch tape |
+| ptrd.asm | Tool to copy `.txt` / `.h16` files from the punch tape to the file system |
+| ptwr.asm | Tool to write `.txt` / `.h16` files on a punch tape |
 | shell1.asm | Part of J/OS |
 | shell2.asm | Part of J/OS |
 | strcat.asm | Library function for string handling |
@@ -654,7 +654,7 @@ But first some theory, which is needed for the following tasks.
 
 PDP-13 is a 16-bit machine and can therefore only store values from 0 to 65535 in CPU registers. All calculations are also limited to this range of values. In the case of a representation with a sign, there are only values from -32768 to +32767. Here is an overview of the value ranges: 
 
-| 16-Bit wert (hex) | Ganzzahl ohne Vorzeichen | Ganzzahl mit Vorzeichen |
+| 16 bit value (hex) | Unsigned integer        | Signed integer          |
 | ----------------- | ------------------------ | ----------------------- |
 | $0000             | 0                        | 0                       |
 | $0001             | 1                        | +1                      |
@@ -662,10 +662,10 @@ PDP-13 is a 16-bit machine and can therefore only store values from 0 to 65535 i
 | $8000             | 32768                    | -32768                  |
 | $FFFF             | 65535                    | -1                      |
 
-If the sign is to be changed, e.g. if a negative number is to be converted into a positive, the [two's complement] (https://de.wikipedia.org/wiki/Zweierkomplement) procedure is used: 
+If the sign is to be changed, e.g. if a negative number is to be converted into a positive, the [two's complement](https://en.wikipedia.org/wiki/Two%27s_complement) procedure is used: 
 
 ```
-pos_zahl = not(neg_zahl) + 1
+pos_num = not(neg_num) + 1
 ```
 
 Or in Assembler:
