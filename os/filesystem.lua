@@ -458,10 +458,10 @@ function pdp13.get_boot_path(pos, path)
 	local mem = techage.get_nvm(pos)
 	if mpath.is_filename(path) then
 		-- return standard boot path
-		--print("get_boot_path1", (mem.boot_path or "t/") .. path)
+		print("get_boot_path1", (mem.boot_path or "t/") .. path)
 		return (mem.boot_path or "t/") .. path
 	end
 	-- return the given path
-	--print("get_boot_path2", path)
+	print("get_boot_path2", path)
 	return path  
 end	

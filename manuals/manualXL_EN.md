@@ -72,6 +72,16 @@ The CPU is able to execute up to 100,000 commands per second (0.1 MIPS). This ap
 
 Otherwise the CPU runs "full speed", but only as long as the area of the world is loaded. This makes the CPU almost as fast as its big model, the DEC PDP-11/70 (0.4 MIPS).
 
+### Selftest
+
+The CPU contains a self-test routine which is executed when the computer is switched on and the result is output on the CPU (this is used to check whether everything has been connected correctly):
+
+```
+RAM=4K   ROM=8K   I/O=8
+Telewriter..ok
+Programmer..ok
+```
+
 
 
 ## PDP-13 Telewriter
@@ -275,16 +285,6 @@ You can also include the assembler command `brk #0` in your `.asm` program. The 
 When your program is finished, you can replace the `brk #0` instruction with a `move A, A`, so that your program does not stop at this point.
 
 You can copy programs you have written yourself onto punch tape in order to save them or pass them on to other players.
-
-### Selftest
-
-In addition, the "Monitor ROM" chip contains a self-test routine which is executed when the computer is switched on and the result is output on the CPU (this is used to check whether everything has been connected correctly): 
-
-```
-RAM=4K   ROM=8K   I/O=8
-Telewriter..ok
-Programmer..ok
-```
 
 
 
@@ -538,7 +538,7 @@ cpn * .h16 h/bin/
 cpn * .com h/bin/
 cd h
 cd am
-ed boot -> h/bin/boot
+ed boot -> h/bin/shell1.h16
 -> stop tape drive
 -> reboot CPU
 ```

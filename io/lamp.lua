@@ -18,15 +18,19 @@ local M = minetest.get_meta
 local logic = techage.logic
 
 local function switch_on(pos, node, color)
-	node.name = "pdp13:lamp_on"
-	node.param2 = color or 0
-	minetest.swap_node(pos, node)
+	if node.name == "pdp13:lamp_off" or node.name == "pdp13:lamp_on" then
+		node.name = "pdp13:lamp_on"
+		node.param2 = color or 0
+		minetest.swap_node(pos, node)
+	end
 end	
 
 local function switch_off(pos, node)
-	node.name = "pdp13:lamp_off"
-	node.param2 = 50
-	minetest.swap_node(pos, node)
+	if node.name == "pdp13:lamp_on" then
+		node.name = "pdp13:lamp_off"
+		node.param2 = 50
+		minetest.swap_node(pos, node)
+	end
 end	
 
 minetest.register_node("pdp13:lamp_off", {

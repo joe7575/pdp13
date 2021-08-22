@@ -354,24 +354,23 @@ end
 local function selftest(pos, mem, number)
 	if pos and mem then
 		local rom_size = pdp13.tROM_SIZE[M(pos):get_int("rom_size")]
-		local ram_size = M(pos):get_int("ram_size")
+		local ram_size = M(pos):get_int("ram_size") + 4
 		local io_size = (mem.num_ioracks or 0) * 8
 		local telewriter = M(pos):get_string("telewriter_number") ~= "" and "Telewriter..ok  " or ""
 		local terminal   = M(pos):get_string("terminal_pos") ~= "" and "Terminal..ok" or ""
 		local programmer = M(pos):get_string("programmer_number") ~= "" and "Programmer..ok" or ""
 		local tape_drive = M(pos):get_int("has_tape") == 1 and "Tape drive..ok  " or ""
 		local hard_disk  = M(pos):get_int("has_hdd") == 1 and "Hard disk..ok" or ""
-		if rom_size >= 8 then
-			mem.regABXY = "RAM="..ram_size.."K   ROM="..rom_size.."K   I/O="..io_size
-			mem.cmnd1   = telewriter..terminal
-			mem.cmnd2   = programmer
-			if rom_size >= 16 then
-				mem.cmnd3 = tape_drive..hard_disk
-			else
-				mem.cmnd3 = ""
-			end
-			update_formspec(pos, mem)
+			
+		mem.regABXY = "RAM="..ram_size.."K   ROM="..rom_size.."K   I/O="..io_size
+		mem.cmnd1   = telewriter..terminal
+		mem.cmnd2   = programmer
+		if rom_size >= 16 then
+			mem.cmnd3 = tape_drive..hard_disk
+		else
+			mem.cmnd3 = ""
 		end
+		update_formspec(pos, mem)
 	end
 end
 
@@ -382,9 +381,8 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 		if data == "on" then
 			local mem = techage.get_nvm(pos)
 			local meta = M(pos)
-			local ram_size = meta:get_int("ram_size")
+			local ram_size = meta:get_int("ram_size") + 4
 			local rom_size = meta:get_int("rom_size")
-			if ram_size == 0 then ram_size = 4 end
 			if vm16.on_power_on(pos, ram_size/4) then
 				fs_power_on(pos, mem)
 			end

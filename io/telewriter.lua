@@ -112,7 +112,7 @@ local function formspec2(mem)
 		"image[2.5,1;1,1;pdp13_punched_tape.png]"..
 		button("writer", "tape -> PDP13", mem.writer, 5, 0.4)..
 		button("reader", "PDP13 -> tape", mem.reader, 5, 1.6)..
-		"dropdown[1,3.2;6.2;demotape;"..items..";1;]"..
+		"dropdown[1,3.2;6.2;demotape;"..items..";1;" .. items .. "]"..
 		"button[7,3.15;2,1;punch;punch]"..
 		"list[current_player;main;1,4.5;8,4;]"
 end

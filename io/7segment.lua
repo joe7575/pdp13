@@ -20,7 +20,7 @@ local function swap_node(pos, val)
 	if val >= 0 and val <= 16 then
 		local name = "pdp13:7segment"..string.format("%X", val)
 		local node = minetest.get_node(pos)
-		if node.name == name then
+		if node.name == name or string.sub(node.name, 1, 14) ~= "pdp13:7segment" then
 			return 0
 		end
 		node.name = name
