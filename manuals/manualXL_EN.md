@@ -761,3 +761,57 @@ halt            ; important, otherwise the program will continue to run uncontro
 
 
 
+### Task 4: PDP-13 Hard Disk Tape
+
+To get the hard disk tape, you have to solve the following task:
+
+*Write a Collatz function that saves all calculated values including the start value and the end value 1 in an array and returns the start address of the array.*
+
+The problem is about sequences of numbers that are constructed according to a simple law of formation:
+
+- Start with the passed number in the range 11 - 520
+- If n is even, take n / 2 next
+- If n is odd, then take 3 * n + 1 next
+- Repeat the procedure with the number you received
+
+For example, for the starting number n = 4, the sequence is: 4, 2, 1
+
+For example, the Collatz function in Lua looks like this:
+
+```lua
+function collatz(n)
+	local tbl = {}
+	while n ~= 1 do
+		table.insert(tbl, n)
+		if n % 2 == 0 then
+			n = n / 2
+		else
+			n = 3 * n + 1
+		end
+	end
+	table.insert(tbl, n)
+	return tbl
+end
+```
+
+You have to create the program under J/OS using the `ed` editor, compile it with `asm` and then run it from the console.
+The program must first request the value via `sys # $ 306` and then return the result via `sys # $ 307`.
+In addition, the requirements for an executable file and J/OS must be met. If the conversion fits and there is an empty "Tape Chest", the tape is placed in the box if the result is suitable.
+In any case, there is an output on the PDP-13 Terminal Operator. Here is the framework of the program:
+
+```assembly
+.org $100		; Startadresse für ein J/OS Programm
+move A, B		; Ergennungsmuster für ein .com File
+
+sys   #$306     ; den Werte anfordern, dieser steht dann in A
+
+.....			; Hier muss dein Code hin
+
+move  A, #$nnn  ; A mit der Array-Adresse laden
+sys   #$307     ; Ergebnis übergeben
+sys   #$71      ; Ruecksprung nach J/OS
+```
+
+Good luck!  :)
+
+

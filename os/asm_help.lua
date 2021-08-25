@@ -67,6 +67,7 @@ pdp13.AsmHelp = [[## VM16 Instruction Set ##
 ]]
 
 pdp13.AsmHelp = pdp13.AsmHelp:gsub(",", "\\,")
+pdp13.AsmHelp = pdp13.AsmHelp:gsub(";", "\\;")
 pdp13.AsmHelp = pdp13.AsmHelp:gsub("\n", ",")
 pdp13.AsmHelp = pdp13.AsmHelp:gsub("%[", "\\%[")
 pdp13.AsmHelp = pdp13.AsmHelp:gsub("%]", "\\%]")

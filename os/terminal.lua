@@ -29,6 +29,8 @@ local function send_terminal_command(cpu_pos, mem, cmnd, payload)
 	return 0
 end
 
+pdp13.send_terminal_command = send_terminal_command
+
 local function sys_clear_screen(cpu_pos)
 	local mem = techage.get_nvm(cpu_pos)
 	

@@ -79,6 +79,7 @@ dofile(MP.."/items/chips.lua")
 dofile(MP.."/exam/exam1.lua")
 dofile(MP.."/exam/exam2.lua")
 dofile(MP.."/exam/exam3.lua")
+dofile(MP.."/exam/exam4.lua")
 
 -- Manuals
 dofile(MP.."/manuals/manual_DE.lua")

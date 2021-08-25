@@ -249,7 +249,7 @@ function pdp13.copy_file(pos, path1, path2)
 	local uid2 = get_uid(pos, drive2)
 	local mounted2 = drive2 == 'h' or M(pos):get_int("mounted_t") == 1
 
-	print("copy_file", drive1, dir1, fname1, drive2, dir2, fname2)
+	--print("copy_file", drive1, dir1, fname1, drive2, dir2, fname2)
 	if drive1 and drive2 and mounted1 and mounted2 then
 		if Files[uid1] and Files[uid1][dir1] and Files[uid2] and Files[uid2][dir2] then
 			Files[uid2][dir2][fname2] = Files[uid1][dir1][fname1]
@@ -458,10 +458,10 @@ function pdp13.get_boot_path(pos, path)
 	local mem = techage.get_nvm(pos)
 	if mpath.is_filename(path) then
 		-- return standard boot path
-		print("get_boot_path1", (mem.boot_path or "t/") .. path)
+		--print("get_boot_path1", (mem.boot_path or "t/") .. path)
 		return (mem.boot_path or "t/") .. path
 	end
 	-- return the given path
-	print("get_boot_path2", path)
+	--print("get_boot_path2", path)
 	return path  
 end	

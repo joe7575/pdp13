@@ -751,7 +751,7 @@ Um die OS Install Tapes zu erhalten, musst du folgende Aufgabe lösen:
 
 Die Tapes werden in eine Tape Chest gelegt, daher muss eine Tape Chest bei der CPU platziert sein (max. 3 Blöcke Abstand von der CPU)!
 
-Das Programm muss zuerst den Wert über `sys #$304` anfordern und am Ende das Ergebnis wieder über `sys #$305` ausgeben. Wenn die Umwandlung passt und eine leere "Tape Chest" vorhanden ist, dann werden bei passendem Ergebnis die Tapes in die Kiste gelegt. In jedem Falle erfolgt eine Chat-Ausgabe mit dem String. Hier der Rahmen des Programms:
+Das Programm muss zuerst den Wert über `sys #$304` anfordern und am Ende das Ergebnis wieder über `sys #$305` zurück liefern. Wenn die Umwandlung passt und eine leere "Tape Chest" vorhanden ist, dann werden bei passendem Ergebnis die Tapes in die Kiste gelegt. In jedem Falle erfolgt eine Chat-Ausgabe mit dem String. Hier der Rahmen des Programms:
 
 ```assembly
 sys   #$304     ; den Werte anfordern, dieser steht dann in A
@@ -762,4 +762,57 @@ halt            ; wichtig, sonst läuft das Programm unkontrolliert weiter
 ```
 
 
+
+### Aufgabe 4: PDP-13 Hard Disk Tape
+
+Um das Hard Disk Tape zu erhalten, musst du folgende Aufgabe lösen:
+
+*Schreibe eine Collatz-Funktion, die alle berechneten Werte inklusive dem Startwert und dem Endwert 1 in ein Array speichert  und die Startadresse des Array zurückliefert.*
+
+Bei dem Problem geht es um Zahlenfolgen, die nach einem einfachen Bildungsgesetz konstruiert werden:
+
+- Beginne mit übergebenen Zahl im Bereich 11 - 520
+- Ist n gerade, so nimm als nächstes n/2
+- Ist n ungerade, so nimm als nächstes 3*n + 1
+- Wiederhole die Vorgehensweise mit der erhaltenen Zahl
+
+So erhält man zum Beispiel für die Startzahl n = 4 die Folge: 4, 2, 1
+
+Die Collatz-Funktion in Lua sieht bspw. aus wie folgt:
+
+```lua
+function collatz(n)
+	local tbl = {}
+	while n ~= 1 do
+		table.insert(tbl, n)
+		if n % 2 == 0 then
+			n = n / 2
+		else
+			n = 3 * n + 1
+		end
+	end
+	table.insert(tbl, n)
+	return tbl
+end
+```
+
+
+
+Du musst das Programm unter J/OS über den `ed` Editor erstellen, mit `asm` übersetzen und dann von der Konsole ausführen.
+Das Programm muss zuerst den Wert über `sys #$306` anfordern und am Ende das Ergebnis wieder über `sys #$307` zurück liefern. Außerdem müssen die Anforderungen an eine ausführbare Datei und J/OS erfüllt sein. Wenn die Umwandlung passt und eine leere "Tape Chest" vorhanden ist, dann wird bei passendem Ergebnis das Tape in die Kiste gelegt. In jedem Falle erfolgt eine Ausgabe auf dem PDP-13 Terminal Operator. Hier der Rahmen des Programms:
+
+```assembly
+.org $100		; Startadresse für ein J/OS Programm
+move A, B		; Ergennungsmuster für ein .com File
+
+sys   #$306     ; den Werte anfordern, dieser steht dann in A
+
+.....			; Hier muss dein Code hin
+
+move  A, #$nnn  ; A mit der Array-Adresse laden
+sys   #$307     ; Ergebnis übergeben
+sys   #$71      ; Ruecksprung nach J/OS
+```
+
+Viel Glück :)
 

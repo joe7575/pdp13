@@ -67,10 +67,12 @@ local function fclose(pos, address, val1)
 				total_num <= pdp13.max_num_files(r.drive) then
 			local abspath = mpath.join_be(r.dir, r.fname)
 			backend.write_file(r.uid, abspath, r.data or "")
+			minetest.log("warning", "[PDP13] fclose.size = " .. size or 0)
 			Files[r.uid][r.dir][r.fname] = size
 			OpenFiles[val1] = nil
 			return 1
 		end
+		minetest.log("warning", "[PDP13] Platte voll")
 		Files[r.uid][r.dir][r.fname] = nil
 		OpenFiles[val1] = nil
 	end
