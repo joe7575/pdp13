@@ -38,7 +38,7 @@ local function max_num_files(drive)
 	if drive == "h" then
 		return 512
 	else
-		return 64
+		return 128
 	end
 end
 	
@@ -46,7 +46,7 @@ local function max_filesystem_size(drive)
 	if drive == "h" then
 		return 500  -- kByte
 	else
-		return 60  -- kByte
+		return 120  -- kByte
 	end
 end
 
@@ -136,7 +136,7 @@ function pdp13.total_num_and_size(pos, drive)
 	local total_num = -1
 	local total_size = 0
 	for dir, item in pairs(Files[uid] or {}) do
-		total_num = total_num + 1
+		--total_num = total_num + 1
 		for name, size in pairs(item) do
 			total_num = total_num + 1
 			total_size = total_size + (tonumber(size) or 0)
