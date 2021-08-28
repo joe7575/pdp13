@@ -152,10 +152,9 @@ pdp13.Files = Files
 -- Size and number of all dirs/files of one drive
 function pdp13.total_num_and_size(pos, drive)
 	local uid = get_uid(pos, drive)
-	local total_num = -1
+	local total_num = 0
 	local total_size = 0
 	for dir, item in pairs(Files[uid] or {}) do
-		--total_num = total_num + 1
 		for name, size in pairs(item) do
 			total_num = total_num + 1
 			total_size = total_size + (tonumber(size) or 0)
@@ -232,9 +231,8 @@ function pdp13.pipe_filelist(pos, path, files)
 	if files then
 		local num = #files
 		files = pdp13.table_2rows(files, "     ")
-		files[#files+1] = string.format("%u/%u files  %s/%uK", 
-				num, pdp13.max_num_files(drive), 
-				kbyte(total_size), max_filesystem_size(drive))
+		files[#files+1] = string.format("%u files  %s/%uK", 
+				num, kbyte(total_size), max_filesystem_size(drive))
 		pdp13.push_pipe(pos, files)
 		return #files - 1
 	end
@@ -382,6 +380,7 @@ function pdp13.remove_dir(pos, dir)
 end
 
 function pdp13.change_drive(pos, drive)
+	print("change_drive", drive)
 	local mem = techage.get_nvm(pos)
 	if drive == "t" or drive == "h" then
 		mem.curr_drive = drive
@@ -391,7 +390,7 @@ function pdp13.change_drive(pos, drive)
 end
 
 function pdp13.change_dir(pos, dir)
-	--print("change_dir")
+	print("change_dir", dir)
 	local mem = techage.get_nvm(pos)
 	if mpath.is_dir(dir) and mem.curr_drive == "h" then
 		local uid = get_uid(pos, mem.curr_drive)

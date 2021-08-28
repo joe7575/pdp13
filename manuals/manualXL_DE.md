@@ -442,13 +442,12 @@ Mit J/OS können über das Operator Terminal die folgenden Kommandos eingegeben 
 - `cp <from> <to>` Um eine Datei zu kopieren, also bspw. `cp t/test.txt  h/test.txt`
 - `cpn <from> <to>` Um mehrere Dateien zu kopieren, also bspw. `cpn t/*.asm  h/asm/`. Wichtig ist hier, das als 2. Parameter ein Pfad mit einem abschließenden `/`-Zeichen eingegeben wird.
 - `cd t/h` Um das Laufwerk zu wechseln. Also bspw.  `ls h` für das Hard Drive. Beim Hard Drive werden auch Verzeichnisse unterstützt. Damit geht auch bspw. `cd bin`.
-
 - `asm <file>`  um ein File zu h16 zu übersetzen
 - `cat <file>` um den Inhalt einer Text-Datei auszugeben
 - `ptrd <file>` um ein ASCII File vom Punch Tape in das Filesystem zu kopieren
 - `ptwr <file>` um ein ASCII File vom Filesystem auf ein Punch Tape zu kopieren
-
 - `h16com.h16 <name>` um ein `.h16` File in ein `.com` File umzuwandeln. Der Dateiname `<name>` muss ohne Endung eingegeben werden.
+- `disk` um den belegten Speicherplatz auf dem Laufwerk auszugeben.
 
 Weitere Kommandos folgen...
 

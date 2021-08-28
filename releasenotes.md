@@ -5,7 +5,7 @@
 ### Changes
 - search paths for ASM files and executables has changed
 - the tape size is doubled
-
+- disk command added
 
 ## v0.09.00 (2021-01-13)
 

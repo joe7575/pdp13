@@ -73,9 +73,10 @@ local function fclose(pos, address, val1)
 		end
 		Files[r.uid][r.dir][r.fname] = nil
 		OpenFiles[val1] = nil
+		minetest.log("warning", "[pdp13] Disk/tape full! " .. table.concat({total_num, pdp13.max_num_files(r.drive), size, total_size, (pdp13.max_filesystem_size(r.drive) * 1024)}, ", "))
+		local mem = techage.get_nvm(pos)
+		pdp13.send_terminal_command(pos, mem, "println", "Error: Disk/tape full!")
 	end
-	local mem = techage.get_mem(pos)
-	pdp13.send_terminal_command(pos, mem, "println", "Error: Disk/tape full!")
 	return 0
 end
 
@@ -190,12 +191,12 @@ local function change_dir(pos, address, val1, val2)
 end
 
 local function get_current_drive(pos, address, val1, val2)
-	local mem = techage.get_mem(pos)
+	local mem = techage.get_nvm(pos)
 	return string.byte(mem.curr_drive or "t", 1)
 end
 
 local function get_current_dir(pos, address, val1, val2)
-	local mem = techage.get_mem(pos)
+	local mem = techage.get_nvm(pos)
 	vm16.write_ascii(pos, val1, mem.curr_dir or "")
 	return 1
 end
@@ -220,6 +221,18 @@ local function get_files(pos, address, val1, val2)
 	return 0
 end
 
+local function disk_space(pos, address, val1, val2)
+	local mem = techage.get_nvm(pos)
+	local drive = mem.curr_drive or "t"
+	local total_num, total_size = pdp13.total_num_and_size(pos, drive)
+	local max_num, max_size = pdp13.max_num_files(drive), pdp13.max_filesystem_size(drive)
+	local id = pdp13.get_uid(pos, drive) or 0
+	local s = string.format("ID %s: %u/%u files  %s/%uK\0", id, total_num, max_num, pdp13.kbyte(total_size), max_size) 
+	vm16.write_ascii(pos, val2, s)
+	return 1
+end
+
+
 local help = [[+-----+----------------+-------------+------+
 |sys #| File System    | A    | B    | rtn  |
 +-----+----------------+-------------+------+
@@ -242,6 +255,7 @@ local help = [[+-----+----------------+-------------+------+
  $60   make dir         @dir    -     1=ok
  $61   remove dir       @dir    -     1=ok
  $62   get files (>p)   @fname  -     1=ok
+ $63   disk space       -      @dest  1=ok
  ]]
  
 
@@ -264,6 +278,7 @@ pdp13.register_SystemHandler(0x5F, get_current_dir)
 pdp13.register_SystemHandler(0x60, make_dir)
 pdp13.register_SystemHandler(0x61, remove_dir)
 pdp13.register_SystemHandler(0x62, get_files)
+pdp13.register_SystemHandler(0x63, disk_space)
 
 vm16.register_sys_cycles(0x52, 10000)
 vm16.register_sys_cycles(0x54, 10000)

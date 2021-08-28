@@ -446,8 +446,8 @@ With J/OS the following commands can be entered and executed via the operator te
 - `cat <file>` to output the content of a text file
 - `ptrd <file>` to copy an ASCII file from the punch tape to the file system
 - `ptwr <file>` to copy an ASCII file from the file system to a punch tape
-
 - `h16com.h16 <name>` to convert a `.h16` file into a `.com` file. The file name `<name>` must be entered without an extension.
+- `disk` to display the used space on the drive.
 
 More commands will follow ... 
 

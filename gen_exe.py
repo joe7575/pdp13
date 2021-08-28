@@ -7,7 +7,7 @@ Header = """--[[
 	PDP-13
 	======
 
-	Copyright (C) 2019-2020 Joachim Stolberg
+	Copyright (C) 2019-2021 Joachim Stolberg
 
 	AGPL v3
 	See LICENSE.txt for more information
@@ -131,6 +131,7 @@ SystemFiles = [
     ("com", "ptrd"),
     ("com", "ptwr"),
     ("com", "asm"),
+    ("com", "disk"),
 ]
 
 for file_type, file_name in SystemFiles:
@@ -183,6 +184,7 @@ CopyFiles = [
     ("asm", "ptrd"),
     ("asm", "ptwr"),
     ("asm", "asm"),
+    ("asm", "disk"),
 ]
 
 lOut = []
@@ -214,6 +216,7 @@ CopyFiles = [
     ("asm", "ptrd"),
     ("asm", "ptwr"),
     ("asm", "cpyfiles"),
+    ("asm", "disk"),
 ]
 
 lOut = []
