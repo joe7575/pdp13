@@ -59,7 +59,7 @@ error:
 
     .ctext
 HELLO:
-    "J/OS v0.1 Cold Boot\0"
+    "J/OS v0.2 Cold Boot\0"
 ERROR:
     "Load error!\0"
 RAM:

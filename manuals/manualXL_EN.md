@@ -500,13 +500,13 @@ A maximum of one hard disk can be connected to the computer. The hard disk is ac
 
 If this block is removed, the data is retained. If the block is destroyed, the data is gone too.
 
-The hard disk supports one level of directories. Directory names must be 2 or 3 characters long, including letters and numbers. It is advisable to create the following directories: 
+The hard disk supports one level of directories. Directory names must be 2 or 3 characters long, including letters and numbers. It is advisable to create the following directories. Only these directories are searched for executable files or `.asm` files:
 
 ```
 h/bin - for all executable programs, including the boot file (attention: boot itself must also be adapted)
-h/lib - for all .asm files that are used as a library (strcpy.asm, etc.)
-h/prj - for all of your own .asm project files
-h/usr - for all other, own files s
+h/lib - for all .asm files that are used as library by the assembler (strcpy.asm, etc.)
+h/ubn - for all own executable programs
+h/ulb - for all own .asm files that shall be used as library by the assembler
 
 ```
 

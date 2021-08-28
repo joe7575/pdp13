@@ -1,6 +1,7 @@
 # PDP-13 [pdp13]
 
-A 16-bit minicomputer simulation inspired by DEC, IBM, and other Vintage Computers from the 60s and 70s.
+A 16-bit minicomputer simulation for Minetest, inspired by DEC, IBM, and
+other Vintage Computers from the 60s and 70s.
 
 ![screenshot](https://github.com/joe7575/pdp13/blob/main/screenshot.png)
 
@@ -70,4 +71,5 @@ Required: default,tubelib2,techage,vm16
 - 2021-01-03  v0.07  * Add terminal history buffer, update manual, fix bugs
 - 2021-01-07  v0.08  * Add macro asm, OS install process, and many more
 - 2021-01-13  v0.09  * Add new macro asm, add dir level for drive 'h'
+- 2021-08-28  v0.10  * Change exe/asm search paths
 

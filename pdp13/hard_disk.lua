@@ -51,11 +51,13 @@ local function after_place_node(pos, placer, itemstack)
 		if stack_meta then
 			local uid = pdp13.set_uid(pos, "h", stack_meta:get_string("uid_h"))
 			M(pos):set_string("uid_h", uid)
+			M(pos):set_string("infotext", "PDP-13 Hard Disk (" .. uid .. ")")
 			return
 		end
 	end
 	local uid = pdp13.set_uid(pos, "h")
 	M(pos):set_string("uid_h", uid)
+	M(pos):set_string("infotext", "PDP-13 Hard Disk (" .. uid .. ")")
 end
 
 local function preserve_metadata(pos, oldnode, oldmetadata, drops)

@@ -119,6 +119,25 @@ end
 
 pcall(scan_file_system)
 
+local function get_file(pos, mem, drive, dir, fname)
+	if drive then
+		local uid = get_uid(pos, drive)
+		local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
+		if mounted and Files[uid] and Files[uid][dir] then
+			return Files[uid][dir][fname]
+		end
+	end
+end
+
+local function join(drive, dir, fname)
+	if dir and dir ~= "" then
+		return drive .. "/" .. dir .. "/" .. fname
+	else
+		return drive .. "/" .. fname
+	end
+end
+
+
 -------------------------------------------------------------------------------
 -- Export
 -------------------------------------------------------------------------------
@@ -211,9 +230,10 @@ function pdp13.pipe_filelist(pos, path, files)
 	local drive, dir, fname = mpath.splitpath(mem, path)
 	local total_num, total_size = pdp13.total_num_and_size(pos, drive)
 	if files then
+		local num = #files
 		files = pdp13.table_2rows(files, "     ")
 		files[#files+1] = string.format("%u/%u files  %s/%uK", 
-				#files, pdp13.max_num_files(drive), 
+				num, pdp13.max_num_files(drive), 
 				kbyte(total_size), max_filesystem_size(drive))
 		pdp13.push_pipe(pos, files)
 		return #files - 1
@@ -292,26 +312,13 @@ function pdp13.file_exists(pos, path)
 	--print("file_exists")
 	local mem = techage.get_nvm(pos)
 	local drive, dir, fname = mpath.splitpath(mem, path)
-	if drive then
-		local uid = get_uid(pos, drive)
-		local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
-		if mounted and Files[uid] and Files[uid][dir] then
-			return Files[uid][dir][fname] ~= nil
-		end
-	end
+	return get_file(pos, mem, drive, dir, fname) ~= nil
 end
 
 function pdp13.file_size(pos, path)
 	local mem = techage.get_nvm(pos)
 	local drive, dir, fname = mpath.splitpath(mem, path)
-	if drive then
-		local uid = get_uid(pos, drive)
-		local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
-		if mounted and Files[uid] and Files[uid][dir] then
-			return tonumber(Files[uid][dir][fname]) or 0
-		end
-	end
-	return 0
+	return get_file(pos, mem, drive, dir, fname) or 0
 end
 
 function pdp13.read_file(pos, path)
@@ -442,26 +449,23 @@ function pdp13.mount_drive(pos, drive, mount)
 	end
 end
 	
-function pdp13.set_boot_path(pos, path)
+-- Search for the executable in all valid paths.
+function pdp13.get_exe_path(pos, path)
 	local mem = techage.get_nvm(pos)
-	local drive, dir, _ = mpath.splitpath(mem, path)
-	--print("set_boot_path", path, drive, dir)
-	if dir ~= "" then
-		mem.boot_path = drive .. "/" .. dir .. "/"
-	else
-		mem.boot_path = drive .. "/"
-	end
-	--print("set_boot_path2", mem.boot_path)
+	local drive, dir, fname = mpath.splitpath(mem, path)
+	if get_file(pos, mem, drive, dir, fname) then return join(drive, dir, fname) end
+	if get_file(pos, mem, "h", "",    fname) then return join("h", "",    fname) end
+	if get_file(pos, mem, "h", "bin", fname) then return join("h", "bin", fname) end
+	if get_file(pos, mem, "h", "ubn", fname) then return join("h", "ubn", fname) end
+	return path  -- default path
 end	
 
-function pdp13.get_boot_path(pos, path)
+-- Search for the ASM files in all valid paths.
+function pdp13.get_asm_path(pos, path)
 	local mem = techage.get_nvm(pos)
-	if mpath.is_filename(path) then
-		-- return standard boot path
-		--print("get_boot_path1", (mem.boot_path or "t/") .. path)
-		return (mem.boot_path or "t/") .. path
-	end
-	-- return the given path
-	--print("get_boot_path2", path)
-	return path  
+	local drive, dir, fname = mpath.splitpath(mem, path)
+	if get_file(pos, mem, drive, dir, fname) then return join(drive, dir, fname) end
+	if get_file(pos, mem, "h", "lib", fname) then return join("h", "lib", fname) end
+	if get_file(pos, mem, "h", "ulb", fname) then return join("h", "ulb", fname) end
+	return nil
 end	

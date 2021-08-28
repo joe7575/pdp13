@@ -1,5 +1,11 @@
 # Release Notes for pdp13 /JOS
 
+## v0.10.00 (2021-08-28)
+
+### Changes
+- search paths for ASM files and executables has changed
+- the tape size is doubled
+
 
 ## v0.09.00 (2021-01-13)
 

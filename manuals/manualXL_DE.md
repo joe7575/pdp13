@@ -500,14 +500,13 @@ Es kann maximal eine Hard Disk am Rechner angeschlossen werden. Der Zugriff auf 
 
 Wird dieser Block abgebaut, bleiben die Daten erhalten. Wird der Block zerstört, sind die Daten auch weg.
 
-Die Hard Disk unterstützt eine Ebene von Verzeichnissen. Verzeichnisnamen müssen 2 oder 3 Zeichen lang sein, wobei Buchstaben und Zahlen zulässig sind.  Es empfiehlt sich, folgende Verzeichnisse anzulegen:
+Die Hard Disk unterstützt eine Ebene von Verzeichnissen. Verzeichnisnamen müssen 2 oder 3 Zeichen lang sein, wobei Buchstaben und Zahlen zulässig sind.  Es empfiehlt sich, folgende Verzeichnisse anzulegen. Nur diese werden nach ausführbaren Files bzw.  `.asm` Files durchsucht:
 
 ```
 h/bin  - für alle ausführbaren Programme, inklusive dem boot File (Achtung: boot selbst muss auch angepasst werden)
-h/lib  - für alle .asm Files, die als Bibliothek genutzt werden (strcpy.asm, usw.)
-h/prj  - für alle eigenen .asm Projekt Files
-h/usr  - für alle andere, eigenen Files
-
+h/lib  - für alle .asm Files, die vom Assembler als Bibliothek genutzt werden (strcpy.asm, usw.)
+h/ubn  - für eigene ausführbaren Programme
+h/ulb  - für eigene .asm Files, die vom Assembler als Bibliothek genutzt werden sollen
 ```
 
 

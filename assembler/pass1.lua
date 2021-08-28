@@ -45,27 +45,6 @@ local function strsplit(text)
    return list
 end
 
-local function find_file(pos, path)
-	local mem = techage.get_nvm(pos)
-	local drive, dir, fname = pdp13.path.splitpath(mem, path)
-	if drive then
-		if lFnames[fname] then return true end  -- already included
-
-		lFnames[fname] = true
-		tDirs[dir] = true
-		
-		if pdp13.file_exists(pos, path) then return path end
-		-- test tape
-		path = "t/" .. fname
-		if pdp13.file_exists(pos, path) then return path end
-		-- test hard drive
-		for dir,_ in pairs(tDirs) do
-			path = "h/" .. pdp13.path.join_fe(dir, fname)
-			if pdp13.file_exists(pos, path) then return path end
-		end
-	end
-end
-	
 local function expand_macro(pos, lToken, name, params)
 	local num_param = #params
 	if num_param ~= tMacros[name][1] then
@@ -93,10 +72,20 @@ end
 -- Function is called recursively to handle includes.
 -- Returns a list with {type, lineno, string}
 local function scanner(pos, lToken, fname, call_count)
+	local path = pdp13.get_asm_path(pos, fname)
+	if not path then
+		asm.err_msg(pos, "Can't find file")
+		return
+	end
+	-- already included
+	if path == true then 
+		return true
+	end
+	
 	if call_count == 1 then
-		asm.outp(pos, " - read " .. fname .. "...")
+		asm.outp(pos, " - read " .. path .. "...")
 	else
-		asm.outp(pos, " - import " .. fname .. "...")
+		asm.outp(pos, " - import " .. path .. "...")
 	end
 	
 	call_count = call_count + 1
@@ -105,17 +94,6 @@ local function scanner(pos, lToken, fname, call_count)
 		return
 	end
 		
-	local path = find_file(pos, fname)
-	if not path then
-		asm.err_msg(pos, "Can't find file")
-		return
-	end
-		
-	-- already included
-	if path == true then 
-		return true
-	end
-	
 	asm.fname = fname
 	table.insert(lToken, {asm.FNAME, 0, fname})
 	

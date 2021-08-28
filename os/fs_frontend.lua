@@ -75,7 +75,7 @@ local function fclose(pos, address, val1)
 		OpenFiles[val1] = nil
 	end
 	local mem = techage.get_mem(pos)
-	pdp13.send_terminal_command(pos, mem, "println", "Error: Disk/take full!")
+	pdp13.send_terminal_command(pos, mem, "println", "Error: Disk/tape full!")
 	return 0
 end
 

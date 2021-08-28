@@ -30,7 +30,7 @@ local function h16_size(s)
 end
 
 local function load_comfile(pos, fname)
-	local path = pdp13.get_boot_path(pos, fname)
+	local path = pdp13.get_exe_path(pos, fname)
 	local s = pdp13.read_file(pos, path)
 	if s and #s > 2 then
 		local word = string.byte(s, 1) + string.byte(s, 2) * 256
@@ -43,7 +43,7 @@ local function load_comfile(pos, fname)
 end
 
 local function load_h16file(pos, fname)
-	local path = pdp13.get_boot_path(pos, fname)
+	local path = pdp13.get_exe_path(pos, fname)
 	local s = pdp13.read_file(pos, path)
 	if s then
 		vm16.write_h16(pos, s)
@@ -53,7 +53,7 @@ local function load_h16file(pos, fname)
 end
 
 local function load_batfile(pos, fname)
-	local path = pdp13.get_boot_path(pos, fname)
+	local path = pdp13.get_exe_path(pos, fname)
 	local s = pdp13.read_file(pos, path)
 	if s then
 		local items = pdp13.text2table(s)
@@ -64,7 +64,7 @@ local function load_batfile(pos, fname)
 end
 
 local function file_exists(pos, fname)
-	local path = pdp13.get_boot_path(pos, fname)
+	local path = pdp13.get_exe_path(pos, fname)
 	return pdp13.file_exists(pos, path) and 1 or 0
 end
 
@@ -107,8 +107,6 @@ function pdp13.cold_start(pos)
 	local mem = techage.get_mem(pos)
 	local drive, _, _ = pdp13.path.splitpath(mem, fname)
 	pdp13.change_drive(pos, drive)
-	pdp13.set_boot_path(pos, fname)
-	
 	local regs = vm16.get_cpu_reg(pos)
 	regs.A = 0
 	regs.B = 0
@@ -157,14 +155,14 @@ end
 
 local function sys_h16_size(pos, address, val1, val2)
 	local fname = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
-	local path = pdp13.get_boot_path(pos, fname)
+	local path = pdp13.get_exe_path(pos, fname)
 	local s = pdp13.read_file(pos, path)
 	return h16_size(s)
 end
 
 local function sys_com_size(pos, address, val1, val2)
 	local fname = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
-	local path = pdp13.get_boot_path(pos, fname)
+	local path = pdp13.get_exe_path(pos, fname)
 	return pdp13.file_size(pos, path)
 end
 
@@ -172,7 +170,7 @@ end
 -- Size via B Reg
 local function sys_store_as_com(pos, address, val1, val2)
 	local fname = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
-	local path = pdp13.get_boot_path(pos, fname)
+	local path = pdp13.get_exe_path(pos, fname)
 	local s = vm16.read_mem_bin(pos, pdp13.START_ADDR, val2)
 	if path and s then
 		return pdp13.write_file(pos, path, s) and 1 or 0
@@ -184,7 +182,7 @@ end
 -- Size via B Reg
 local function sys_store_as_h16(pos, address, val1, val2)
 	local fname = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
-	local path = pdp13.get_boot_path(pos, fname)
+	local path = pdp13.get_exe_path(pos, fname)
 	local s = vm16.read_h16(pos. pdp13.START_ADDR, val2)
 	if path and s then
 		return pdp13.write_file(pos, path, s) and 1 or 0
