@@ -71,5 +71,5 @@ Required: default,tubelib2,techage,vm16
 - 2021-01-03  v0.07  * Add terminal history buffer, update manual, fix bugs
 - 2021-01-07  v0.08  * Add macro asm, OS install process, and many more
 - 2021-01-13  v0.09  * Add new macro asm, add dir level for drive 'h'
-- 2021-08-28  v0.10  * Change exe/asm search paths
+- 2021-08-28  v0.10  * Change exe/asm search paths, add new commands to J/OS v0.2
 

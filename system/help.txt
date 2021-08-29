@@ -13,3 +13,5 @@ mv  <file> <file>  - move/rename file from...to
 ptrd  <file>       - copy file from punch tape
 ptwr  <file>       - copy file to punch tape
 rm  <files>        - remove file(s)
+disk               - display drive info
+format t/h         - delete all files on t/h

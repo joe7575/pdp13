@@ -23,6 +23,7 @@ local MP = minetest.get_modpath("pdp13")
 local Files = {}  -- t[uid][dir][fname] = file_size
 local mpath = pdp13.path
 local backend = dofile(MP .. "/os/fs_backend.lua")
+local TTL_FOR_BOXED_HDDS_IN_GAME_DAYS = tonumber(minetest.settings:get("pdp13_ttl_for_boxed_hdds_in_game_days")) or (72 * 40)
 
 pdp13.path = mpath -- make it global available
 
@@ -101,6 +102,17 @@ local function del_uid(pos, drive)
 	end
 end
 
+local function delete_old_files()
+	print("[PDP-13] Delete old files...")
+	for _, item in ipairs(backend.scan_file_system()) do
+		if pdp13.HddTtl[item.uid] and 
+			(pdp13.HddTtl[item.uid] + TTL_FOR_BOXED_HDDS_IN_GAME_DAYS) < minetest.get_day_count() then
+			backend.remove_file(item.uid, item.path)
+		end
+	end
+	print("[PDP-13] Done.")
+end
+
 local function scan_file_system()	
 	for _, item in ipairs(backend.scan_file_system()) do
 		-- dir$fname is used for dir/fname
@@ -117,7 +129,10 @@ local function scan_file_system()
 	end
 end
 
-pcall(scan_file_system)
+minetest.after(5, function()
+	delete_old_files()
+	scan_file_system()
+end)
 
 local function get_file(pos, mem, drive, dir, fname)
 	if drive then
@@ -380,7 +395,6 @@ function pdp13.remove_dir(pos, dir)
 end
 
 function pdp13.change_drive(pos, drive)
-	print("change_drive", drive)
 	local mem = techage.get_nvm(pos)
 	if drive == "t" or drive == "h" then
 		mem.curr_drive = drive
@@ -390,7 +404,6 @@ function pdp13.change_drive(pos, drive)
 end
 
 function pdp13.change_dir(pos, dir)
-	print("change_dir", dir)
 	local mem = techage.get_nvm(pos)
 	if mpath.is_dir(dir) and mem.curr_drive == "h" then
 		local uid = get_uid(pos, mem.curr_drive)
@@ -447,6 +460,22 @@ function pdp13.mount_drive(pos, drive, mount)
 		M(pos):set_int("mounted_t", mount == true and 1 or 0)
 	end
 end
+	
+function pdp13.format_disk(pos, drive)
+	local uid = get_uid(pos, drive)
+	if Files[uid] then
+		for dir, item in pairs(Files[uid]) do
+			for fname, _ in pairs(item) do
+				local path = mpath.join_be(dir, fname)
+				backend.remove_file(uid, path)
+			end
+		end
+		Files[uid] = nil
+		local mem = techage.get_nvm(pos)		
+		mem.curr_dir = ""
+		return true
+	end
+end	
 	
 -- Search for the executable in all valid paths.
 function pdp13.get_exe_path(pos, path)

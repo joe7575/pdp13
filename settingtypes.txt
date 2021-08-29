@@ -1,3 +1,4 @@
 # Number of CPU instructions per cycle (100ms)
 pdp13_num_cpu_instructions (Number of CPU instructions per cycle) int 20000
+pdp13_ttl_for_boxed_hdds_in_game_days (Time to live for boxed HDDs in game days) int 2880
 

@@ -38,7 +38,7 @@ end
 -- val1 = mem address for dst_data
 -- val2 = I/O port => remote node number
 local function upd_receive(pos, address, val1, val2)
-	if M(pos):get_int("rom_size")  >= 3 then  -- COMM enabled
+	if M(pos):get_int("rom_size") >= 3 then  -- COMM enabled
 		local own_num = M(pos):get_string("node_number")
 		own_num = tonumber(own_num)
 		local rmt_num = pdp13.get_rmt_node_number(own_num, val2)

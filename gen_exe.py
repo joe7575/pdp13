@@ -132,6 +132,7 @@ SystemFiles = [
     ("com", "ptwr"),
     ("com", "asm"),
     ("com", "disk"),
+    ("com", "format"),
 ]
 
 for file_type, file_name in SystemFiles:
@@ -169,7 +170,7 @@ CopyFiles = [
 
 lOut = []
 for file_type, file_name in CopyFiles:
-    copy_file("./system/", "../../worlds/pdp13_test/pdp13/", file_type, file_name, "00000004")
+    #copy_file("./system/", "../../worlds/pdp13_test/pdp13/", file_type, file_name, "00000004")
     pass
 
 ################################################################################
@@ -185,11 +186,12 @@ CopyFiles = [
     ("asm", "ptwr"),
     ("asm", "asm"),
     ("asm", "disk"),
+    ("asm", "format"),
 ]
 
 lOut = []
 for file_type, file_name in CopyFiles:
-    copy_file("./system/", "../../worlds/pdp13_test/pdp13/", file_type, file_name, "00000004")
+    #copy_file("./system/", "../../worlds/pdp13_test/pdp13/", file_type, file_name, "00000004")
     pass
 
 
@@ -217,10 +219,11 @@ CopyFiles = [
     ("asm", "ptwr"),
     ("asm", "cpyfiles"),
     ("asm", "disk"),
+    ("asm", "format"),
 ]
 
 lOut = []
 for file_type, file_name in CopyFiles:
-    copy_file("./system/", "./test/asm/pdp13/", file_type, file_name, "00000004")
+    #copy_file("./system/", "./test/asm/pdp13/", file_type, file_name, "00000004")
     compile_file("./system/", "h16", file_name)
     pass

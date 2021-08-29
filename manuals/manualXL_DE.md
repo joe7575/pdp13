@@ -317,6 +317,8 @@ Zur Verfügung stehen ab sofort bspw. folgende zusätzliche sys-Kommandos (Das Z
 | $60   | make dir                  | @dir                       | -               | 1=ok, 0=error   |
 | $61   | remove dir                | @dir                       | -               | 1=ok, 0=error   |
 | $62   | get files (in die pipe)   | @file name                 | -               | 1=ok, 0=error   |
+| $63   | disk space                | -                          | @destination    | 1=ok            |
+| $64   | format disk               | drive character `t` or `h` | -               | 1=ok, 0=error   |
 
 
 
@@ -448,6 +450,7 @@ Mit J/OS können über das Operator Terminal die folgenden Kommandos eingegeben 
 - `ptwr <file>` um ein ASCII File vom Filesystem auf ein Punch Tape zu kopieren
 - `h16com.h16 <name>` um ein `.h16` File in ein `.com` File umzuwandeln. Der Dateiname `<name>` muss ohne Endung eingegeben werden.
 - `disk` um den belegten Speicherplatz auf dem Laufwerk auszugeben.
+- `format h` oder `format t` um alle Files auf HDD oder Tape zu löschen.
 
 Weitere Kommandos folgen...
 

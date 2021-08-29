@@ -17,9 +17,11 @@ local storage = minetest.get_mod_storage()
 
 pdp13.UdpData = minetest.deserialize(storage:get_string("UdpData")) or {}
 pdp13.UIDCounter = storage:get_int("UIDCounter")
+pdp13.HddTtl = minetest.deserialize(storage:get_string("HddTtl")) or {}
 
 local function store_data()
 	storage:set_string("UdpData", minetest.serialize(pdp13.UdpData))
+	storage:set_string("HddTtl", minetest.serialize(pdp13.HddTtl))
 	storage:set_int("UIDCounter", pdp13.UIDCounter)
 	minetest.after(60*20, store_data)
 end

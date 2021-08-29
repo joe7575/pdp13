@@ -121,3 +121,13 @@ minetest.register_craft({
 	},
 })
 
+minetest.register_lbm({
+    label = "PDP13 trigger HDD TTL",
+    name = "pdp13:trigger_hdd_ttl",
+    nodenames = {"pdp13:hard_disk"},
+    run_at_every_load = true,
+    action = function(pos, node)
+		local uid = M(pos):get_string("uid_h")
+		pdp13.HddTtl[uid] = minetest.get_day_count()
+	end
+})

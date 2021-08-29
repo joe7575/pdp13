@@ -59,7 +59,7 @@ error:
 
     .ctext
 HELLO:
-    "J/OS v0.2 Cold Boot\0"
+    "J/OS v0.2 Cold Boot\0" ; adapt 'install.asm' also!
 ERROR:
     "Load error!\0"
 RAM:

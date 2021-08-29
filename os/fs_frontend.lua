@@ -232,6 +232,11 @@ local function disk_space(pos, address, val1, val2)
 	return 1
 end
 
+local function format_disk(pos, address, val1, val2)
+	local drive = string.char(val1)
+	return pdp13.format_disk(pos, drive) and 1 or 0
+end
+
 
 local help = [[+-----+----------------+-------------+------+
 |sys #| File System    | A    | B    | rtn  |
@@ -256,7 +261,7 @@ local help = [[+-----+----------------+-------------+------+
  $61   remove dir       @dir    -     1=ok
  $62   get files (>p)   @fname  -     1=ok
  $63   disk space       -      @dest  1=ok
- ]]
+ $64   format           drive   -     1=ok]]
  
 
 pdp13.register_SystemHandler(0x50, fopen, help)
@@ -279,6 +284,7 @@ pdp13.register_SystemHandler(0x60, make_dir)
 pdp13.register_SystemHandler(0x61, remove_dir)
 pdp13.register_SystemHandler(0x62, get_files)
 pdp13.register_SystemHandler(0x63, disk_space)
+pdp13.register_SystemHandler(0x64, format_disk)
 
 vm16.register_sys_cycles(0x52, 10000)
 vm16.register_sys_cycles(0x54, 10000)
@@ -289,3 +295,4 @@ vm16.register_sys_cycles(0x5A, 10000)
 vm16.register_sys_cycles(0x60, 10000)
 vm16.register_sys_cycles(0x61, 10000)
 vm16.register_sys_cycles(0x62, 10000)
+vm16.register_sys_cycles(0x64, 10000)

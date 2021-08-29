@@ -86,16 +86,16 @@ error:
 
     .text
 HELLO:
-    "J/OS Install v0.1\0"
+    "J/OS Install v0.2\0"
 NEWLINE:
     "\0"
 
 TAPE1:
-    "Insert System Tape 1 and press enter\0"
+    "Insert System Tape 1 and press Enter\0"
 TAPE2:   
-    "Insert System Tape 2 and press enter\0"
+    "Insert System Tape 2 and press Enter\0"
 TAPE3:   
-    "Insert System Tape 3 and press enter\0"
+    "Insert System Tape 3 and press Enter\0"
 COPY:
     "copy files...\0"
 

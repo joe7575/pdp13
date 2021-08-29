@@ -317,6 +317,8 @@ The following additional sys commands, for example, are now available (the `@` s
 | $60   | make dir                   | @dir                       | -               | 1=ok, 0=error   |
 | $61   | remove dir                 | @dir                       | -               | 1=ok, 0=error   |
 | $62   | get files (in the pipe)    | @file name                 | -               | 1=ok, 0=error   |
+| $63   | disk space                 | -                          | @destination    | 1=ok            |
+| $64   | format disk                | drive character `t` or `h` | -               | 1=ok, 0=error   |
 
 
 
@@ -434,20 +436,20 @@ That's it! You have successfully installed J/OS!
 With J/OS the following commands can be entered and executed via the operator terminal:
 
 - `ed <file>` to start the editor. The specified text or assembler file is loaded into the editor. If the file does not yet exist, it will be created.
-- `<name> .h16` or` <name> .com` to run a program from one of the drives. With `.com` programs the` .com` extension can also be omitted.
+- `<name>.h16` or `<name>.com` to run a program from one of the drives. With `.com` programs the `.com` extension can also be omitted.
 - `mv <old> <new>` to rename or move a file
-- `rm <file>` to delete file (s). You can also use `rm * .lst` or `rm test. * `
-- `ls [<wc>]` to output the filenames of the files on a drive as a list. With `ls` all files of the current drive are output. with `ls t/*`, for example, all files on the tape drive are output. With `ls test. *` Only files with the name "test" and with `ls * .com` only `.com` files.
+- `rm <file>` to delete file (s). You can also use `rm *.lst` or `rm test.* `
+- `ls [<wc>]` to output the filenames of the files on a drive as a list. With `ls` all files of the current drive are output. with `ls t/*`, for example, all files on the tape drive are output. With `ls test.*` Only files with the name "test" and with `ls *.com` only `.com` files.
 - `cp <from> <to>` To copy a file, e.g. `cp t/test.txt h/test.txt`
 - `cpn <from> <to>` To copy multiple files, e.g. `cpn t/*. asm h/asm/`. It is important here that a path with a final `/` character is entered as the 2nd parameter.
 - `cd t/h` To change the drive. For example, `ls h` for the hard drive. With hard drives, directories are also supported. This also works, for example, with `cd bin`.
-
 - `asm <file>` to translate a file to h16
 - `cat <file>` to output the content of a text file
 - `ptrd <file>` to copy an ASCII file from the punch tape to the file system
 - `ptwr <file>` to copy an ASCII file from the file system to a punch tape
 - `h16com.h16 <name>` to convert a `.h16` file into a `.com` file. The file name `<name>` must be entered without an extension.
 - `disk` to display the used space on the drive.
+- `format h` or `format t` to delete all files on the disk/tape
 
 More commands will follow ... 
 

@@ -27,6 +27,7 @@ local Tape1Files = {
 	"h16com.h16",
 	"asm.com",
         "disk.com",
+        "format.com",
 }
 
 local Tape2Files = {
@@ -53,6 +54,7 @@ local Tape3Files = {
 	"ptrd.asm",
 	"ptwr.asm",
         "disk.asm",
+        "format.asm",
 	"time.asm",
 }
 
