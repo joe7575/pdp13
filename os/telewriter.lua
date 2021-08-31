@@ -21,7 +21,7 @@ local NUM_CHARS = pdp13.MAX_LINE_LEN
 
 local function send_cmnd(pos, dst_num, topic, payload)
 	local own_num = M(pos):get_string("node_number")
-	return techage.send_single(own_num, dst_num, topic, payload)
+	return pdp13.send_single(own_num, dst_num, topic, payload)
 end
 
 local function telewriter_print_string_ln(pos, address, val1, val2)

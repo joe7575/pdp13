@@ -25,7 +25,7 @@ local OpenFilesRef = 1
 
 local function fopen(pos, address, val1, val2)
 	--print("fopen")
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	local path = vm16.read_ascii(pos, val1, mpath.MAX_PATH_LEN)
 	local drive, dir, fname = mpath.splitpath(mem, path)
 	local data = ""
@@ -74,7 +74,7 @@ local function fclose(pos, address, val1)
 		Files[r.uid][r.dir][r.fname] = nil
 		OpenFiles[val1] = nil
 		minetest.log("warning", "[pdp13] Disk/tape full! " .. table.concat({total_num, pdp13.max_num_files(r.drive), size, total_size, (pdp13.max_filesystem_size(r.drive) * 1024)}, ", "))
-		local mem = techage.get_nvm(pos)
+		local mem = pdp13.get_nvm(pos)
 		pdp13.send_terminal_command(pos, mem, "println", "Error: Disk/tape full!")
 	end
 	return 0
@@ -191,12 +191,12 @@ local function change_dir(pos, address, val1, val2)
 end
 
 local function get_current_drive(pos, address, val1, val2)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	return string.byte(mem.curr_drive or "t", 1)
 end
 
 local function get_current_dir(pos, address, val1, val2)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	vm16.write_ascii(pos, val1, mem.curr_dir or "")
 	return 1
 end
@@ -222,7 +222,7 @@ local function get_files(pos, address, val1, val2)
 end
 
 local function disk_space(pos, address, val1, val2)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	local drive = mem.curr_drive or "t"
 	local total_num, total_size = pdp13.total_num_and_size(pos, drive)
 	local max_num, max_size = pdp13.max_num_files(drive), pdp13.max_filesystem_size(drive)

@@ -148,6 +148,7 @@ DemoFiles = [
     ("h16", "inp_number",  "pdp13:tape_inp_num",   "Demo: Telewriter Input Number"),
     ("h16", "inp_string",  "pdp13:tape_inp_str",   "Demo: Telewriter Input String"),
     ("h16", "terminal",    "pdp13:tape_terminal",  "Demo: Terminal"),
+    ("h16", "signaltower", "pdp13:tape_signaltower", "Demo: Signal Tower"),
 ]
 
 lOut = []

@@ -14,8 +14,6 @@
 -- for lazy programmers
 local M = minetest.get_meta
 
-local logic = techage.logic
-
 local function swap_node(pos, val)
 	if val >= 0 and val <= 16 then
 		local name = "pdp13:7segment"..string.format("%X", val)
@@ -58,11 +56,11 @@ for i = 0,16 do
 			"pdp13_7segment_"..c..".png^pdp13_7segment_mask.png",
 		},
 		after_place_node = function(pos, placer)
-			logic.after_place_node(pos, placer, "pdp13:7segment"..c, "PDP-13 7-Segment")
-			logic.infotext(M(pos), "PDP-13 7-Segment")
+			pdp13.after_place_node(pos, placer, "pdp13:7segment"..c, "PDP-13 7-Segment")
+			pdp13.infotext(M(pos), "PDP-13 7-Segment")
 		end,
 		after_dig_node = function(pos, oldnode, oldmetadata)
-			techage.remove_node(pos, oldnode, oldmetadata)
+			pdp13.remove_node(pos, oldnode, oldmetadata)
 		end,
 		paramtype2 = "facedir",
 		groups = table.copy(groups),
@@ -73,8 +71,11 @@ for i = 0,16 do
 		sounds = default.node_sound_wood_defaults(),
 	})
 
-	techage.register_node({"pdp13:7segment"..c}, {
+	pdp13.register_node({"pdp13:7segment"..c}, {
 		on_recv_message = function(pos, src, topic, payload)
+			if pdp13.tubelib then
+				pos, src, topic, payload = pos, "000", src, topic
+			end
 			if topic == "value" then
 				payload = tonumber(payload) or 0
 				swap_node(pos, payload)
@@ -85,11 +86,22 @@ for i = 0,16 do
 	})		
 end
 
-minetest.register_craft({
-	output = "pdp13:7segment10",
-	recipe = {
-		{"wool:black", "", ""},
-		{"techage:vacuum_tube", "", ""},
-		{"pdp13:ic1", "", ""},
-	},
-})
+if minetest.global_exists("techage") then
+	minetest.register_craft({
+		output = "pdp13:7segment10",
+		recipe = {
+			{"wool:black", "", ""},
+			{"techage:vacuum_tube", "", ""},
+			{"pdp13:ic1", "", ""},
+		},
+	})
+else
+	minetest.register_craft({
+		output = "pdp13:7segment10",
+		recipe = {
+			{"wool:black", "default:wood", ""},
+			{"pdp13:ic1", "basic_materials:copper_wire", ""},
+			{"", "", ""},
+		},
+	})
+end

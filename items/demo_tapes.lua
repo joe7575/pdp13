@@ -185,3 +185,34 @@ pdp13.tape.register_tape("pdp13:tape_terminal", "Demo: Terminal",
 :60068000065006100640079002E0000
 :00000FF
 ]], false)
+
+
+pdp13.tape.register_tape("pdp13:tape_signaltower", "Demo: Signal Tower",
+[[; SmartLine Signal Tower/TA4 Signal Tower demo v1.0
+; Grinder on port #0
+; Signal Tower on port #1
+
+
+0000: 6590, 0005    out  #0, #5 ; send 'state' to grinder
+0002: 600C          in   A, #0  ; read response
+
+   ; if off then send off
+0003: 8C10, 000A    skne A, #10
+0005: 65B0, 0000    out  #1, #00 ; force 2 byte instr.
+   ; if running then send green
+0007: 8C10, 0005    skne A, #5
+0009: 65B0, 0002    out  #1, #2
+   ; if standby then send amber
+000B: 8C10, 0007    skne A, #7
+000D: 65B0, 0003    out  #1, #3
+   ; if blocked then send red
+000F: 8C10, 0006    skne A, #6
+0011: 65B0, 0004    out  #1, #4
+
+0013: 1180          jump #0  ; start again
+]], [[:200000100000013
+:800000065900005600C8C10000A65B000008C10
+:8000800000565B000028C10000765B000038C10
+:4001000000665B000041180
+:00000FF
+]], false)

@@ -83,7 +83,7 @@ local function register_terminal(pos)
 	if cpu_pos then
 		M(pos):set_string("cpu_pos", P2S(cpu_pos))
 		-- needed for sys commands
-		local mem = techage.get_nvm(cpu_pos)
+		local mem = pdp13.get_nvm(cpu_pos)
 		mem.term_pos = pos
 	end
 end	
@@ -94,7 +94,7 @@ local function register_programmer(pos)
 	local cpu_num = pdp13.send(pos, nil, names,  "reg_prog", number)
 	if cpu_num then
 		M(pos):set_string("cpu_number", cpu_num)
-		local cpu_pos = (techage.get_node_info(cpu_num) or {}).pos
+		local cpu_pos = (pdp13.get_node_info(cpu_num) or {}).pos
 		M(pos):set_string("cpu_pos", P2S(cpu_pos))
 	end
 end	
@@ -206,11 +206,11 @@ end
 
 local tiles = {
 	-- up, down, right, left, back, front
-	'techage_terminal2_top.png',
-	'techage_terminal2_side.png',
-	'techage_terminal2_side.png^[transformFX',
-	'techage_terminal2_side.png',
-	'techage_terminal2_back.png',
+	'pdp13_terminal_top.png',
+	'pdp13_terminal_side.png',
+	'pdp13_terminal_side.png^[transformFX',
+	'pdp13_terminal_side.png',
+	'pdp13_terminal_back.png',
 	"pdp13_terminal_front.png",
 }
 
@@ -236,19 +236,20 @@ local selection_box = {
 
 local function after_place_node(pos, placer, name)
 	local meta = M(pos)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	mem.ttl = minetest.get_gametime() + SCREENSAVER_TIME
 	clear_screen(pos, mem)
 	meta:set_string("owner", placer:get_player_name())
-	local own_num = techage.add_node(pos, name)
-	meta:set_string("node_number", own_num)
+	local own_num = pdp13.add_node(pos, name)
+	meta:set_string("node_number", own_num)  -- for techage
+	meta:set_string("own_number", own_num)  -- for tubelib
 end
 
 local function on_rightclick(pos, node, clicker)
 	if minetest.is_protected(pos, clicker:get_player_name()) then
 		return
 	end
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	mem.ttl = minetest.get_gametime() + SCREENSAVER_TIME
 	if mem.editor_active then
 		formspec2(pos, mem.text or "")
@@ -309,7 +310,7 @@ local function on_receive_fields(pos, formname, fields, player)
 		return
 	end
 	
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	mem.ttl = minetest.get_gametime() + SCREENSAVER_TIME
 	fields = function_keys(fields)
 		
@@ -358,7 +359,7 @@ end
 
 local function pdp13_on_receive(pos, src_pos, cmnd, data)
 	--print("pdp13_on_receive", cmnd)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	if cmnd == "input" then
 		if mem.input then
 			local s = string.trim(mem.input)
@@ -391,7 +392,7 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 		return true
 	elseif cmnd == "power" then
 		M(pos):set_int("has_power", data == "on" and 1 or 0)
-		local mem = techage.get_nvm(pos)
+		local mem = pdp13.get_nvm(pos)
 		mem.lLines = {""}
 		if data == "on" then
 			if M(pos):get_int("monitor") == 1 then
@@ -413,9 +414,9 @@ local function can_dig(pos)
 end
 
 local function after_dig_node(pos, oldnode, oldmetadata)
-	techage.remove_node(pos, oldnode, oldmetadata)
-	techage.remove_node(pos)
-	techage.del_mem(pos)
+	pdp13.remove_node(pos, oldnode, oldmetadata)
+	pdp13.remove_node(pos)
+	pdp13.del_mem(pos)
 end
 
 minetest.register_node("pdp13:terminal", {
@@ -469,11 +470,13 @@ minetest.register_node("pdp13:terminal_prog", {
 })
 
 -- For monitor mode
-techage.register_node({"pdp13:terminal", "pdp13:terminal_prog"}, {
+pdp13.register_node({"pdp13:terminal", "pdp13:terminal_prog"}, {
 	on_recv_message = function(pos, src, topic, payload)
-		--print("Terminal on_recv_message", topic)
+		if pdp13.tubelib then
+			pos, src, topic, payload = pos, "000", src, topic
+		end
 		if topic == "monitor" then
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			if payload then
 				mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 				clear_screen(pos, mem)
@@ -486,7 +489,7 @@ techage.register_node({"pdp13:terminal", "pdp13:terminal_prog"}, {
 			mem.monitor = payload
 			return true
 		elseif topic == "stopped" then  -- CPU stopped
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 			local lines = pdp13.monitor_stopped(mem.cpu_pos, mem, payload, true)
 			monitor_print_lines(pos, mem, lines or {})
@@ -495,20 +498,40 @@ techage.register_node({"pdp13:terminal", "pdp13:terminal_prog"}, {
 	end,
 })	
 
-minetest.register_craft({
-	output = "pdp13:terminal",
-	recipe = {
-		{"", "techage:terminal2", ""},
-		{"", "pdp13:ic1", ""},
-		{"", "", ""},
-	},
-})
+if minetest.global_exists("techage") then
+	minetest.register_craft({
+		output = "pdp13:terminal",
+		recipe = {
+			{"", "techage:terminal2", ""},
+			{"", "pdp13:ic1", ""},
+			{"", "", ""},
+		},
+	})
 
-minetest.register_craft({
-	output = "pdp13:terminal_prog",
-	recipe = {
-		{"", "techage:terminal2", ""},
-		{"pdp13:ic1", "pdp13:ic1", "pdp13:ic1"},
-		{"", "", ""},
-	},
-})
+	minetest.register_craft({
+		output = "pdp13:terminal_prog",
+		recipe = {
+			{"", "techage:terminal2", ""},
+			{"pdp13:ic1", "pdp13:ic1", "pdp13:ic1"},
+			{"", "", ""},
+		},
+	})
+else
+	minetest.register_craft({
+		output = "pdp13:terminal",
+		recipe = {
+			{"default:glass", "pdp13:ic1", "default:copper_ingot"},
+			{"default:steel_ingot", "pdp13:ic1", "default:steel_ingot"},
+			{"default:steel_ingot", "dye:grey", "default:steel_ingot"},
+		},
+	})
+
+	minetest.register_craft({
+		output = "pdp13:terminal_prog",
+		recipe = {
+			{"pdp13:terminal", "", ""},
+			{"pdp13:ic1", "", ""},
+			{"", "", ""},
+		},
+	})
+end

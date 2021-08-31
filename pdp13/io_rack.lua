@@ -18,55 +18,113 @@ local P2S = function(pos) if pos then return minetest.pos_to_string(pos) end end
 local S2T = function(s) return minetest.deserialize(s) or {} end
 local T2S = function(t) return minetest.serialize(t) or 'return {}' end
 local S   = function(s) return tostring(s or "-") end
+local Commands
 
-local Commands = [[   PDP13 Techage I/O Commands
+if minetest.global_exists("techage") then
+	
+	Commands = [[   PDP13 Techage I/O Commands
 
-  OUT (hex)         IN (hex)
----------------------------------------
-  00 - off          00 - off
-  01 - on           01 - on
-  02 - green        02 - green
-  03 - amber        03 - amber
-  04 - red          04 - red
-  05 - state        05 - running
-  06 - fuel         06 - blocked
-  07 - depth        07 - standby
-  08 - load         08 - nopower
-  09 - delivered    09 - fault
-  0A - count        0A - stopped
-                    0B - unloaded
-   
-  80 - cmd value (val in B)
-]]
+	  OUT (hex)         IN (hex)
+	---------------------------------------
+	  00 - off          00 - off
+	  01 - on           01 - on
+	  02 - green        02 - green
+	  03 - amber        03 - amber
+	  04 - red          04 - red
+	  05 - state        05 - running
+	  06 - fuel         06 - blocked
+	  07 - depth        07 - standby
+	  08 - load         08 - nopower
+	  09 - delivered    09 - fault
+	  0A - count        0A - stopped
+	  -                 0B - unloaded
+	   
+	  80 - cmd value (val in B)
+	]]
 
-Commands = Commands:gsub("\n", ",")
+	Commands = Commands:gsub("\n", ",")
 
-pdp13.register_CommandTopic("techage", "off", 0)
-pdp13.register_CommandTopic("techage", "on", 1)
-pdp13.register_CommandTopic("techage", "green", 2)
-pdp13.register_CommandTopic("techage", "amber", 3)
-pdp13.register_CommandTopic("techage", "red", 4)
-pdp13.register_CommandTopic("techage", "state", 5)
-pdp13.register_CommandTopic("techage", "fuel", 6)
-pdp13.register_CommandTopic("techage", "depth", 7)
-pdp13.register_CommandTopic("techage", "load", 8)
-pdp13.register_CommandTopic("techage", "delivered", 9)
-pdp13.register_CommandTopic("techage", "count", 10)
+	pdp13.register_CommandTopic("techage", "off", 0)
+	pdp13.register_CommandTopic("techage", "on", 1)
+	pdp13.register_CommandTopic("techage", "green", 2)
+	pdp13.register_CommandTopic("techage", "amber", 3)
+	pdp13.register_CommandTopic("techage", "red", 4)
+	pdp13.register_CommandTopic("techage", "state", 5)
+	pdp13.register_CommandTopic("techage", "fuel", 6)
+	pdp13.register_CommandTopic("techage", "depth", 7)
+	pdp13.register_CommandTopic("techage", "load", 8)
+	pdp13.register_CommandTopic("techage", "delivered", 9)
+	pdp13.register_CommandTopic("techage", "count", 10)
 
-pdp13.register_CommandTopic("techage", "value", 0x80)
+	pdp13.register_CommandTopic("techage", "value", 0x80)
 
-pdp13.register_ResponseTopic("techage", "off", 0)
-pdp13.register_ResponseTopic("techage", "on", 1)
-pdp13.register_ResponseTopic("techage", "green", 2)
-pdp13.register_ResponseTopic("techage", "amber", 3)
-pdp13.register_ResponseTopic("techage", "red", 4)
-pdp13.register_ResponseTopic("techage", "running", 5)
-pdp13.register_ResponseTopic("techage", "blocked", 6)
-pdp13.register_ResponseTopic("techage", "standby", 7)
-pdp13.register_ResponseTopic("techage", "nopower", 8)
-pdp13.register_ResponseTopic("techage", "fault", 9)
-pdp13.register_ResponseTopic("techage", "stopped", 10)
-pdp13.register_ResponseTopic("techage", "unloaded", 11)
+	pdp13.register_ResponseTopic("techage", "off", 0)
+	pdp13.register_ResponseTopic("techage", "on", 1)
+	pdp13.register_ResponseTopic("techage", "green", 2)
+	pdp13.register_ResponseTopic("techage", "amber", 3)
+	pdp13.register_ResponseTopic("techage", "red", 4)
+	pdp13.register_ResponseTopic("techage", "running", 5)
+	pdp13.register_ResponseTopic("techage", "blocked", 6)
+	pdp13.register_ResponseTopic("techage", "standby", 7)
+	pdp13.register_ResponseTopic("techage", "nopower", 8)
+	pdp13.register_ResponseTopic("techage", "fault", 9)
+	pdp13.register_ResponseTopic("techage", "stopped", 10)
+	pdp13.register_ResponseTopic("techage", "unloaded", 11)
+
+else
+
+	Commands = [[   PDP13 Tubelib I/O Commands
+
+	  OUT (hex)         IN (hex)
+	---------------------------------------
+	  00 - off          00 - off
+	  01 - on           01 - on
+	  02 - green        02 - green
+	  03 - amber        03 - amber
+	  04 - red          04 - red
+	  05 - state        05 - running
+	  06 - close        06 - blocked
+	  07 - open         07 - standby
+	  -                 08 - defect
+	  -                 09 - fault
+	  -                 0A - stopped
+	  -                 0B - full
+	  -                 0C - empty
+	   
+	  80 - cmd value (val in B)
+	]]
+
+	Commands = Commands:gsub("\n", ",")
+
+	pdp13.register_CommandTopic("tubelib", "off", 0)
+	pdp13.register_CommandTopic("tubelib", "on", 1)
+	pdp13.register_CommandTopic("tubelib", "green", 2)
+	pdp13.register_CommandTopic("tubelib", "amber", 3)
+	pdp13.register_CommandTopic("tubelib", "red", 4)
+	pdp13.register_CommandTopic("tubelib", "state", 5)
+	pdp13.register_CommandTopic("tubelib", "close", 6)
+	pdp13.register_CommandTopic("tubelib", "open", 7)
+--	pdp13.register_CommandTopic("tubelib", "load", 8)
+--	pdp13.register_CommandTopic("tubelib", "delivered", 9)
+--	pdp13.register_CommandTopic("tubelib", "count", 10)
+
+	pdp13.register_CommandTopic("tubelib", "value", 0x80)
+
+	pdp13.register_ResponseTopic("tubelib", "off", 0)
+	pdp13.register_ResponseTopic("tubelib", "on", 1)
+	pdp13.register_ResponseTopic("tubelib", "green", 2)
+	pdp13.register_ResponseTopic("tubelib", "amber", 3)
+	pdp13.register_ResponseTopic("tubelib", "red", 4)
+	pdp13.register_ResponseTopic("tubelib", "running", 5)
+	pdp13.register_ResponseTopic("tubelib", "blocked", 6)
+	pdp13.register_ResponseTopic("tubelib", "standby", 7)
+	pdp13.register_ResponseTopic("tubelib", "defect", 8)
+	pdp13.register_ResponseTopic("tubelib", "fault", 9)
+	pdp13.register_ResponseTopic("tubelib", "stopped", 10)
+	pdp13.register_ResponseTopic("tubelib", "full", 11)
+	pdp13.register_ResponseTopic("tubelib", "empty", 12)
+
+end
 
 local inp = pdp13.get_input
 local out = pdp13.get_output
@@ -79,7 +137,7 @@ local function node_names(num)
 	end
 	-- determine node name
 	NodeNames[num] = "unknown"
-	local info = techage.get_node_info(tostring(num))
+	local info = pdp13.get_node_info(tostring(num))
 	if info and info.pos then
 		--print("node_names", dump(info))
 		local node = tubelib2.get_node_lvm(info.pos)
@@ -115,7 +173,11 @@ local function register_rack_data(pos)
 		if tonumber(numbers[i]) then
 			pdp13.register_OutputNumber(cpu_num, i+offset, tonumber(numbers[i]))
 		end
-		pdp13.register_AddressType(cpu_num, i+offset, "techage")
+		if pdp13.tubelib then
+			pdp13.register_AddressType(cpu_num, i+offset, "tubelib")
+		else
+			pdp13.register_AddressType(cpu_num, i+offset, "techage")
+		end
 	end
 end
 
@@ -323,21 +385,6 @@ minetest.register_node("pdp13:io_rack_top", {
 	on_rotate = screwdriver.disallow,
 	is_ground_content = false,
 	sounds = default.node_sound_wood_defaults(),
-})
-
-
-minetest.register_craftitem("pdp13:chassis", {
-	description = "PDP-13 Chassis Rack",
-	inventory_image = "pdp13_chassis.png^pdp13_frame.png",
-})
-
-minetest.register_craft({
-	output = "pdp13:chassis",
-	recipe = {
-		{"default:steel_ingot", "default:wood", "default:steel_ingot"},
-		{"dye:black", "wool:white", "dye:black"},
-		{"techage:iron_ingot", "default:wood", "techage:iron_ingot"},
-	},
 })
 
 minetest.register_craft({

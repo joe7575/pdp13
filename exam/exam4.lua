@@ -34,7 +34,7 @@ local function exam_provide_number(pos, address, val1, val2)
 	local val = math.floor(math.random() * 255) + 11
 	--local val = val1
 
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	mem.exam4_res = collatz(val)
 	mem.exam4_time = minetest.get_gametime()
 	
@@ -50,7 +50,7 @@ local function add_tape(pos, owner, tape)
 end
 
 local function exam_check_result(pos, address, val1, val2)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	local meta = M(pos)
 	local owner = meta:get_string("owner")
 

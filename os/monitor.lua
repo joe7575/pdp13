@@ -71,7 +71,7 @@ end
 
 -- st(art)  s(to)p  r(ese)t  n(ext)  r(egister)  ad(dress)  d(ump)  en(ter)
 Commands["?"] = function(pos, mem, cmd, rest, is_terminal)
-	if techage.get_nvm(pos).monitor then
+	if pdp13.get_nvm(pos).monitor then
 		mem.mstate = nil
 		if is_terminal then
 			return {
@@ -111,7 +111,7 @@ end
 
 -- start
 Commands["st"] = function(pos, mem, cmd, rest)
-	if techage.get_nvm(pos).monitor then
+	if pdp13.get_nvm(pos).monitor then
 		if rest ~= "" then
 			local addr = pdp13.string_to_number(rest, true)
 			vm16.set_pc(pos, addr)
@@ -128,7 +128,7 @@ end
 
 -- stop
 Commands["sp"] = function(pos, mem, cmd, rest)
-	if techage.get_nvm(pos).monitor then
+	if pdp13.get_nvm(pos).monitor then
 		pdp13.stop_cpu(pos)
 		mem.mstate = nil
 		local cpu, sts = vm16.get_cpu_reg(pos), false
@@ -140,7 +140,7 @@ end
 
 -- reset
 Commands["rt"] = function(pos, mem, cmd, rest)
-	if techage.get_nvm(pos).monitor then
+	if pdp13.get_nvm(pos).monitor then
 		vm16.set_pc(pos, 0) 
 		mem.mstate = nil
 		local cpu, sts = vm16.get_cpu_reg(pos), false
@@ -152,7 +152,7 @@ end
 
 -- next step
 Commands["n"] = function(pos, mem, cmd, rest)
-	if techage.get_nvm(pos).monitor then
+	if pdp13.get_nvm(pos).monitor then
 		if mem.bp_val then
 			mem.bp_val = vm16.breakpoint_step2(pos, mem.brkp_addr, mem.bp_val)
 		else
@@ -170,7 +170,7 @@ Commands["\028"] = Commands["n"]
 	
 -- register
 Commands["r"] = function(pos, mem, cmd, rest, is_terminal)
-	if techage.get_nvm(pos).monitor then
+	if pdp13.get_nvm(pos).monitor then
 		local cpu = vm16.get_cpu_reg(pos)
 		mem.mstate = nil
 		return {
@@ -184,7 +184,7 @@ Commands["\030"] = Commands["r"]
 	
 -- set address
 Commands["ad"] = function(pos, mem, cmd, rest)
-	if techage.get_nvm(pos).monitor then
+	if pdp13.get_nvm(pos).monitor then
 		local addr = pdp13.string_to_number(rest, true)
 		mem.mstate = nil
 		vm16.set_pc(pos, addr) 
@@ -197,7 +197,7 @@ end
 	
 -- dump memory
 Commands["d"] = function(pos, mem, cmd, rest, is_terminal)
-	if techage.get_nvm(pos).monitor then
+	if pdp13.get_nvm(pos).monitor then
 		if cmd == "d" then
 			mem.mstate = "d"
 			mem.maddr = pdp13.string_to_number(rest, true)
@@ -225,7 +225,7 @@ end
 
 -- dump pipe size
 Commands["ps"] = function(pos, mem, cmd, rest, is_terminal)
-	if techage.get_nvm(pos).monitor and is_terminal then
+	if pdp13.get_nvm(pos).monitor and is_terminal then
 		local size = pdp13.pipe_size(pos)
 		return {"pipe size = "..size}
 	end
@@ -233,7 +233,7 @@ end
 
 -- enter data
 Commands["en"] = function(pos, mem, cmd, rest)
-	if techage.get_nvm(pos).monitor then
+	if pdp13.get_nvm(pos).monitor then
 		if cmd == "en" then
 			mem.mstate = "en"
 			mem.maddr = pdp13.string_to_number(rest, true)
@@ -250,7 +250,7 @@ end
 		
 -- assemble
 Commands["as"] = function(pos, mem, cmd, rest)
-	if techage.get_nvm(pos).monitor then
+	if pdp13.get_nvm(pos).monitor then
 		if cmd == "as" then
 			mem.mstate = "as"
 			mem.maddr = pdp13.string_to_number(rest, true)
@@ -274,7 +274,7 @@ end
 
 -- disassemble
 Commands["di"] = function(pos, mem, cmd, rest)
-	if techage.get_nvm(pos).monitor then
+	if pdp13.get_nvm(pos).monitor then
 		if cmd == "di" then
 			mem.mstate = "di"
 			if rest ~= "" then
@@ -303,7 +303,7 @@ end
 
 -- set/reset breakpoint
 Commands["br"] = function(pos, mem, cmd, rest, is_terminal)
-	if techage.get_nvm(pos).monitor and is_terminal then
+	if pdp13.get_nvm(pos).monitor and is_terminal then
 		mem.mstate = nil
 		local words = string.split(rest, " ", true, 1)
 		if rest ~= "" and #words == 1 then
@@ -326,7 +326,7 @@ end
 
 -- step over (a call opcode)
 Commands["so"] = function(pos, mem, cmd, rest, is_terminal)
-	if techage.get_nvm(pos).monitor and is_terminal then
+	if pdp13.get_nvm(pos).monitor and is_terminal then
 		local cpu, sts = vm16.get_cpu_reg(pos), false
 		local opcode = math.floor(cpu.mem0 / 1024)
 		if opcode == 5 then
@@ -348,7 +348,7 @@ Commands["\029"] = Commands["so"]
 
 -- copy text
 Commands["ct"] = function(pos, mem, cmd, rest)
-	if techage.get_nvm(pos).monitor then
+	if pdp13.get_nvm(pos).monitor then
 		mem.mstate = nil
 		local words = string.split(rest, " ", true, 1)
 		if #words == 2 then
@@ -362,7 +362,7 @@ end
 
 -- copy memory
 Commands["cm"] = function(pos, mem, cmd, rest)
-	if techage.get_nvm(pos).monitor then
+	if pdp13.get_nvm(pos).monitor then
 		mem.mstate = nil
 		local words = string.split(rest, " ", false, 2)
 		if #words == 3 then
@@ -381,7 +381,7 @@ end
 
 -- sys command
 Commands["sy"] = function(pos, mem, cmd, rest, is_terminal)
-	if techage.get_nvm(pos).monitor and is_terminal then
+	if pdp13.get_nvm(pos).monitor and is_terminal then
 		mem.mstate = nil
 		local num, regA, regB = unpack(string.split(rest, " ", false, 2))
 		num = pdp13.string_to_number(num, true)
@@ -402,7 +402,7 @@ end
 
 -- load file
 Commands["ld"] = function(pos, mem, cmd, rest, is_terminal)
-	if techage.get_nvm(pos).monitor and is_terminal then
+	if pdp13.get_nvm(pos).monitor and is_terminal then
 		local resp
 		if pdp13.path.has_ext(rest, "com") and pdp13.boot.file_exists(pos, rest) then
 			resp = pdp13.boot.load_comfile(pos, rest)
@@ -417,7 +417,7 @@ end
 
 -- exit monitor
 Commands["ex"] = function(pos, mem, cmd, rest)
-	techage.get_nvm(pos).monitor = false
+	pdp13.get_nvm(pos).monitor = false
 	mem.monitor = nil
 	pdp13.exit_monitor(pos)
 	return {"finished."}

@@ -39,7 +39,7 @@ local function load_comfile(pos, fname)
 			return 1
 		end
 	end
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	pdp13.send_terminal_command(pos, mem, "println", "Error: Invalid .com file!")
 	return 0
 end
@@ -51,7 +51,7 @@ local function load_h16file(pos, fname)
 		vm16.write_h16(pos, s)
 		return 1
 	end
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	pdp13.send_terminal_command(pos, mem, "println", "Error: Invalid .h16 file!")
 	return 0
 end
@@ -64,7 +64,7 @@ local function load_batfile(pos, fname)
 		pdp13.push_pipe(pos, items)
 		return 1
 	end
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	pdp13.send_terminal_command(pos, mem, "println", "Error: Invalid .bat file!")
 	return 0
 end
@@ -110,7 +110,7 @@ function pdp13.cold_start(pos)
 	
 	vm16.write_h16(pos, s)
 	
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	local drive, _, _ = pdp13.path.splitpath(mem, fname)
 	pdp13.change_drive(pos, drive)
 	local regs = vm16.get_cpu_reg(pos)

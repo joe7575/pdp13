@@ -283,7 +283,7 @@ function asm.pass2(pos, lToken1)
 	
 	for _,tok in ipairs(lToken1) do
 		if tok[asm.TYPE] == asm.FNAME then
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			local _, _, name = pdp13.path.splitpath(mem, tok[asm.STRING])
 			local s = pdp13.path.splitext(name)
 			tNamespaces[s] = true
@@ -319,13 +319,13 @@ function asm.pass2(pos, lToken1)
 		elseif ttype == asm.FNAME then
 			asm.section = asm.CODESEC
 			asm.fname = text
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			local _, _, name = pdp13.path.splitpath(mem, tok[asm.STRING])
 			asm.namespace = pdp13.path.splitext(name)
 			table.insert(lToken2, {asm.FILENAME, asm.fname})
 		elseif ttype == asm.EOF then
 			asm.fname = text
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			local _, _, name = pdp13.path.splitpath(mem, tok[asm.STRING])
 			asm.namespace = pdp13.path.splitext(name)
 			table.insert(lToken2, {asm.EOFILE, asm.fname})
@@ -335,7 +335,7 @@ function asm.pass2(pos, lToken1)
 end
 
 local function sys_asm_pass2(pos, address, val1, val2)
-	local mem = techage.get_mem(pos)
+	local mem = pdp13.get_mem(pos)
 	mem.asm_pass2 = asm.pass2(pos, mem.asm_pass1)
 	if mem.asm_pass2 then
 		return 1

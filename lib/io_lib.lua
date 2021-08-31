@@ -24,16 +24,10 @@ local CommandTopics  = {}  -- on startup generated: t[type_][cmnd] = topic
 local ResponseTopics = {}  -- on startup generated: t[type_][resp] = topic
 local Inputs  = {}  -- volatile: t[own_num][addr] = value
 local Outputs = {}  -- volatile: t[own_num][addr] = value
+local ADDRESS_TYPE = "techage"
 
-
-local function value_changed(outputs, addr, val1, val2)
-	if outputs[addr] ~= val1 then 
-		outputs[addr] = val1
-		return true
-	elseif val1 >= 128 and outputs[addr] ~= val2 then 
-		outputs[addr] = val2
-		return true
-	end
+if minetest.global_exists("tubelib") then
+	ADDRESS_TYPE = "tubelib"
 end
 	
 --
@@ -83,29 +77,24 @@ local function on_output(pos, addr, val1, val2)
 	Outputs[own_num] = Outputs[own_num] or {}
 	Inputs[own_num] = Inputs[own_num] or {}
 		
-	--print("on_output1", own_num, addr, val1, val2, Outputs[own_num][addr])
-	if value_changed(Outputs[own_num], addr, val1, val2) then 
-		local num = (OutputNumbers[own_num] or {})[addr]
-		local type_ = (AddressTypes[own_num] or {})[addr] or "techage"
-		local topic = (CommandTopics[type_] or {})[val1]
-	
-		--print("on_output2", num, type_, topic)
-		if num and topic then
-			-- TODO: allow other mods for communication
-			local resp = techage.send_single(own_num, num, topic, val2)
-			if resp then
-				Inputs[own_num][addr] = ((ResponseTopics[type_] or {})[resp])
-			else
-				Inputs[own_num][addr] = 0xFFFF  -- receiver does not respond
-			end
-		elseif not num then
-			Inputs[own_num][addr] = 0xFFFE -- invalid addr
+	local num = (OutputNumbers[own_num] or {})[addr]
+	local type_ = (AddressTypes[own_num] or {})[addr] or ADDRESS_TYPE
+	local topic = (CommandTopics[type_] or {})[val1]
+
+	if num and topic then
+		-- TODO: allow other mods for communication
+		local resp = pdp13.send_single(own_num, num, topic, val2)
+		if resp then
+			Inputs[own_num][addr] = ((ResponseTopics[type_] or {})[resp])
 		else
-			Inputs[own_num][addr] = 0xFFFD -- invalid data
+			Inputs[own_num][addr] = 0xFFFF  -- receiver does not respond
 		end
-		return true  -- output changed
+	elseif not num then
+		Inputs[own_num][addr] = 0xFFFE -- invalid addr
+	else
+		Inputs[own_num][addr] = 0xFFFD -- invalid data
 	end
-	return false  -- output not changed
+	return true  -- output changed
 end
 
 local function on_input(pos, addr)
@@ -121,14 +110,14 @@ vm16.register_callbacks(on_input, on_output)
 -- API functions
 --
 function pdp13.io_restore(pos, number)
-	number = tonumber(number)
+	number = tonumber(number) or 0
 	OutputNumbers[number] = get_tbl(pos, "OutputNumbers")
 	InputAdresses[number] = get_tbl(pos, "InputAdresses")
 	AddressTypes[number]  = get_tbl(pos, "AddressTypes")
 end
 
 function pdp13.io_store(pos, number)
-	number = tonumber(number)
+	number = tonumber(number) or 0
 	set_tbl(pos, "OutputNumbers", OutputNumbers[number])
 	set_tbl(pos, "InputAdresses", InputAdresses[number])
 	set_tbl(pos, "AddressTypes", AddressTypes[number])
@@ -154,4 +143,25 @@ end
 
 function pdp13.get_rmt_node_number(cpu_num, addr)
 	return OutputNumbers[cpu_num] and OutputNumbers[cpu_num][addr]
+end
+
+function pdp13.after_place_node(pos, placer, name, descr)
+	local meta = M(pos)
+	local own_num = pdp13.add_node(pos, name)
+	meta:set_string("node_number", own_num)  -- for techage
+	meta:set_string("own_number", own_num)  -- for tubelib
+	meta:set_string("owner", placer:get_player_name())
+	meta:set_string("infotext", descr.." -")
+end
+
+function pdp13.infotext(meta, descr, text)
+	local own_num = meta:get_string("node_number") or ""
+	local numbers = meta:get_string("numbers") or ""
+	if numbers ~= "" then
+		meta:set_string("infotext", descr.." "..own_num..": "..S("connected with").." "..numbers)
+	elseif text then
+		meta:set_string("infotext", descr.." "..own_num..": "..text)
+	else
+		meta:set_string("infotext", descr.." "..own_num)
+	end
 end

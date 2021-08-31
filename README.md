@@ -17,9 +17,9 @@ A computer simulation that will take you back to the beginnings of programming:
 - RAM and ROM chips to expand the computer
 - Communication possibilities between computers
 - Output possibilities like color lamp and 7-segment node
-- Compatible to TechAge to be able control machines
-- J/OS operating system to be able to boot from drive
-- commands like: ls, cat, rm, rm, cd, cp, ...
+- Compatible to TechAge and TechPack (tubelib) to be able control machines
+- J/OS operating system to be able to boot from drives
+- commands like: ls, cat, mkdir, rm, cd, cp, disk, format, ...
 - Macro assembler application
 - Many ASM stdlib and example files
 
@@ -49,14 +49,14 @@ The English translation was made by Flitzpiepe
 Copyright (C) 2019-2021 Joe (iauit@gmx.de)
 Code: Licensed under the GNU AGPL version 3 or later. See LICENSE.txt  
 Textures: CC BY-SA 3.0  
-Sound: 271163__alienxxx__beep-008.wav from freesound.org,  
+Sound: `271163__alienxxx__beep-008.wav` from freesound.org,  
 licensed under the Attribution License.  
 
 
 
 ### Dependencies
 
-Required: default,tubelib2,techage,vm16
+Required: default, vm16, techage or tubelib
 
 
 
@@ -72,4 +72,5 @@ Required: default,tubelib2,techage,vm16
 - 2021-01-07  v0.08  * Add macro asm, OS install process, and many more
 - 2021-01-13  v0.09  * Add new macro asm, add dir level for drive 'h'
 - 2021-08-28  v0.10  * Change exe/asm search paths, add new commands to J/OS v0.2
+- 2021-08-31  v0.11  * Prepared for TechPack
 

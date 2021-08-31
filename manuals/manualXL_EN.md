@@ -270,8 +270,8 @@ The monitor program supports the following commands, which are also output by en
 | `ad #` | (address) Set the program counter (corresponds to the "address" button on the CPU). `#` is the address |
 | `d #` | (dump) Output memory (corresponds to the "dump" button on the CPU). `#` is the start address. If "enter" is then pressed, the next memory block is output |
 | `en #` | (enter) Enter data. `#` is the address. Then values ​​(numbers) can be entered and accepted with "enter" |
-| `as #` | (assembler) Start the assembler. The start address must be specified for `#`. After that, assembler commands can be entered. You can exit this mode by entering another command |
-| `di #` | (disassemble) Output of a memory area of ​​the CPU in assembler notation. 4 commands are always issued. If "enter" is then pressed, the next 4 commands are issued |
+| `as #` | (assembler) Start the assembler. The start address must be specified for `#`. After that, assembler commands can be entered. Entering `ex` will exit this mode. |
+| `di #` | (disassemble) Output of a memory area of ​​the CPU in assembler notation. 4 commands are always issued. If "Enter" is pressed, the next 4 commands are issued. This mode is ended by entering another command. |
 | `ct # txt` | (copy text) Copy text into memory. With `ct 100 Hello World`, the text "Hello World" is copied to the address $100 and terminated with a zero |
 | `cm # # #` | (copy memory) Copy memory. The three `#` mean: source address, target address, number of words |
 | `ex` | (exit) Exit Monitor Mode from the terminal |
@@ -628,6 +628,8 @@ The following `.asm` files are also installed with the operating system:
 | nextstr.asm | Library function for string handling |
 | ptrd.asm | Tool to copy `.txt` / `.h16` files from the punch tape to the file system |
 | ptwr.asm | Tool to write `.txt` / `.h16` files on a punch tape |
+| disk.asm | Tool to output information to tape/disk |
+| format.asm | Tool for delete all files on tape/disk |
 | shell1.asm | Part of J/OS |
 | shell2.asm | Part of J/OS |
 | strcat.asm | Library function for string handling |

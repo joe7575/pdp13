@@ -193,14 +193,25 @@ minetest.register_craftitem("pdp13:chassis", {
 	inventory_image = "pdp13_chassis.png^pdp13_frame.png",
 })
 
-minetest.register_craft({
-	output = "pdp13:chassis",
-	recipe = {
-		{"default:steel_ingot", "default:wood", "default:steel_ingot"},
-		{"dye:black", "wool:white", "dye:black"},
-		{"techage:iron_ingot", "default:wood", "techage:iron_ingot"},
-	},
-})
+if minetest.global_exists("techage") then
+	minetest.register_craft({
+		output = "pdp13:chassis",
+		recipe = {
+			{"default:steel_ingot", "default:wood", "default:steel_ingot"},
+			{"dye:black", "wool:white", "dye:black"},
+			{"default:steel_ingot", "default:wood", "techage:iron_ingot"},
+		},
+	})
+else
+	minetest.register_craft({
+		output = "pdp13:chassis",
+		recipe = {
+			{"default:steel_ingot", "default:wood", "default:steel_ingot"},
+			{"dye:black", "wool:white", "dye:black"},
+			{"basic_materials:steel_strip", "basic_materials:copper_wire", "basic_materials:steel_strip"},
+		},
+	})
+end
 
 minetest.register_craft({
 	output = "pdp13:mem_rack",

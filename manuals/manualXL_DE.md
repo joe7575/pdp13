@@ -270,8 +270,8 @@ Das Monitor Programm unterstützt folgende Kommandos, die auch mit Eingabe von `
 | `ad #`     | (address) Setzen des Programm Counters (entspricht der "address" Taste an der CPU). `#` ist dabei die Adresse |
 | `d #`      | (dump) Speicher ausgeben (entspricht der "dump" Taste an der CPU). `#` ist dabei die Startadresse. Wird danach "enter" gedrückt, wird der nächste Speicherblock ausgegeben |
 | `en #`     | (enter) Daten eingeben. `#` ist dabei die Adresse. Danach können Werte (Zahlen) eingegeben und mit "enter" übernommen werden |
-| `as #`     | (assembler) Starten des Assemblers. Für `#` muss die Startadresse angegeben werden Danach können Assemblerbefehle eingegeben werden. Aus diesem Mode kommt man durch Eingabe eines anderen Kommandos wieder heraus |
-| `di #`     | (disassemble) Ausgabe eines Speicherbereichs der CPU in Assemblerschreibweise. Es werden immer 4 Befehle ausgegeben. Wird danach "enter" gedrückt, werden die nächsten 4 Befehle ausgegeben |
+| `as #`     | (assembler) Starten des Assemblers. Für `#` muss die Startadresse angegeben werden Danach können Assemblerbefehle eingegeben werden. Durch Eingabe von `ex` wird diese Modus beendet. |
+| `di #`     | (disassemble) Ausgabe eines Speicherbereichs der CPU in Assemblerschreibweise. Es werden immer 4 Befehle ausgegeben. Wird danach "Enter" gedrückt, werden die nächsten 4 Befehle ausgegeben. Durch Eingabe eines anderen Kommandos wird dieser Modus beendet. |
 | `ct # txt` | (copy text) Kopieren von Text in den Speicher. Mit `ct 100 Hallo Welt,` wird der Text "Hallo Welt" an die Adresse $100  kopiert und mit einer Null abgeschlossen |
 | `cm # # #` | (copy memory) Speicher kopieren. Die drei `#` bedeuten: Quell-Adresse, Ziel-Adresse, Anzahl Worte |
 | `ex`       | (exit) Monitor Mode vom Terminal aus beenden                 |
@@ -629,6 +629,8 @@ Mit dem Betriebssystem werden auch die folgenden `.asm`-Files installiert:
 | nextstr.asm  | Library Funktion zum String Handling                         |
 | ptrd.asm     | Tool, um `.txt`/`.h16` Files vom Punch Tape ins Filesystem zu kopieren |
 | ptwr.asm     | Tool, um `.txt`/`.h16` Files auf ein Punch Tape zu schreiben |
+| disk.asm     | Tool, um Informationen zum Tape/zur Platte auszugeben        |
+| format.asm   | Tool, um Files auf Tape/Platte zu löschen                    |
 | shell1.asm   | Teil von J/OS                                                |
 | shell2.asm   | Teil von J/OS                                                |
 | strcat.asm   | Library Funktion zum String Handling                         |

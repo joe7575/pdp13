@@ -26,7 +26,7 @@ local function register_telewriter(pos, cmnd)
 	local cpu_num = pdp13.send(pos, nil, names,  cmnd, number)
 	if cpu_num then
 		M(pos):set_string("cpu_number", cpu_num)
-		local cpu_pos = (techage.get_node_info(cpu_num) or {}).pos
+		local cpu_pos = (pdp13.get_node_info(cpu_num) or {}).pos
 		M(pos):set_string("cpu_pos", P2S(cpu_pos))
 	end
 end	
@@ -121,7 +121,7 @@ local function send_to_cpu(pos, topic, payload)
 	local own_num = M(pos):get_string("node_number")
 	local cpu_num = M(pos):get_string("cpu_number")
 	--print("send_to_cpu", own_num, cpu_num, topic, #(payload or {}))
-	return techage.send_single(own_num, cpu_num, topic, payload)
+	return pdp13.send_single(own_num, cpu_num, topic, payload)
 end
 	
 local function add_line(pos, mem, text)
@@ -240,13 +240,13 @@ end
 
 local function write_code_to_cpu(pos, code)
 	minetest.after(1, function(pos)
-		local mem = techage.get_nvm(pos)
+		local mem = pdp13.get_nvm(pos)
 		mem.writer = false
 		M(pos):set_string("formspec", formspec2(mem))
 	end, pos)
 	local cpu_num = M(pos):get_string("cpu_number")
 	local res = send_to_cpu(pos, "write_h16", code)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	add_line_to_fifo(pos, mem, "Tape to PDP13.."..(res and "ok" or "error"))
 end
 
@@ -256,7 +256,7 @@ local function gen_demotape(pos, demotape)
 			minetest.after(DELAY, function(pos, name)
 				local inv = M(pos):get_inventory()
 				inv:set_stack("main", 1, ItemStack(name))
-				local mem = techage.get_nvm(pos)
+				local mem = pdp13.get_nvm(pos)
 				add_line_to_fifo(pos, mem, "Tape punched")
 			end, pos, item.name)
 			play_sound(pos)
@@ -270,7 +270,7 @@ local function gen_rom_tape(pos, rom_tape)
 		minetest.after(DELAY, function(pos, rom_tape)
 			local inv = M(pos):get_inventory()
 			inv:set_stack("main", 1, ItemStack(rom_tape))
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			add_line_to_fifo(pos, mem, "Tape punched")
 		end, pos, rom_tape)
 		play_sound(pos)
@@ -279,13 +279,13 @@ end
 
 local function read_code_from_cpu(pos)
 	minetest.after(1, function(pos)
-		local mem = techage.get_nvm(pos)
+		local mem = pdp13.get_nvm(pos)
 		mem.reader = false
 		M(pos):set_string("formspec", formspec2(mem))
 	end, pos)
 	local cpu_num = M(pos):get_string("cpu_number")
 	local code = send_to_cpu(pos, "read_h16")
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	if code then
 		if write_tape_code(pos, code) then
 			add_line_to_fifo(pos, mem, "PDP13 to tape..ok")
@@ -301,10 +301,11 @@ local function after_place_node(pos, placer, itemstack, name, cmnd, ntype)
 	local meta = M(pos)
 	local inv = meta:get_inventory()
 	inv:set_size('main', 1)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	meta:set_string("owner", placer:get_player_name())
-	local own_num = techage.add_node(pos, name)
-	meta:set_string("node_number", own_num)
+	local own_num = pdp13.add_node(pos, name)
+	meta:set_string("node_number", own_num)  -- for techage
+	meta:set_string("own_number", own_num)  -- for tubelib
 	meta:set_string("formspec", formspec1(pos, mem))
 	meta:set_string("infotext", "PDP-13 Telewriter "..ntype)
 end
@@ -332,7 +333,7 @@ local function on_receive_fields(pos, formname, fields, player)
 		return
 	end
 	
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	mem.codes = mem.codes or {}
 	
 	if fields.tab == "2" then
@@ -383,7 +384,7 @@ local function on_receive_fields(pos, formname, fields, player)
 end
 
 local function node_timer(pos, elapsed)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	mem.OutFifo = mem.OutFifo or {}
 	if #mem.OutFifo > 0 then
 		play_sound(pos)
@@ -405,9 +406,9 @@ local function can_dig(pos)
 end
 
 local function after_dig_node(pos, oldnode, oldmetadata)
-	techage.remove_node(pos, oldnode, oldmetadata)
-	techage.remove_node(pos)
-	techage.del_mem(pos)
+	pdp13.remove_node(pos, oldnode, oldmetadata)
+	pdp13.remove_node(pos)
+	pdp13.del_mem(pos)
 end
 
 local Tiles = {
@@ -475,28 +476,31 @@ minetest.register_node("pdp13:telewriter_prog", {
 	sounds = default.node_sound_wood_defaults(),
 })
 
-techage.register_node({"pdp13:telewriter", "pdp13:telewriter_prog"}, {
+pdp13.register_node({"pdp13:telewriter", "pdp13:telewriter_prog"}, {
 	on_recv_message = function(pos, src, topic, payload)
-	--print("Telewriter on_recv_message", topic, payload)
+		if pdp13.tubelib then
+			pos, src, topic, payload = pos, "000", src, topic
+		end
+		print("telewriter", pos, src, topic, payload)
 		if topic == "println" then
 			payload = tostring(payload) or ""
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			add_line_to_fifo(pos, mem, payload)
 			return 1
 		elseif topic == "print" then
 			payload = tostring(payload) or ""
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			add_string_to_fifo(pos, mem, payload)
 			return 1
 		elseif topic == "input" then
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			if mem.input then
 				local s = string.trim(mem.input)
 				mem.input = nil
 				return s
 			end
 		elseif topic == "monitor" then
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			if payload then
 				mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 				add_line_to_fifo(pos, mem, "### Monitor v1.0 ###")
@@ -506,25 +510,25 @@ techage.register_node({"pdp13:telewriter", "pdp13:telewriter_prog"}, {
 			mem.monitor = payload
 			return true
 		elseif topic == "stopped" then  -- CPU stopped
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
 			local lines = pdp13.monitor_stopped(mem.cpu_pos, mem, payload, false)
 			add_lines_to_fifo(pos, mem, lines or {})
 			return true
 		elseif topic == "punch" then  -- punch "dongle" tape from exams
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			mem.reader = true
 			gen_rom_tape(pos, payload)
 			return true
 		elseif topic == "read_tape" then  -- provide the tape string
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			if not mem.reader then
 				mem.reader = true
 				start_tape(pos, mem)
 				return get_tape_code(pos)
 			end			
 		elseif topic == "write_tape" then  -- write string to tape
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			if not mem.writer then
 				if write_tape_code(pos, payload) then
 					mem.writer = true
@@ -533,10 +537,10 @@ techage.register_node({"pdp13:telewriter", "pdp13:telewriter_prog"}, {
 				end
 			end			
 		elseif topic == "tape_name" then
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			return get_tape_name(pos)
 		elseif topic == "tape_sound" then
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			if not mem.reader then
 				mem.reader = true
 				start_tape(pos, mem)
@@ -553,7 +557,7 @@ minetest.register_lbm({
     nodenames = {"pdp13:telewriter", "pdp13:telewriter_prog"},
     run_at_every_load = true,
     action = function(pos, node)
-		local mem = techage.get_nvm(pos)
+		local mem = pdp13.get_nvm(pos)
 		mem.reader = false
 		mem.writer = false
 		mem.input = nil
@@ -570,7 +574,10 @@ minetest.register_craft({
 })
 
 minetest.register_craft({
-	type = "shapeless",
 	output = "pdp13:telewriter_prog",
-	recipe = {"pdp13:telewriter"},
+	recipe = {
+		{"pdp13:telewriter", "", ""},
+		{"pdp13:ic1", "", ""},
+		{"", "", ""},
+	},
 })

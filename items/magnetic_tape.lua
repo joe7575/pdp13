@@ -70,10 +70,21 @@ minetest.register_craftitem("pdp13:magnetic_tape", {
 	on_use = on_use,
 })
 
-techage.recipes.add("ta3_electronic_fab", {
-	output = "pdp13:magnetic_tape 1",
-	input = {
-		"basic_materials:plastic_strip 4", 
-		"dye:dark_green 1"
-	}
-})
+if minetest.global_exists("techage") then
+	techage.recipes.add("ta3_electronic_fab", {
+		output = "pdp13:magnetic_tape 1",
+		input = {
+			"basic_materials:plastic_strip 4", 
+			"dye:dark_green 1"
+		}
+	})
+else
+	minetest.register_craft({
+		output = "pdp13:magnetic_tape",
+		recipe = {
+			{"basic_materials:plastic_strip", "", "basic_materials:plastic_strip"},
+			{"", "dye:dark_green", ""},
+			{"basic_materials:plastic_strip", "", "basic_materials:plastic_strip"},
+		},
+	})	
+end

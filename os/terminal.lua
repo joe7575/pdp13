@@ -32,7 +32,7 @@ end
 pdp13.send_terminal_command = send_terminal_command
 
 local function sys_clear_screen(cpu_pos)
-	local mem = techage.get_nvm(cpu_pos)
+	local mem = pdp13.get_nvm(cpu_pos)
 	
 	mem.stdout = ""
 	send_terminal_command(cpu_pos, mem, "clear")
@@ -40,7 +40,7 @@ local function sys_clear_screen(cpu_pos)
 end
 
 local function sys_print_char(cpu_pos, address, val1)
-	local mem = techage.get_nvm(cpu_pos)
+	local mem = pdp13.get_nvm(cpu_pos)
 	
 	if val1 > 255 then
 		mem.stdout = mem.stdout..
@@ -54,7 +54,7 @@ local function sys_print_char(cpu_pos, address, val1)
 end
 
 local function sys_print_number(cpu_pos, address, val1, val2)
-	local mem = techage.get_nvm(cpu_pos)
+	local mem = pdp13.get_nvm(cpu_pos)
 	
 	if val2 == 16 then
 		mem.stdout = mem.stdout..string.format("%04X", val1)
@@ -65,7 +65,7 @@ local function sys_print_number(cpu_pos, address, val1, val2)
 end
 
 local function sys_print_string(cpu_pos, address, val1)
-	local mem = techage.get_nvm(cpu_pos)
+	local mem = pdp13.get_nvm(cpu_pos)
 	
 	local s = vm16.read_ascii(cpu_pos, val1, NUM_CHARS)
 	mem.stdout = mem.stdout..s
@@ -73,7 +73,7 @@ local function sys_print_string(cpu_pos, address, val1)
 end
 
 local function sys_print_string_ln(cpu_pos, address, val1)
-	local mem = techage.get_nvm(cpu_pos)
+	local mem = pdp13.get_nvm(cpu_pos)
 	
 	local s = vm16.read_ascii(cpu_pos, val1, NUM_CHARS)
 	mem.stdout = mem.stdout..s
@@ -83,14 +83,14 @@ local function sys_print_string_ln(cpu_pos, address, val1)
 end
 
 local function sys_flush_stdout(cpu_pos, address, val1)
-	local mem = techage.get_nvm(cpu_pos)
+	local mem = pdp13.get_nvm(cpu_pos)
 	send_terminal_command(cpu_pos, mem, "print", mem.stdout)
 	mem.stdout = ""
 end
 
 local function sys_update_screen(cpu_pos, address, val1)
 	local s = vm16.read_ascii(cpu_pos, val1, SCREENBUFFER_SIZE)
-	local mem = techage.get_nvm(cpu_pos)
+	local mem = pdp13.get_nvm(cpu_pos)
 	send_terminal_command(cpu_pos, mem, "update", s)
 	return 1
 end
@@ -98,7 +98,7 @@ end
 local function sys_editor_start(cpu_pos, address, val1)
 	local fname = vm16.read_ascii(cpu_pos, val1, pdp13.MAX_FNAME_LEN)
 	local items = pdp13.pop_pipe(cpu_pos, pdp13.MAX_PIPE_LEN)
-	local mem = techage.get_nvm(cpu_pos)
+	local mem = pdp13.get_nvm(cpu_pos)
 	if not next(items) or vm16.is_ascii(items[1]) then
 		local text = table.concat(items or {}, "\n")
 		send_terminal_command(cpu_pos, mem, "edit", {text = text, fname = fname})
@@ -111,7 +111,7 @@ local function sys_editor_start(cpu_pos, address, val1)
 end
 
 local function sys_input_string(cpu_pos, address, val1)
-	local mem = techage.get_nvm(cpu_pos)
+	local mem = pdp13.get_nvm(cpu_pos)
 	local s = send_terminal_command(cpu_pos, mem, "input")
 	if s and vm16.write_ascii(cpu_pos, val1, s) then
 		return #s
@@ -120,7 +120,7 @@ local function sys_input_string(cpu_pos, address, val1)
 end
 
 local function sys_print_pipe(cpu_pos, address, val1)
-	local mem = techage.get_nvm(cpu_pos)
+	local mem = pdp13.get_nvm(cpu_pos)
 	local items = pdp13.pop_pipe(cpu_pos, val1)
 	for _,s in ipairs(items) do
 		if s == "" or vm16.is_ascii(s) then
@@ -134,7 +134,7 @@ local function sys_print_pipe(cpu_pos, address, val1)
 end
 
 local function sys_prompt(cpu_pos, address, val1)
-	local mem = techage.get_nvm(cpu_pos)
+	local mem = pdp13.get_nvm(cpu_pos)
 	local cwd = pdp13.path.get_curr_wdir(mem)
 	send_terminal_command(cpu_pos, mem, "print", cwd..">")
 	mem.stdout = ""
@@ -142,7 +142,7 @@ local function sys_prompt(cpu_pos, address, val1)
 end
 
 local function sys_beep(cpu_pos, address, val1)
-	local mem = techage.get_nvm(cpu_pos)
+	local mem = pdp13.get_nvm(cpu_pos)
 	mem.term_pos = mem.term_pos or S2P(M(cpu_pos):get_string("terminal_pos"))
 	minetest.sound_play("pdp13_beep", {
 		pos = mem.term_pos, 

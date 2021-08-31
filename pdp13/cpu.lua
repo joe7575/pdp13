@@ -22,13 +22,13 @@ local CYCLE_TIME = 0.1
 local function programmer_cmnd(pos, cmd, payload)
 	local dst_num = M(pos):get_string("programmer_number")
 	local own_num = M(pos):get_string("node_number")
-	return techage.send_single(own_num, dst_num, cmd, payload)
+	return pdp13.send_single(own_num, dst_num, cmd, payload)
 end
 
 function pdp13.operator_cmnd(pos, cmd, payload)
 	local dst_num = M(pos):get_string("telewriter_number")
 	local own_num = M(pos):get_string("node_number")
-	return techage.send_single(own_num, dst_num, cmd, payload)
+	return pdp13.send_single(own_num, dst_num, cmd, payload)
 end
 
 local function leds(address, opcode, operand)
@@ -379,7 +379,7 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 	--print("pdp13_on_receive", cmnd, data)
 	if cmnd == "power" then
 		if data == "on" then
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			local meta = M(pos)
 			local ram_size = meta:get_int("ram_size") + 4
 			local rom_size = meta:get_int("rom_size")
@@ -397,14 +397,14 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 			reset_periphery_settings(M(pos))
 			if vm16.on_power_off(pos) then
 				swap_node(pos, "pdp13:cpu1")
-				local mem = techage.get_nvm(pos)
+				local mem = pdp13.get_nvm(pos)
 				fs_power_off(pos, mem)
 			end
 			return true
 		end
 	elseif cmnd == "reg_io" then
 		--print("reg_io")
-		local mem = techage.get_nvm(pos)
+		local mem = pdp13.get_nvm(pos)
 		mem.num_ioracks = (mem.num_ioracks or 0) + 1
 		return mem.num_ioracks - 1
 	elseif cmnd == "cpu_num" then
@@ -431,7 +431,7 @@ end
 
 -- update CPU formspec
 local function on_update(pos, resp, cpu)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	--print("on_update", mem.monitor, resp)
 	-- External controlled?
 	if mem.monitor then
@@ -470,7 +470,7 @@ function pdp13.single_step_cpu(pos)
 end
 
 function pdp13.exit_monitor(pos)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	pdp13.stop_cpu(pos)
 	vm16.set_pc(pos, 0) 
 	mem.monitor = false
@@ -493,14 +493,14 @@ local function on_receive_fields_stopped(pos, formname, fields, player)
 		return
 	end
 	
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	local meta = minetest.get_meta(pos)
 	--print(vm16.is_loaded(pos), mem.inp_mode, dump(fields))
 	
 	if mem.monitor then
 		if fields.stop then
 			pdp13.stop_cpu(pos)
-			local mem = techage.get_nvm(pos)
+			local mem = pdp13.get_nvm(pos)
 			mem.monitor = false
 			programmer_cmnd(pos, "monitor", false)
 			fs_cpu_stopped(pos, mem)
@@ -587,11 +587,12 @@ minetest.register_node("pdp13:cpu1", {
 		"pdp13_cpu.png^pdp13_frame.png^pdp13_frame_top.png",
 	},
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
-		local mem = techage.get_nvm(pos)
+		local mem = pdp13.get_nvm(pos)
 		local meta = M(pos)
 		meta:set_string("owner", placer:get_player_name())
-		local own_num = techage.add_node(pos, "pdp13:cpu1")
-		meta:set_string("node_number", own_num)
+		local own_num = pdp13.add_node(pos, "pdp13:cpu1")
+		meta:set_string("node_number", own_num)  -- for techage
+		meta:set_string("own_number", own_num)  -- for tubelib
 		meta:set_string("infotext", "PDP-13 CPU "..own_num)
 		update_formspec(pos, mem)
 	end,
@@ -603,8 +604,8 @@ minetest.register_node("pdp13:cpu1", {
 	end,
 	
 	after_dig_node = function(pos, oldnode, oldmetadata)
-		techage.remove_node(pos, oldnode, oldmetadata)
-		techage.del_mem(pos)
+		pdp13.remove_node(pos, oldnode, oldmetadata)
+		pdp13.del_mem(pos)
 	end,
 	paramtype2 = "facedir",
 	groups = {cracky=2, crumbly=2, choppy=2},
@@ -620,7 +621,7 @@ local function on_receive_fields_started(pos, formname, fields, player)
 	
 	if fields.stop then
 		pdp13.stop_cpu(pos)
-		local mem = techage.get_nvm(pos)
+		local mem = pdp13.get_nvm(pos)
 		mem.monitor = false
 		programmer_cmnd(pos, "monitor", false)
 		fs_cpu_stopped(pos, mem)
@@ -668,9 +669,11 @@ minetest.register_node("pdp13:cpu1_on", {
 	sounds = default.node_sound_wood_defaults(),
 })
 
-techage.register_node({"pdp13:cpu1", "pdp13:cpu1_on"}, {
+pdp13.register_node({"pdp13:cpu1", "pdp13:cpu1_on"}, {
 	on_recv_message = function(pos, src, topic, payload)
-		--print("CPU on_recv_message", src, topic, payload)
+		if pdp13.tubelib then
+			pos, src, topic, payload = pos, "000", src, topic
+		end
 		if topic == "on" then
 			local number = M(pos):get_string("node_number")
 			pdp13.on_cmnd_input(number, src, 1)
@@ -699,7 +702,7 @@ minetest.register_lbm({
     nodenames = {"pdp13:cpu1", "pdp13:cpu1_on"},
     run_at_every_load = true,
     action = function(pos, node)
-		local mem = techage.get_nvm(pos)
+		local mem = pdp13.get_nvm(pos)
 		local number = M(pos):get_string("node_number")
 		pdp13.io_restore(pos, number)
 		if vm16.on_load(pos) then

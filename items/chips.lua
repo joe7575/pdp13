@@ -55,58 +55,144 @@ minetest.register_craftitem("pdp13:ic2", {
 	inventory_image = "pdp13_ic2.png",
 })
 
-techage.recipes.add("ta3_electronic_fab", {
-	output = "pdp13:ic1 1",
-	input = {
-		"basic_materials:ic 2", 
-		"basic_materials:silicon 1", "techage:usmium_nuggets 1"
-	}
-})
+if minetest.global_exists("techage") then
 
-techage.recipes.add("ta3_electronic_fab", {
-	output = "pdp13:ram4k 1",
-	input = {
-		"basic_materials:ic 2", 
-		"basic_materials:plastic_sheet 1", "techage:usmium_nuggets 1"
-	}
-})
+	techage.recipes.add("ta3_electronic_fab", {
+		output = "pdp13:ic1 1",
+		input = {
+			"basic_materials:ic 2", 
+			"basic_materials:silicon 1", "techage:usmium_nuggets 1"
+		}
+	})
 
-techage.recipes.add("ta3_electronic_fab", {
-	output = "pdp13:ic2 1",
-	input = {
-		"pdp13:ic1 8", 
-	}
-})
+	techage.recipes.add("ta3_electronic_fab", {
+		output = "pdp13:ram4k 1",
+		input = {
+			"basic_materials:ic 2", 
+			"basic_materials:plastic_sheet 1", "techage:usmium_nuggets 1"
+		}
+	})
 
-techage.recipes.add("ta3_electronic_fab", {
-	output = "pdp13:ram8k 1",
-	input = {
-		"pdp13:ram4k 2", 
-	}
-})
+	techage.recipes.add("ta3_electronic_fab", {
+		output = "pdp13:ic2 1",
+		input = {
+			"pdp13:ic1 8", 
+		}
+	})
 
-techage.recipes.add("ta3_electronic_fab", {
-	output = "pdp13:mon_rom 1",
-	input = {
-		"pdp13:ic1 8", 
-		"pdp13:tape_monitor 1",
-	}
-})
+	techage.recipes.add("ta3_electronic_fab", {
+		output = "pdp13:ram8k 1",
+		input = {
+			"pdp13:ram4k 2", 
+		}
+	})
 
-techage.recipes.add("ta3_electronic_fab", {
-	output = "pdp13:bios_rom 1",
-	input = {
-		"pdp13:ic1 8", 
-		"pdp13:tape_bios 1",
-	}
-})
+	techage.recipes.add("ta3_electronic_fab", {
+		output = "pdp13:mon_rom 1",
+		input = {
+			"pdp13:ic1 8", 
+			"pdp13:tape_monitor 1",
+		}
+	})
 
-techage.recipes.add("ta3_electronic_fab", {
-	output = "pdp13:comm_rom 1",
-	input = {
-		"pdp13:ic1 8", 
-		"pdp13:tape_comm 1",
-	}
-})
+	techage.recipes.add("ta3_electronic_fab", {
+		output = "pdp13:bios_rom 1",
+		input = {
+			"pdp13:ic1 8", 
+			"pdp13:tape_bios 1",
+		}
+	})
+
+	techage.recipes.add("ta3_electronic_fab", {
+		output = "pdp13:disk_rom 1",
+		input = {
+			"pdp13:ic1 8", 
+			"pdp13:tape_hdd 1",
+		}
+	})
+
+	techage.recipes.add("ta3_electronic_fab", {
+		output = "pdp13:comm_rom 1",
+		input = {
+			"pdp13:ic1 8", 
+			"pdp13:tape_comm 1",
+		}
+	})
+
+else
+
+	minetest.register_craft({
+		output = "pdp13:ic1",
+		recipe = {
+			{"basic_materials:ic", "basic_materials:ic", ""},
+			{"basic_materials:silicon", "basic_materials:energy_crystal_simple", ""},
+			{"", "", ""},
+		}
+	})
+
+	minetest.register_craft({
+		output = "pdp13:ram4k",
+		recipe = {
+			{"basic_materials:ic", "basic_materials:ic", ""},
+			{"basic_materials:plastic_sheet", "basic_materials:energy_crystal_simple", ""},
+			{"", "", ""},
+		}
+	})
+
+	minetest.register_craft({
+		output = "pdp13:ic2",
+		recipe = {
+			{"pdp13:ic1", "pdp13:ic1", "pdp13:ic1"},
+			{"pdp13:ic1", "", "pdp13:ic1"},
+			{"pdp13:ic1", "pdp13:ic1", "pdp13:ic1"},
+		}
+	})
+
+	minetest.register_craft({
+		output = "pdp13:ram8k",
+		recipe = {
+			{"pdp13:ram4k", "", ""},
+			{"pdp13:ram4k", "", ""},
+			{"", "", ""},
+		}
+	})
+
+	minetest.register_craft({
+		output = "pdp13:mon_rom",
+		recipe = {
+			{"pdp13:ic1", "pdp13:ic1", "pdp13:ic1"},
+			{"pdp13:ic1", "pdp13:tape_monitor", "pdp13:ic1"},
+			{"pdp13:ic1", "pdp13:ic1", "pdp13:ic1"},
+		}
+	})
+
+	minetest.register_craft({
+		output = "pdp13:bios_rom",
+		recipe = {
+			{"pdp13:ic1", "pdp13:ic1", "pdp13:ic1"},
+			{"pdp13:ic1", "pdp13:tape_bios", "pdp13:ic1"},
+			{"pdp13:ic1", "pdp13:ic1", "pdp13:ic1"},
+		}
+	})
+
+	minetest.register_craft({
+		output = "pdp13:disk_rom",
+		recipe = {
+			{"pdp13:ic1", "pdp13:ic1", "pdp13:ic1"},
+			{"pdp13:ic1", "pdp13:tape_hdd", "pdp13:ic1"},
+			{"pdp13:ic1", "pdp13:ic1", "pdp13:ic1"},
+		}
+	})
+	
+	minetest.register_craft({
+		output = "pdp13:comm_rom",
+		recipe = {
+			{"pdp13:ic1", "pdp13:ic1", "pdp13:ic1"},
+			{"pdp13:ic1", "pdp13:tape_comm", "pdp13:ic1"},
+			{"pdp13:ic1", "pdp13:ic1", "pdp13:ic1"},
+		}
+	})
+
+end
 
 minetest.register_alias("pdp13:os_rom", "pdp13:bios_rom")

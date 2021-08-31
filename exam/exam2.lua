@@ -23,7 +23,7 @@ local function exam_provide_positions(pos, address, val1, val2)
 	local y2 = math.floor(math.random() * 1000)
 	local z2 = math.floor(math.random() * 1000)
 
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	mem.exam2_res = math.abs(x2 - x1) + math.abs(y2 - y1) + math.abs(z2 - z1) + 1
 	mem.exam2_time = minetest.get_gametime()
 
@@ -37,7 +37,7 @@ local function exam_provide_positions(pos, address, val1, val2)
 end
 
 local function exam_check_result(pos, address, val1, val2)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	local meta = M(pos)
 	local owner = meta:get_string("owner")
 

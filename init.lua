@@ -22,6 +22,7 @@ local MP = minetest.get_modpath("pdp13")
 pdp13 = {}
 
 -- Library
+dofile(MP.."/lib/wrapper.lua")
 dofile(MP.."/lib/helper.lua")
 dofile(MP.."/lib/storage.lua")
 dofile(MP.."/lib/io_lib.lua")
@@ -85,7 +86,7 @@ dofile(MP.."/exam/exam4.lua")
 dofile(MP.."/manuals/manual_DE.lua")
 dofile(MP.."/manuals/manual_EN.lua")
 
-techage.add_manual_items({
+pdp13.add_manual_items({
 		pdp13_cpu = "pdp13:cpu1",
 		pdp13_iorack = "pdp13:io_rack",
 		pdp13_telewriter = "pdp13:telewriter",

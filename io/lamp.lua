@@ -15,8 +15,6 @@
 -- for lazy programmers
 local M = minetest.get_meta
 
-local logic = techage.logic
-
 local function switch_on(pos, node, color)
 	if node.name == "pdp13:lamp_off" or node.name == "pdp13:lamp_on" then
 		node.name = "pdp13:lamp_on"
@@ -38,14 +36,14 @@ minetest.register_node("pdp13:lamp_off", {
     tiles = {"pdp13_lamp.png"},
 	
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
-		logic.after_place_node(pos, placer, "pdp13:lamp_off", "PDP-13 Color Lamp")
-		logic.infotext(M(pos), "PDP-13 Color Lamp")
+		pdp13.after_place_node(pos, placer, "pdp13:lamp_off", "PDP-13 Color Lamp")
+		pdp13.infotext(M(pos), "PDP-13 Color Lamp")
 		local node = minetest.get_node(pos)
 		node.param2 = 50
 		minetest.swap_node(pos, node)
 	end,
 	after_dig_node = function(pos, oldnode, oldmetadata)
-		techage.remove_node(pos, oldnode, oldmetadata)
+		pdp13.remove_node(pos, oldnode, oldmetadata)
 	end,
 	
 	on_rightclick = switch_on,
@@ -80,11 +78,14 @@ minetest.register_node("pdp13:lamp_on", {
 	sounds = default.node_sound_defaults(),
 })
 
-techage.register_node({"pdp13:lamp_off", "pdp13:lamp_on"}, {
+pdp13.register_node({"pdp13:lamp_off", "pdp13:lamp_on"}, {
 	on_recv_message = function(pos, src, topic, payload)
+		if pdp13.tubelib then
+			pos, src, topic, payload = pos, "000", src, topic
+		end
 		if topic == "value" then
 			payload = tonumber(payload)
-			local node = techage.get_node_lvm(pos)
+			local node = tubelib2.get_node_lvm(pos)
 			if payload and payload > 0 then
 				switch_on(pos, node, payload - 1)
 			else

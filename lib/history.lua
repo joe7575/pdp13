@@ -15,7 +15,7 @@
 local BUFFER_DEPTH = 10
 
 function pdp13.historybuffer_add(pos, s)
-	local mem = techage.get_mem(pos)
+	local mem = pdp13.get_mem(pos)
 	mem.hisbuf = mem.hisbuf or {}
 	
 	if #s > 2 then
@@ -28,7 +28,7 @@ function pdp13.historybuffer_add(pos, s)
 end
 
 function pdp13.historybuffer_priv(pos)
-	local mem = techage.get_mem(pos)
+	local mem = pdp13.get_mem(pos)
 	mem.hisbuf = mem.hisbuf or {}
 	mem.hisbuf_idx = mem.hisbuf_idx or 1
 	
@@ -37,7 +37,7 @@ function pdp13.historybuffer_priv(pos)
 end
 
 function pdp13.historybuffer_next(pos)
-	local mem = techage.get_mem(pos)
+	local mem = pdp13.get_mem(pos)
 	mem.hisbuf = mem.hisbuf or {}
 	mem.hisbuf_idx = mem.hisbuf_idx or 1
 	

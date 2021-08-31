@@ -180,7 +180,7 @@ end
 
 -- Return  uid, dir, list of filenames, and list of full pathnames
 function pdp13.get_files(pos, path)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	local drive, dir, fname = mpath.splitpath(mem, path)
 	local uid = get_uid(pos, drive)
 	local mounted = drive == 'h' or M(pos):get_int("mounted_t") == 1
@@ -240,7 +240,7 @@ function pdp13.list_files(pos, path)
 end	
 
 function pdp13.pipe_filelist(pos, path, files)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	local drive, dir, fname = mpath.splitpath(mem, path)
 	local total_num, total_size = pdp13.total_num_and_size(pos, drive)
 	if files then
@@ -270,7 +270,7 @@ function pdp13.remove_files(pos, path)
 end
 
 function pdp13.copy_file(pos, path1, path2)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	
 	--print("copy_file", path1, path2)
 	local drive1, dir1, fname1 = mpath.splitpath(mem, path1)
@@ -296,7 +296,7 @@ function pdp13.copy_file(pos, path1, path2)
 end
 
 function pdp13.move_file(pos, path1, path2)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	
 	local drive1, dir1, fname1 = mpath.splitpath(mem, path1)
 	local uid1 = get_uid(pos, drive1)
@@ -323,19 +323,19 @@ end
 -- check if file is visible for CPU
 function pdp13.file_exists(pos, path)
 	--print("file_exists")
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	local drive, dir, fname = mpath.splitpath(mem, path)
 	return get_file(pos, mem, drive, dir, fname) ~= nil
 end
 
 function pdp13.file_size(pos, path)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	local drive, dir, fname = mpath.splitpath(mem, path)
 	return get_file(pos, mem, drive, dir, fname) or 0
 end
 
 function pdp13.read_file(pos, path)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	local drive, dir, fname = mpath.splitpath(mem, path)
 	if drive then
 		local uid = get_uid(pos, drive)
@@ -348,7 +348,7 @@ function pdp13.read_file(pos, path)
 end
 
 function pdp13.write_file(pos, path, s)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	local drive, dir, fname = mpath.splitpath(mem, path)
 	if drive then
 		local uid = get_uid(pos, drive)
@@ -365,7 +365,7 @@ function pdp13.write_file(pos, path, s)
 end
 
 function pdp13.make_dir(pos, dir)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	if mem.curr_drive  == "h" and mem.curr_dir == "" then
 		local uid = get_uid(pos, mem.curr_drive)
 		if Files[uid] and not Files[uid][dir] then
@@ -382,7 +382,7 @@ function pdp13.make_dir(pos, dir)
 end
 
 function pdp13.remove_dir(pos, dir)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	if mem.curr_drive  == "h" and mem.curr_dir == "" then
 		local uid = get_uid(pos, mem.curr_drive)
 		if Files[uid] and Files[uid][dir] and not next(Files[uid][dir]) then
@@ -395,7 +395,7 @@ function pdp13.remove_dir(pos, dir)
 end
 
 function pdp13.change_drive(pos, drive)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	if drive == "t" or drive == "h" then
 		mem.curr_drive = drive
 		mem.curr_dir = ""
@@ -404,7 +404,7 @@ function pdp13.change_drive(pos, drive)
 end
 
 function pdp13.change_dir(pos, dir)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	if mpath.is_dir(dir) and mem.curr_drive == "h" then
 		local uid = get_uid(pos, mem.curr_drive)
 		if Files[uid] and Files[uid][dir] then
@@ -423,7 +423,7 @@ end
 
 function pdp13.make_file_visible(pos, path)
 	--print("make_file_visible")
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	local drive, dir, fname = mpath.splitpath(mem, path)
 	if drive then
 		local uid = get_uid(pos, drive)
@@ -471,7 +471,7 @@ function pdp13.format_disk(pos, drive)
 			end
 		end
 		Files[uid] = nil
-		local mem = techage.get_nvm(pos)		
+		local mem = pdp13.get_nvm(pos)		
 		mem.curr_dir = ""
 		return true
 	end
@@ -479,7 +479,7 @@ end
 	
 -- Search for the executable in all valid paths.
 function pdp13.get_exe_path(pos, path)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	local drive, dir, fname = mpath.splitpath(mem, path)
 	if get_file(pos, mem, drive, dir, fname) then return join(drive, dir, fname) end
 	if get_file(pos, mem, "h", "",    fname) then return join("h", "",    fname) end
@@ -490,7 +490,7 @@ end
 
 -- Search for the ASM files in all valid paths.
 function pdp13.get_asm_path(pos, path)
-	local mem = techage.get_nvm(pos)
+	local mem = pdp13.get_nvm(pos)
 	local drive, dir, fname = mpath.splitpath(mem, path)
 	if get_file(pos, mem, drive, dir, fname) then return join(drive, dir, fname) end
 	if get_file(pos, mem, "h", "lib", fname) then return join("h", "lib", fname) end
