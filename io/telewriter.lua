@@ -481,7 +481,6 @@ pdp13.register_node({"pdp13:telewriter", "pdp13:telewriter_prog"}, {
 		if pdp13.tubelib then
 			pos, src, topic, payload = pos, "000", src, topic
 		end
-		print("telewriter", pos, src, topic, payload)
 		if topic == "println" then
 			payload = tostring(payload) or ""
 			local mem = pdp13.get_nvm(pos)

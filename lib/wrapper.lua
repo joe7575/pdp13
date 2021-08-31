@@ -48,7 +48,6 @@ elseif minetest.global_exists("tubelib") then
 		if type(number) == "number" then
 			number = string.format("%.04u", number)
 		end
-		print("send_request", number, topic, payload)
 		return tubelib.send_request(number, topic, payload)
 	end
 	pdp13.get_node_info = function(number)

@@ -122,11 +122,11 @@ if minetest.global_exists("techage") then
 else
 
 	minetest.register_craft({
-		output = "pdp13:ic1",
+		output = "pdp13:ic1 4",
 		recipe = {
 			{"basic_materials:ic", "basic_materials:ic", ""},
 			{"basic_materials:silicon", "basic_materials:energy_crystal_simple", ""},
-			{"", "", ""},
+			{"basic_materials:plastic_sheet", "basic_materials:plastic_sheet", ""},
 		}
 	})
 
