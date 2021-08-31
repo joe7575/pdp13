@@ -77,6 +77,12 @@ local function on_output(pos, addr, val1, val2)
 	Outputs[own_num] = Outputs[own_num] or {}
 	Inputs[own_num] = Inputs[own_num] or {}
 		
+	if val1 >= 128 then 
+		Outputs[own_num][addr] = val2
+	else
+		Outputs[own_num][addr] = val1
+	end
+	
 	local num = (OutputNumbers[own_num] or {})[addr]
 	local type_ = (AddressTypes[own_num] or {})[addr] or ADDRESS_TYPE
 	local topic = (CommandTopics[type_] or {})[val1]
