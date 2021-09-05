@@ -138,7 +138,6 @@ function asm.pass3(pos, lToken2, filename)
 	filename = pdp13.path.splitext(filename)
 	local first, last, size = generate_h16(pos, lToken2, filename)
 	listing(pos, lToken2, filename)
-	asm.outp(pos, "")
 	if size and size > 0 then
 		return first, last, size
 	else

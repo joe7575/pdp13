@@ -47,7 +47,7 @@ local function upd_receive(pos, address, val1, val2)
 			if msg then
 				local num = vm16.write_mem(pos, val1, msg)
 				DataStorage[own_num][rmt_num] = nil
-				return num
+				return 1
 			end
 			return 0
 		end
@@ -59,7 +59,7 @@ local help = [[+-----+----------------+-------------+------+
 |sys #| Communication  | A    | B    | rtn  |
 +-----+----------------+-------------+------+
  $40   send datagram    @data  port   1=ok
- $41   recv datagram    @dest  port   num]]
+ $41   recv datagram    @dest  port   1=ok]]
 
 pdp13.register_SystemHandler(0x40, upd_send, help)
 pdp13.register_SystemHandler(0x41, upd_receive)

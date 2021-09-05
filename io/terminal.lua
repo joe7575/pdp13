@@ -470,33 +470,35 @@ minetest.register_node("pdp13:terminal_prog", {
 })
 
 -- For monitor mode
-pdp13.register_node({"pdp13:terminal", "pdp13:terminal_prog"}, {
-	on_recv_message = function(pos, src, topic, payload)
-		if pdp13.tubelib then
-			pos, src, topic, payload = pos, "000", src, topic
-		end
-		if topic == "monitor" then
-			local mem = pdp13.get_nvm(pos)
-			if payload then
-				mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
-				clear_screen(pos, mem)
-				print_string_ln(pos, mem, "### Monitor v2.0 ###")
-				pdp13.monitor_init(mem.cpu_pos, mem)
-			elseif mem.monitor then
-				print_string_ln(pos, mem, "end.")
-				pdp13.monitor_stopped(mem.cpu_pos, mem, payload, true)
+for _, name in ipairs({"pdp13:terminal", "pdp13:terminal_prog"}) do
+	pdp13.register_node({name}, {
+		on_recv_message = function(pos, src, topic, payload)
+			if pdp13.tubelib then
+				pos, src, topic, payload = pos, "000", src, topic
 			end
-			mem.monitor = payload
-			return true
-		elseif topic == "stopped" then  -- CPU stopped
-			local mem = pdp13.get_nvm(pos)
-			mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
-			local lines = pdp13.monitor_stopped(mem.cpu_pos, mem, payload, true)
-			monitor_print_lines(pos, mem, lines or {})
-			return true
-		end
-	end,
-})	
+			if topic == "monitor" then
+				local mem = pdp13.get_nvm(pos)
+				if payload then
+					mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
+					clear_screen(pos, mem)
+					print_string_ln(pos, mem, "### Monitor v2.0 ###")
+					pdp13.monitor_init(mem.cpu_pos, mem)
+				elseif mem.monitor then
+					print_string_ln(pos, mem, "end.")
+					pdp13.monitor_stopped(mem.cpu_pos, mem, payload, true)
+				end
+				mem.monitor = payload
+				return true
+			elseif topic == "stopped" then  -- CPU stopped
+				local mem = pdp13.get_nvm(pos)
+				mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
+				local lines = pdp13.monitor_stopped(mem.cpu_pos, mem, payload, true)
+				monitor_print_lines(pos, mem, lines or {})
+				return true
+			end
+		end,
+	})	
+end
 
 if minetest.global_exists("techage") then
 	minetest.register_craft({

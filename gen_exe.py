@@ -228,3 +228,19 @@ for file_type, file_name in CopyFiles:
     #copy_file("./system/", "./test/asm/pdp13/", file_type, file_name, "00000004")
     compile_file("./system/", "h16", file_name)
     pass
+
+################################################################################
+## ASM files as Templates for the Exams
+################################################################################
+CopyFiles = [
+    ("asm", "exam1_fahrenheit"),
+    ("asm", "exam2_addition"),
+    ("asm", "exam3_distance"),
+    ("asm", "exam4_tostring"),
+    ("asm", "exam5_collatz"),
+]
+
+lOut = []
+for file_type, file_name in CopyFiles:
+    compile_file("./examples/", "h16", file_name)
+    pass

@@ -73,4 +73,5 @@ Required: default, vm16, techage or tubelib
 - 2021-01-13  v0.09  * Add new macro asm, add dir level for drive 'h'
 - 2021-08-28  v0.10  * Change exe/asm search paths, add new commands to J/OS v0.2
 - 2021-08-31  v0.11  * Prepared for TechPack
+- 2021-09-05  v0.12  * Rework the exams
 

@@ -24,24 +24,30 @@ local function register_memory_data(pos)
 	local ram = 4
 	local rom = 0
 	
-	if inv:get_stack("ram", 4):get_count() == 1 then
-		ram = 64
-	elseif inv:get_stack("ram", 3):get_count() == 1 then
-		ram = 32
-	elseif inv:get_stack("ram", 2):get_count() == 1 then
-		ram = 16
-	elseif inv:get_stack("ram", 1):get_count() == 1 then
+	if inv:get_stack("ram", 1):get_count() == 1 then
 		ram = 8
+		if inv:get_stack("ram", 2):get_count() == 1 then
+			ram = 16
+			if inv:get_stack("ram", 3):get_count() == 1 then
+				ram = 32
+				if inv:get_stack("ram", 4):get_count() == 1 then
+					ram = 64
+				end
+			end
+		end
 	end
 		
-	if inv:get_stack("rom", 4):get_count() == 1 then
-		rom = 4
-	elseif inv:get_stack("rom", 3):get_count() == 1 then
-		rom = 3
-	elseif inv:get_stack("rom", 2):get_count() == 1 then
-		rom = 2
-	elseif inv:get_stack("rom", 1):get_count() == 1 then
+	if inv:get_stack("rom", 1):get_count() == 1 then
 		rom = 1
+		if inv:get_stack("rom", 2):get_count() == 1 then
+			rom = 2
+			if inv:get_stack("rom", 3):get_count() == 1 then
+				rom = 3
+				if inv:get_stack("rom", 4):get_count() == 1 then
+					rom = 4
+				end
+			end
+		end
 	end
 	
 	local names = {"pdp13:cpu1", "pdp13:cpu1_on"}

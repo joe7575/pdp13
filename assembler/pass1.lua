@@ -166,7 +166,6 @@ function asm.pass1(pos, fname)
 	tDirs = {}
 	tMacros = {}
 	lFnames = {}
-	asm.outp(pos, "")
 	local lToken = {}
 	if scanner(pos, lToken, fname, 1) then
 		return lToken

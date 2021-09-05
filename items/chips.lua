@@ -25,6 +25,11 @@ minetest.register_craftitem("pdp13:ram8k", {
 	inventory_image = "pdp13_ram8k.png",
 })
 
+minetest.register_craftitem("pdp13:ram16k", {
+	description = "PDP-13 RAM 16K",
+	inventory_image = "pdp13_ram16k.png",
+})
+
 minetest.register_craftitem("pdp13:mon_rom", {
 	description = "PDP-13 Monitor ROM",
 	inventory_image = "pdp13_rom.png",

@@ -33,7 +33,7 @@ local function on_use(itemstack, user)
 		"field[0.3,0.5;11,1;name;Name:;"..name.."]"..
 		"textarea[0.3,1.6;11,1.8;desc;Description:;"..desc.."]"..
 		"style_type[textarea,table;font=mono]"..
-		"textarea[0.3,3.6;11,5;code;Code:;"..code.."]"..
+		"textarea[0.3,3.6;11,5;code;H16 Code:;"..code.."]"..
 		"button_exit[4,7.8;3,1;save;Save]"
 	
 	local player_name = user:get_player_name()

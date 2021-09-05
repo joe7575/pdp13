@@ -31,10 +31,10 @@ Aufgrund der Länge dieses Anleitung ist diese nicht in-game, sondern nur über 
 
 ## I/O Rack
 
-Das I/O-Rack verbindet die CPU mit der Welt, also anderen Blöcken und Maschinen. Es können mehrere I/O-Blöcke pro CPU genutzt werden.
+Das I/O-Rack verbindet die CPU mit der Welt, also anderen Blöcken und Maschinen der Mods `Techage` oder `TechPack`. Es können mehrere I/O-Blöcke pro CPU genutzt werden.
 
 - Das erste I/O-Rack belegt die I/O-Adressen #0 bis #7. Diesen Adressen können über das Menü des I/O-Racks Blocknummern zugeordnet werden
-- Werte, welche über das `out` Kommando an Adresse #0 bis #7 ausgegeben werden, werden dann vom I/O-Rack an den entsprechenden Block weitergegeben
+- Werte, welche über das `out` Kommando an Adresse #0 bis #7 ausgegeben werden, werden dann vom I/O-Rack an den entsprechenden `Techage` oder `tubelib` (TechPack) Block weitergegeben
 - Kommandos, die an die CPU bzw. an die Nummer der CPU gesendet werden (bspw. von einem Schalter) können so über ein `in` Kommando wieder eingelesen werden
 - Das Description Feld ist optional und muss nicht beschrieben werden. Im nicht-konfigurierten Fall zeigt es den Blocknamen an, mit dem der Port über die Blocknummer verbunden ist
 - Das "OUT" Feld zeigt den zuletzt ausgegebenen Wert/das zuletzt ausgegebene Kommando
@@ -67,7 +67,7 @@ Am Ende der Tabelle werden die System-Kommandos aufgeführt. Dies sind quasi Bet
 Die CPU ist in der Lage, bis zu 100.000 Befehle pro Sekunde (0.1 MIPS) auszuführen. Dies gilt, solange nur interne CPU-Befehle ausgeführt werden. Dabei gibt es folgende Ausnahmen:
 
 - Der `sys` und der `in` Befehl "kosten" bis zu 1000 Zyklen, da hier externer Code ausgeführt wird. 
-- Der `out` Befehl unterbricht die Ausführung für 100 ms, sofern sich der Wert am Ausgang ändert und eine externe Aktionen in der Spielwelt durchgeführt werden muss. Anderenfalls sind es auch nur die 1000 Zyklen.
+- Der `out` Befehl unterbricht die Ausführung für 100 ms.
 - Der `nop` Befehl, der für Pausen genutzt werden kann, unterbricht die Ausführung auch für 100 ms.
 
 Ansonsten läuft die CPU "full speed", aber nur solange der Bereich der Welt geladen ist. Damit ist die CPU fast so schnell wie ihr großes Vorbild, die DEC PDP-11/70 (0.4 MIPS). 
@@ -81,6 +81,17 @@ RAM=4K   ROM=8K   I/O=8
 Telewriter..ok
 Programmer..ok
 ```
+
+Beim Vollausbau sieht die Ausgabe in etwa wie folgt aus:
+
+```
+RAM=32K   ROM=24K   I/O=32
+Telewriter..ok  Terminal..ok
+Programmer..ok
+Tape drive..ok  Hard didk..ok
+```
+
+"Programmer" kann entweder der "Telewriter Programmer" oder - sofern vorhanden - das "Terminal Programmer" sein. Es kann aber  immer nur ein "Programmer" pro PDP-13 Anlage angeschlossen sein.
 
 
 
@@ -190,7 +201,7 @@ out #00, A      ; output on port #0
 
 Dieser Block vervollständigt als vierter Block den Rechneraufbau. Der Block hat ein Inventar für Chips zur Speichererweiterung. Der Rechner hat intern 4 KWords an Speicher (4096 Worte) und kann durch einen 4 K RAM Chip auf 8 KWords erweitert werden. Mit einem zusätzlichen 8 K RAM Chip kann der Speicher dann auf 16 KWords erweitert werden. Theoretisch sind bis zu 64 KWords möglich.
 
-In der unteren Reihe kann das Rack bis zu 4 ROM Chips aufnehmen. Diese ROM Chips beinhalten Programme und sind quasi das BIOS (basic input/output system) des Rechners. ROM Chips kann man nur auf der TA3 Elektronikfabrik produzieren. Das Programm für den Chip muss man dazu auf Tape besitzen, welches dann mit Hilfe der Elektronikfabrik auf den Chip "gebrannt" wird. An diese Programme kommt man nur, wenn man entsprechende Programmieraufgaben gelöst hat (dazu später mehr).
+In der unteren Reihe kann das Rack bis zu 4 ROM Chips aufnehmen. Diese ROM Chips beinhalten Programme und sind quasi das BIOS (basic input/output system) des Rechners. Das Programm für den Chip muss man dazu auf Tape besitzen, welches dann mit Hilfe der Elektronikfabrik (Techage) oder von Hand (TechPack) auf den Chip "gebrannt" wird. An diese Programme kommt man nur, wenn man entsprechende Programmieraufgaben gelöst hat (dazu später mehr).
 
 Das Inventar des Speicherblocks lässt sich nur in der vorgegebenen Reihenfolge von links nach rechts füllen. Der Rechner muss dazu ausgeschaltet sein.
 
@@ -198,7 +209,7 @@ Das Inventar des Speicherblocks lässt sich nur in der vorgegebenen Reihenfolge 
 
 ## Minimal Beispiel
 
-Hier ein konkretes Beispiel, das den Umgang mit der Mod zeigt. Ziel ist es, die TechAge Signallampe (nicht die PDP-13 Color Lamp!) einzuschalten. Dazu muss man den Wert 1 über ein `out` Befehl an dem Port ausgeben, wo die Lampe "angeschlossen" ist. Das Assembler-Programm dazu sieht aus wie folgt:
+Hier ein konkretes Beispiel, das den Umgang mit der Mod zeigt. Ziel ist es, die TechAge Signallampe oder Tubelib Lampe (nicht die PDP-13 Color Lamp!) einzuschalten. Dazu muss man den Wert 1 über ein `out` Befehl an dem Port ausgeben, wo die Lampe "angeschlossen" ist. Das Assembler-Programm dazu sieht aus wie folgt:
 
 ```assembly
 move A, #1   ; Lade das A-Register mit den Wert 1
@@ -216,7 +227,7 @@ Da der Rechner diese Assemblerbefehle nicht direkt versteht, muss das Programm i
 
 `mov A` entspricht dem Wert `2010`, der Parameter `#1` steht dann im zweiten Wort `0001`. Über das zweite Wort lassen sich so Werte von 0 bis 65535 (0000 - FFFF) in das Register A laden.  Ein `mov B` ist beispielsweise `2030`. A und B sind Register der CPU, mit denen die CPU rechnen kann, aber auch alle `in` und `out` Befehle gehen über diese Register. Die CPU hat noch weitere Register, diese werden für einfache Aufgaben aber nicht benötigt.
 
-Bei allen Befehlen mit 2 Operanden steht das Ergebnis der Operation immer im ersten Operand, bei `mov A, #1` also in A. Beim `out #0, A` wird A auf den I/O-Port #0 ausgegeben. Der Code dazu ist `6600 0000`. Da sehr viele Ports unterstützt werden, steht dieser Wert #0 wieder im zweiten Wort. Damit lassen sich wieder bis zu 65535 Ports adressieren.
+Bei allen Befehlen mit 2 Operanden steht das Ergebnis der Operation immer im ersten Operand, bei `mov A, #1` also in A. Beim `out #0, A` wird A auf den I/O-Port #0 ausgegeben. Der Code dazu ist `6600 0000`. Da sehr viele Ports unterstützt werden, steht dieser Wert #0 wieder im zweiten Wort. Damit lassen sich wieder bis zu 65535 Ports adressieren. Um den Wert in A bspw. auf Port #2 auszugeben, muss folgende Sequenz eingegeben werden: `6600 0002`.
 
 Diese 5 Maschinenbefehle müssen bei der CPU eingegeben werden, wobei für `0000` auch nur `0` eingegeben werden darf (führende Nullen sind nicht relevant).
 
@@ -273,7 +284,7 @@ Das Monitor Programm unterstützt folgende Kommandos, die auch mit Eingabe von `
 | `as #`     | (assembler) Starten des Assemblers. Für `#` muss die Startadresse angegeben werden Danach können Assemblerbefehle eingegeben werden. Durch Eingabe von `ex` wird diese Modus beendet. |
 | `di #`     | (disassemble) Ausgabe eines Speicherbereichs der CPU in Assemblerschreibweise. Es werden immer 4 Befehle ausgegeben. Wird danach "Enter" gedrückt, werden die nächsten 4 Befehle ausgegeben. Durch Eingabe eines anderen Kommandos wird dieser Modus beendet. |
 | `ct # txt` | (copy text) Kopieren von Text in den Speicher. Mit `ct 100 Hallo Welt,` wird der Text "Hallo Welt" an die Adresse $100  kopiert und mit einer Null abgeschlossen |
-| `cm # # #` | (copy memory) Speicher kopieren. Die drei `#` bedeuten: Quell-Adresse, Ziel-Adresse, Anzahl Worte |
+| `cm # # #` | (copy memory) Speicher kopieren. Die drei `#` bedeuten: Werte für Quell-Adresse, Ziel-Adresse, Anzahl Worte |
 | `ex`       | (exit) Monitor Mode vom Terminal aus beenden                 |
 
 **Alle Zahlenangaben sind in hexadezimaler Form  einzugeben (auf das '$' Zeichen kann dabei verzichtet werden)!**
@@ -290,11 +301,11 @@ Selbst geschriebene Programme kannst du auf Punch Tape kopieren, um diese zu sic
 
 ## BIOS ROM
 
-Hat man den Rechner mit dem "BIOS ROM" Chip erweitert, hat der Rechner Zugriff auf das Terminal und auf das Filesystem des Bandlaufwerks und der Festplatte. Der Rechner kann damit theoretisch von einem der Laufwerke booten, wenn er denn eine Betriebssystem hätte, aber dazu später mehr.
+Hat man den Rechner mit dem "BIOS ROM" Chip erweitert, hat der Rechner Zugriff auf das Terminal und auf das Filesystem des Bandlaufwerks und später auch der Festplatte. Der Rechner kann damit theoretisch von einem der Laufwerke booten, wenn er denn eine Betriebssystem hätte, aber dazu später mehr.
 
 Für den  "BIOS ROM" Chip musst du Aufgabe 2 lösen.
 
-Zur Verfügung stehen ab sofort bspw. folgende zusätzliche sys-Kommandos (Das Zeichen `@` bedeutet "Speicheradresse von"):
+Ist Aufgabe 2 gelöst, der "BIOS ROM" Chip produziert und im Speicher-Rack eingelegt, stehen bspw. folgende zusätzliche sys-Kommandos zur Verfügung (Das Zeichen `@` bedeutet "Speicheradresse von"):
 
 | sys # | Bedeutung                 | Parameter in A             | Parameter in B  | Ergebnis in A   |
 | ----- | ------------------------- | -------------------------- | --------------- | --------------- |
@@ -331,12 +342,7 @@ Sofern das BIOS ROM verfügbar ist, kann am Rechner auch ein Terminal angeschlos
 
 Beide Terminals können an einer CPU angeschlossen sein, wobei es pro Typ wieder maximal ein Gerät sein darf, also in der Summe maximal zwei. Das Terminal Programmer ersetzt dabei den Telewriter Programmer, es kann also nur ein Programmer Gerät genutzt werden.
 
-Das Terminal besitzt 2 Betriebsarten:
-
-- Editor-Mode
-- Terminal-Mode 1 mit zeilenweise Ausgabe von Texten
-
-Das Terminal besitzt auch zusätzliche Tasten mit folgenden Codierung:  `RTN` = 26, `ESC` = 27, `F1` = 28, `F2` = 29, `F3` = 30, `F4` = 31.
+Das Terminal besitzt zusätzliche Tasten mit folgenden Codierung:  `RTN` = 26, `ESC` = 27, `F1` = 28, `F2` = 29, `F3` = 30, `F4` = 31.
 `RTN` oder der Wert 26 wird gesendet, wenn nur "enter" gedrückt wurde, ohne dass zuvor Zeichen in die Eingabezeile eingegeben wurden.
 
 Für das Terminal stehen folgende sys-Kommandos zur Verfügung:
@@ -358,13 +364,13 @@ Für das Terminal stehen folgende sys-Kommandos zur Verfügung:
 
 
 
-## Monitor ROM V2
+## Monitor V2
 
 Auf dem "Terminal Programmer" läuft die Version 2 des Monitors. Diese bietet folgende zusätzliche Kommandos:
 
 | Kommando   | Bedeutung                                                    |
 | ---------- | ------------------------------------------------------------ |
-| `ld name`  | (load) Laden einer `.com` oder `.h16` Datei in den Speicher  |
+| `ld name`  | (load) Laden einer `.com` oder `.h16` Datei vom Tape Drive oder Hard Disk in den Speicher |
 | `sy # # #` | (sys) Aufrufen eines `sys` Kommandos mit Nummer (nur sys-Nummern kleiner $300), sowie die Werte für Reg A und Reg B (optional). Beispiel: `sy 1B` für beep |
 | `br #`     | (breakpoint) Setzen eines Breakpoints an der angegebenen Adresse. Es kann immer nur ein Breakpoint gesetzt werden |
 | `br`       | (breakpoint) Löschen des Breakpoints                         |
@@ -484,13 +490,28 @@ Kommt es beim Booten des Rechners zu einem Fehler, wird eine Fehlernummer an der
 
 Um eine J/OS Anwendung zu debuggen, kann der Rechner an der CPU auch über das Kommando `mon` gestartet werden. Dazu wie folgt vorgehen:
 
-- das Programm, das debuggt werden soll, mit einem `btk #0` an der Stelle erweitern, an der der Debugger anhalten soll
-- das Programm mit dem Assembler neu übersetzen
+- Das Programm, das debuggt werden soll, mit einem `btk #0` an der Stelle erweitern, an der der Debugger anhalten soll.
+- Das Programm mit dem Assembler neu übersetzen.
+- Wichtig: der Rechner muss einmal normal gebootet worden sein, so dass sich das Programm `shell1.h16` im Speicher befindet. Alternativ muss `shell1.h16` über das Monitor-Kommando `ld` in den Speicher geladen werden.
+- Den Rechner an der CPU stoppen und mit dem  Kommando `mon` neu starten.
+- Im Programmer Terminal das Kommando `st 0` eingegeben, der Rechner läuft wie im Normalbetrieb.
+- Das Programm über das Operator Terminal wie unter J/OS üblich, von der Konsole starten. Der Debugger steht danach auf dem eingefügten `brk #0`.
+- Jetzt kann das Programmer Terminal zum Debuggen der Anwendung genutzt werden.
 
-- wichtig: der Rechner muss einmal normal gebootet worden sein, so dass sich das Programm `shell1.h16` im Speicher befindet. Alternativ muss `shell1.h16` über das Monitor-Kommando `ld` in den Speicher geladen werden.
-- den Rechner an der CPU stoppen und mit dem  Kommando `mon` neu starten
-- Im Programmer Terminal das Kommando `st 0` eingegeben, der Rechner läuft wie im Normalbetrieb
-- Das Programm über das Operator Terminal starten. Der Debugger steht danach auf dem eingefügten `brk #0`
+
+
+## COMM ROM (Kommunikation)
+
+Mit Hilfe des COMM ROM Chips kann die PDP-13 mit anderen System Kommandos und Daten austauschen. Dazu stehen die folgenden Kommandos zur Verfügung:
+
+| sys # | Bedeutung     | Parameter in A     | Parameter in B | Ergebnis in A   |
+| ----- | ------------- | ------------------ | -------------- | --------------- |
+| $40   | send datagram | @data to be sent   | I/O port       | 1=ok, 0=error   |
+| $41   | recv datagram | @dest for the data | I/O port       | 1=ok, 0=no data |
+
+Ein Datenblock ist immer 64 Worte groß. Werden Texte/Strings übertragen, macht es Sinn, die abschließende Null auch mit zu übertragen. Werden binäre Daten übertragen, so muss es ein gemeinsames Verständnis zwischen Sender und Empfänger über die Anzahl der gültigen Datenworte in einem Datenblock geben.
+
+Mit "send datagram" wird ein Datenblock an einen anderen Teilnehmer gesendet. Die Blocknummer wird wieder aus dem I/O Rack genutzt.
 
 
 
@@ -500,13 +521,14 @@ Die Hard Disk vervollständigt als weitere Block den Rechneraufbau. Damit verfü
 
 Es kann maximal eine Hard Disk am Rechner angeschlossen werden. Der Zugriff auf die Hard Disk erfolgt über `h/`, also bspw. `h/myfile.txt`
 
-Wird dieser Block abgebaut, bleiben die Daten erhalten. Wird der Block zerstört, sind die Daten auch weg.
+Wird dieser Block abgebaut, bleiben die Daten für 40 Tage erhalten. Der Block kann also für kurze Zeit in eine Kiste gelegt werden. Nach 40 Tagen (echte Tage, keine Spieltage) gehen die Daten auf der Hard Disk verloren. Der Block sollte also besser irgendwo hingesetzt werden. Wird der Block anderswie zerstört, sind die Daten auch weg.
 
-Die Hard Disk unterstützt eine Ebene von Verzeichnissen. Verzeichnisnamen müssen 2 oder 3 Zeichen lang sein, wobei Buchstaben und Zahlen zulässig sind.  Es empfiehlt sich, folgende Verzeichnisse anzulegen. Nur diese werden nach ausführbaren Files bzw.  `.asm` Files durchsucht:
+Die Hard Disk unterstützt eine Ebene von Verzeichnissen. Verzeichnisnamen müssen 2 oder 3 Zeichen lang sein, wobei Buchstaben und Zahlen zulässig sind.  Es empfiehlt sich, folgende Verzeichnisse anzulegen. Nur diese werden von J/OS nach ausführbaren Files bzw.  `.asm` Files durchsucht:
 
 ```
-h/bin  - für alle ausführbaren Programme, inklusive dem boot File (Achtung: boot selbst muss auch angepasst werden)
-h/lib  - für alle .asm Files, die vom Assembler als Bibliothek genutzt werden (strcpy.asm, usw.)
+h/bin  - für alle ausführbaren Programme, inklusive dem boot File
+h/lib  - für alle .asm Files, die vom Assembler als Bibliothek genutzt 
+         werden (strcpy.asm, usw.)
 h/ubn  - für eigene ausführbaren Programme
 h/ulb  - für eigene .asm Files, die vom Assembler als Bibliothek genutzt werden sollen
 ```
@@ -539,7 +561,7 @@ cpn *.h16 h/bin/
 cpn *.com h/bin/
 cd h
 cd bin
-ed boot   -> h/bin/shell1.h16
+ed boot  -> ändern von "t/shell1.h16" nach "h/bin/shell1.h16"
 --> stop tape drive
 --> reboot CPU
 ```
@@ -550,9 +572,9 @@ Das Tape mit den boot-Files gut aufheben. Falls der Rechner mal nicht vom Hard D
 
 ## Assembler Programmierung
 
-Eine Einführung in die Assembler Programmierung ist ein umfangreiches Thema. Grundsätzlich empfehlenswert ist die Seite [Assembly Programming Tutorial](https://www.tutorialspoint.com/assembly_programming/index.htm). Diese behandelt zwar eine ganz andere CPU und viele Dinge sind sicher nicht übertragbar. Aber mit dem Wissen aus dem Tutorial kommt man evtl. mit der knappen Dokumentation zur VM16 CPU und zum `vm16asm` Assembler besser zurecht.
+Eine Einführung in die Assembler Programmierung ist ein umfangreiches Thema. Grundsätzlich empfehlenswert ist die Seite [Assembly Programming Tutorial](https://www.tutorialspoint.com/assembly_programming/index.htm). Diese behandelt zwar eine ganz andere CPU und viele Dinge sind sicher nicht übertragbar. Aber mit dem Wissen aus dem Tutorial kommt man evtl. mit der knappen Dokumentation zur VM16 CPU und zum Assembler besser zurecht.
 
-Der `vm16asm` Assembler ist sowohl in-game, also auf dem PDP-13 System, als auch zur Installation auf dem eigenen Rechner verfügbar. Es empfiehlt sich, den Assembler auf dem eigenen Rechner zu installieren, sofern man Python3 installiert hat.  Entwickelte und assemblierbare Files können dann per copy/paste in den Editor des PDP-13 Terminals kopiert werden.
+Der Assembler ist sowohl in-game, also auf dem PDP-13 System, als auch zur Installation auf dem heimischen PC verfügbar. Es empfiehlt sich, den Assembler auf dem eigenen Rechner zu installieren, sofern man Python3 installiert hat.  Entwickelte und assemblierbare Files können dann per copy/paste in den Editor des PDP-13 Terminals kopiert werden.
 
 
 
@@ -676,10 +698,10 @@ pos_zahl = not(neg_zahl) + 1
 Oder in Assembler:
 
 ```assembly
-	bpos  A, weiter  ; positive Zahl: springe zu weiter
+	bpos  A, next    ; positive Zahl: springe zu next
 	not   A			 ; A = not A
 	inc   A			 ; A = A + 1
-weiter:
+next:
 ```
 
 Beim Rechnen mit Zahlen muss daher immer der Wertebereich im Auge behalten werden. Bei der Addition von zwei 16-Bit Zahlen kann es zu einem Bereichsüberlauf kommen. 
@@ -696,35 +718,30 @@ Dieser Überlaufswert wird bei `addc A, val` (addiere mit carry/Überlauf) im B 
 
 
 ### Aufgabe 1: PDP-13 Monitor ROM
-
 Um das Tape für das PDP-13 Monitor ROM zu erhalten, musst du folgende Aufgabe lösen:
 
-*Berechne die Summe zweier 32-Bit Zahlen ohne Vorzeichen.*
+*Berechne aus einem Wert in Grad Celsius den Wert in Fahrenheit nach der Formel:* F = (C ∗ 9 / 5) + 32
 
-Die Zahlen sind so gewählt, dass es zu keinem 32-Bit Überlauf kommt. Die zwei Zahlen müssen über `sys #$300` anfordert werden. Nach Berechnung des Ergebnisses muss dieses über `sys #$301` ausgeben werden. 
+Dabei ist der Wertebereich zu beachten. Wird zuerst mit 9 multipliziert, muss geprüft werden, ob beim Ergebnis ein Überlauf eintreten kann. Sind die Celsius-Werte nahe dem Nullpunkt und wird zuerst durch 5 dividiert, so ergibt sich durch die Integer-Rechnung ein großer Rechenfehler. Bei Celsius-Werten kleiner 5 und größer 0 kommt als Ergebnis sogar immer 0 heraus.
 
-```assembly
-; nach sys #$300 stehen die Zahlen wie folgt im Speicher
-addr+0  number 1 low word (niederwertige Anteil)
-addr+1  number 1 high word (höherwertige Anteil)
-addr+2  number 2 low word
-addr+3  number 2 high word
+Mögliche Werte für die Grad Celsius sind 0 bis 400
 
-; vor sys #$301 muss das Ergebnis so im Speicher stehen
-addr+0  result low word
-addr+1  result high word
-```
+Der Celsius-Wert muss über `sys #$300` anfordert werden. Nach Berechnung des Ergebnisses muss der Fahrenheit-Wert über `sys #$301` ausgeben werden.  Die notwendigen Maschinenbefehle für `mul`, `div` und `add`  findest du im Hilfemenü der PDP-13 CPU oder im Manual "[VM16 Opcodes](https://github.com/joe7575/vm16/blob/master/doc/opcodes.md)"
 
-Wenn die Berechnung passt und im "Telewriter Operator" befindet sich ein leeres Tape, dann wird bei passendem Ergebnis das Tape geschrieben. In jedem Falle erfolgt eine Chat-Ausgabe über die berechneten Werte. Hier der Rahmen des Programms:
+Hier der Rahmen des Programms:
 
 ```assembly
-2010 0100  ; move A, #$100  (Zieladresse für die Zahlen laden)
-0B00       ; sys #$300      (die 4 Werte anfordern, diese stehen dann in $100-$103)
-....
-2010 0100  ; move A, #$100  (Adresse mit den Ergebnissen laden)
-0B01       ; sys #$301      (das Rechenergebnis muss zuvor in $100 und $101 gespeichert sein)
-1C00       ; halt           (wichtig, sonst läuft das Programm unkontrolliert weiter)
+0B00       ; sys  #$300  (den Startwert anfordern, der Wert steht dann in A)
+
+....       ; Hier muss dein Code hin
+
+0B01       ; sys  #$301  (das Rechenergebnis muss zuvor in A gespeichert sein)
+1C00       ; halt        (Stoppe die Programmausfuehrung)
 ```
+
+Vervollständige dieses Programm und gib es am Menü der PDP-13 CPU ein. Starte danach die CPU ab Adresse 0. Es empfiehlt sich, das Programm zuerst auf Papier zu entwickeln, nochmals zu prüfen und dann erst in die CPU einzugeben, dort mit `dump` nochmals zu prüfen und dann erst ausführen.
+
+Wenn die Berechnung passt und im "Telewriter Operator" befindet sich ein leeres Tape, dann wird bei passendem Ergebnis das PDP-13 Monitor Programm auf das Tape geschrieben. In jedem Falle erfolgt eine Chat-Ausgabe über den berechneten Wert. 
 
 
 
@@ -732,17 +749,38 @@ Wenn die Berechnung passt und im "Telewriter Operator" befindet sich ein leeres 
 
 Um das Tape für das PDP-13 BIOS ROM zu erhalten, musst du folgende Aufgabe lösen:
 
-*Berechne den Abstand zwischen zwei Punkten im Raum, wobei der Abstand in Blöcken berechnet werden soll, also wie wenn eine Hyperloop-Strecke von pos1 zu pos2 gebaut werden müsste. Die Blöcke für pos1 und pos2 zählen mit. pos1 und pos2 bestehen aus x, y, z Koordinaten, wobei sich alle Werte im Bereich von 0 bis 1000 bewegen, Wenn man bspw. von (0,0,0) nach (1000,1000,1000) eine Strecke bauen müsste, würde man 3001 Blöcke benötigen.*
+*Berechne die Summe zweier 32-Bit Zahlen ohne Vorzeichen.*
 
-Das Programm muss zuerst die 6 Werte (x1, y1, z1, x2, y2, z2) über `sys #$302` anfordern und am Ende das Ergebnis wieder über `sys #$303` ausgeben. Wenn die Berechnung passt und im "Telewriter Operator" befindet sich ein leeres Tape, dann wird bei passendem Ergebnis das Tape geschrieben. In jedem Falle erfolgt eine Chat-Ausgabe über die berechneten Werte. Hier der Rahmen des Programms:
+Die Zahlen sind so gewählt, dass es zu keinem 32-Bit Überlauf kommt. Die zwei Zahlen müssen über `sys #$302` anfordert werden. Nach Berechnung des Ergebnisses muss dieses über `sys #$303` ausgeben werden. 
 
 ```assembly
-move  A, #$100  ; Zieladresse laden
-sys   #$302     ; die 6 Werte anfordern, diese stehen dann in $100-$105
-....
-sys   #$303     ; das Rechenergebnis muss zuvor in A gespeichert sein
-halt            ; wichtig, sonst läuft das Programm unkontrolliert weiter
+; nach sys #$302 stehen die Zahlen wie folgt im Speicher
+addr+0  number 1 low word (niederwertige Anteil)
+addr+1  number 1 high word (höherwertige Anteil)
+addr+2  number 2 low word
+addr+3  number 2 high word
+
+; vor sys #$303 muss das Ergebnis so im Speicher stehen
+addr+0  result low word
+addr+1  result high word
 ```
+
+Hier der Rahmen des Programms:
+
+```assembly
+move A, #$100  ; Zieladresse für die Zahlen laden
+sys  #$302     ; die 4 Werte anfordern, diese stehen dann in $100-$103
+
+....           ; Hier muss dein Code hin
+
+move A, #$100  ; Adresse mit den Ergebnissen laden
+sys  #$303     ; das Rechenergebnis muss zuvor in $100 und $101 gespeichert sein
+halt           ; wichtig, sonst läuft das Programm unkontrolliert weiter
+```
+
+Vervollständige dieses Assembler-Programm und gib es am "Telewriter Programmer" ein. Es empfiehlt sich, das Programm zuerst auf Papier zu entwickeln und dann erst über den "Telewriter Programmer"  in die CPU einzugeben. Dazu musst du zuerst an der CPU das Kommando `mon` eingeben, um das Monitor-Programm zu starten. Dann kannst du die ASM-Befehle am "Telewriter Programmer" eingeben. Dabei werden die Werte direkt Zeile für Zeile in die CPU übernommen. Überprüfe das eingegebene Programm mit Hilfe des Disassemblers. Du kannst das Programm auch schrittweise ausführen. Achte aber darauf, dass für die Berechnung des Ergebnissen nur eine Sekunde Zeit zur Verfügung steht. 
+
+Wenn die Berechnung passt und im "Telewriter Operator" befindet sich ein leeres Tape, dann wird bei passendem Ergebnis das PDP-13 BIOS Programm auf das Tape geschrieben. In jedem Falle erfolgt eine Chat-Ausgabe über den berechneten Wert. 
 
 
 
@@ -750,23 +788,64 @@ halt            ; wichtig, sonst läuft das Programm unkontrolliert weiter
 
 Um die OS Install Tapes zu erhalten, musst du folgende Aufgabe lösen:
 
-*Wandle die übergebenen Wert (0..65535) um in einen String mit der dezimalen Darstellung der Zahl (das was bspw. auch die Lua-Funktion `tostring()` macht).*
+*Berechne den Abstand zwischen zwei Punkten im Raum, wobei der Abstand in Blöcken berechnet werden soll, also wie wenn eine Strecke aus Blöcken von pos1 zu pos2 gebaut werden müsste. Die Blöcke für pos1 und pos2 zählen mit. pos1 und pos2 bestehen aus x, y, z Koordinaten, wobei sich alle Werte im Bereich von 0 bis 1000 bewegen, Wenn man bspw. von (0,0,0) nach (1000,1000,1000) eine Strecke bauen müsste, würde man 3001 Blöcke benötigen.*
 
 Die Tapes werden in eine Tape Chest gelegt, daher muss eine Tape Chest bei der CPU platziert sein (max. 3 Blöcke Abstand von der CPU)!
 
-Das Programm muss zuerst den Wert über `sys #$304` anfordern und am Ende das Ergebnis wieder über `sys #$305` zurück liefern. Wenn die Umwandlung passt und eine leere "Tape Chest" vorhanden ist, dann werden bei passendem Ergebnis die Tapes in die Kiste gelegt. In jedem Falle erfolgt eine Chat-Ausgabe mit dem String. Hier der Rahmen des Programms:
+Das Programm muss zuerst die 6 Werte (x1, y1, z1, x2, y2, z2) über `sys #$304` anfordern und am Ende das Ergebnis wieder über `sys #$305` ausgeben. Hier der Rahmen des Programms:
 
 ```assembly
-sys   #$304     ; den Werte anfordern, dieser steht dann in A
-....
-move  A, #$nnn  ; A mit der String-Adresse laden
-sys   #$305     ; Ergebnis übergeben
+move  A, #$100  ; Zieladresse laden
+sys   #$304     ; die 6 Werte anfordern, diese stehen dann in $100-$105
+
+....            ; Hier muss dein Code hin
+
+sys   #$305     ; das Rechenergebnis muss zuvor in A gespeichert sein
 halt            ; wichtig, sonst läuft das Programm unkontrolliert weiter
 ```
 
+Vervollständige dieses Assembler-Programm und gib es am "Terminal Programmer" ein. Der "Telewriter Programmer" ist jetzt nicht mehr notwendig und kann abgebaut werden. Du musst wieder an der CPU das Kommando `mon` eingeben, um das Monitor-Programm auf dem Terminal zu starten. Dann kannst du die ASM-Befehle am "Terminal Programmer" eingeben. Überprüfe das eingegebene Programm mit Hilfe des Disassemblers. Du kannst das Programm auch schrittweise ausführen, sowie einen Breakpoint setzen (siehe "Monitor V2"). Achte aber darauf, dass für die Berechnung des Ergebnissen nur eine Sekunde Zeit zur Verfügung steht. 
+
+Wenn die Umwandlung passt und eine leere "Tape Chest" vorhanden ist, dann werden bei passendem Ergebnis die Tapes in die Kiste gelegt. In jedem Falle erfolgt eine Chat-Ausgabe über den berechneten Wert. 
+
+### Aufgabe 4: PDP-13 COMM Tape
+
+Um das COMM Tape zu erhalten, musst du folgende Aufgabe lösen:
+
+*Wandle die übergebenen Wert (0..65535) um in einen String mit der dezimalen Darstellung der Zahl (das was bspw. auch die Lua-Funktion `tostring()` macht).*
+
+Das Tape wird in eine Tape Chest gelegt, daher muss eine Tape Chest bei der CPU platziert sein (max. 3 Blöcke Abstand von der CPU)!
+
+Du musst das Programm unter J/OS über den `ed` Editor erstellen, mit `asm` übersetzen und dann von der Konsole ausführen. Dies sieht dann bspw. so aus:
+
+```
+ed exam4.asm
+asm exam4.asm
+exam.h16
+```
+
+Um das Programm unter J/OS ausführen zu können, muss die Startadresse des Programms bei $100 (hex) liegen.  Das Programm muss zuerst den Wert über `sys #$306` anfordern und am Ende das Ergebnis wieder über `sys #$307` zurück liefern. 
+
+Achtung: Der Ergebnis-String muss nach dem Programm in Speicher stehen, so dass das Programm nicht durch den String überschrieben wird.
+
+Hier der Rahmen des Programms:
+
+```assembly
+.org $100       ; Startadresse für ein J/OS Programm
+sys   #$306     ; den Werte anfordern, dieser steht dann in A
+
+....            ; Hier muss dein Code hin
+
+move  A, #$nnn  ; A mit der String-Adresse laden
+sys   #$307     ; Ergebnis übergeben
+sys   #$71      ; Ruecksprung nach J/OS
+```
+
+Wenn die Umwandlung passt und eine leere "Tape Chest" vorhanden ist, dann wird bei passendem Ergebnis das Tape in die Kiste gelegt. In jedem Falle erfolgt eine Ausgabe auf dem PDP-13 Terminal Operator. 
 
 
-### Aufgabe 4: PDP-13 Hard Disk Tape
+
+### Aufgabe 5: PDP-13 Hard Disk Tape
 
 Um das Hard Disk Tape zu erhalten, musst du folgende Aufgabe lösen:
 
@@ -799,23 +878,23 @@ function collatz(n)
 end
 ```
 
+Du musst das Programm wieder unter J/OS über den `ed` Editor erstellen, mit `asm` übersetzen und dann von der Konsole ausführen.
+Das Programm muss zuerst den Wert über `sys #$308` anfordern und am Ende das Ergebnis wieder über `sys #$309` zurück liefern. 
 
-
-Du musst das Programm unter J/OS über den `ed` Editor erstellen, mit `asm` übersetzen und dann von der Konsole ausführen.
-Das Programm muss zuerst den Wert über `sys #$306` anfordern und am Ende das Ergebnis wieder über `sys #$307` zurück liefern. Außerdem müssen die Anforderungen an eine ausführbare Datei und J/OS erfüllt sein. Wenn die Umwandlung passt und eine leere "Tape Chest" vorhanden ist, dann wird bei passendem Ergebnis das Tape in die Kiste gelegt. In jedem Falle erfolgt eine Ausgabe auf dem PDP-13 Terminal Operator. Hier der Rahmen des Programms:
+Hier der Rahmen des Programms:
 
 ```assembly
-.org $100		; Startadresse für ein J/OS Programm
-move A, B		; Ergennungsmuster für ein .com File
+.org $100       ; Startadresse für ein J/OS Programm
+sys   #$308     ; den Werte anfordern, dieser steht dann in A
 
-sys   #$306     ; den Werte anfordern, dieser steht dann in A
-
-.....			; Hier muss dein Code hin
+.....           ; Hier muss dein Code hin
 
 move  A, #$nnn  ; A mit der Array-Adresse laden
-sys   #$307     ; Ergebnis übergeben
+sys   #$309     ; Ergebnis übergeben
 sys   #$71      ; Ruecksprung nach J/OS
 ```
+
+Wenn die Umwandlung passt und eine leere "Tape Chest" vorhanden ist, dann wird bei passendem Ergebnis das Tape in die Kiste gelegt. In jedem Falle erfolgt eine Ausgabe auf dem PDP-13 Terminal Operator. 
 
 Viel Glück :)
 

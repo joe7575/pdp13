@@ -1,4 +1,4 @@
-pdp13.add_to_manual('EN', {
+techage.add_to_manual('EN', {
   "1,PDP13 minicomputer (TA3)",
 }, {
   "PDP13 is a 16-bit minicomputer inspired by DEC\\, IBM\\, and other computers from the 1960s and 1970s. \"Mini\" because up until then the computer systems had not only filled cupboards\\, but entire rooms or halls. It was only with the invention of the first integrated circuits that computers could be reduced to the size of a wardrobe. This makes this computer ideal for the age of oil. Because this computer can only be programmed in machine code (like the originals at the time)\\, this requires a certain amount of computer knowledge\\, which cannot be conveyed in this manual.\n"..
