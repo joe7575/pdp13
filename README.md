@@ -25,14 +25,8 @@ A computer simulation that will take you back to the beginnings of programming:
 
 On client side Minetest 5.4 is recommended (font=mono)
 
-This mod is based on vm16, a virtual CPU implemented as Lua library with an outstanding performance.
-
-
-
-### See also:
-
-- Virtual machine [vm16](https://github.com/joe7575/vm16)
-- Macro Assembler [vm16asm](https://github.com/joe7575/vm16asm)
+This mod is based on [vm16](https://github.com/joe7575/vm16),
+a virtual CPU implemented as Lua library with an outstanding performance.
 
 
 

@@ -84,8 +84,10 @@ dofile(MP.."/exam/exam4.lua")
 dofile(MP.."/exam/exam5.lua")
 
 -- Manuals
-dofile(MP.."/manuals/manual_DE.lua")
-dofile(MP.."/manuals/manual_EN.lua")
+if minetest.global_exists("techage") then
+	dofile(MP.."/manuals/manual_DE.lua")
+	dofile(MP.."/manuals/manual_EN.lua")
+end
 
 pdp13.add_manual_items({
 		pdp13_cpu = "pdp13:cpu1",
