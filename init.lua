@@ -65,6 +65,9 @@ dofile(MP.."/io/7segment.lua")
 dofile(MP.."/io/telewriter.lua")
 dofile(MP.."/io/terminal.lua")
 dofile(MP.."/io/chest.lua")
+if minetest.global_exists("lcdlib") then
+	dofile(MP.."/io/14segment.lua")
+end
 
 -- Items
 dofile(MP.."/items/punch_tape.lua")
