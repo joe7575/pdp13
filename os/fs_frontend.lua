@@ -86,7 +86,7 @@ local function read_file(pos, address, val1, val2)
 	if r then
 		local items = pdp13.text2table(r.data)
 		pdp13.push_pipe(pos, items)
-		return 1
+		return 1, 10000
 	end
 	return 0
 end
@@ -103,7 +103,7 @@ local function read_line(pos, address, val1, val2)
 				local size = string.len(s)
 				r.fpos = r.fpos + size + 1
 				vm16.write_ascii(pos, val2, s)
-				return size
+				return size, 10000
 			end
 		end
 		return 0
@@ -131,7 +131,7 @@ local function write_file(pos, address, val1, val2)
 	if r then
 		local items = pdp13.pop_pipe(pos, pdp13.MAX_PIPE_LEN)
 		r.data = table.concat(items, "\n")
-		return 1
+		return 1, 10000
 	end
 	return 0
 end
@@ -160,18 +160,18 @@ end
 local function list_files(pos, address, val1, val2)
 	local path = vm16.read_ascii(pos, val1, mpath.MAX_PATH_LEN)
 	local files = pdp13.list_files(pos, path)
-	return pdp13.pipe_filelist(pos, path, files)
+	return pdp13.pipe_filelist(pos, path, files), 10000
 end
 
 local function remove_files(pos, address, val1, val2)
 	local path = vm16.read_ascii(pos, val1, mpath.MAX_PATH_LEN)
-	return pdp13.remove_files(pos, path)
+	return pdp13.remove_files(pos, path), 10000
 end
 
 local function copy_file(pos, address, val1, val2)
 	local path1 = vm16.read_ascii(pos, val1, mpath.MAX_PATH_LEN)
 	local path2 = vm16.read_ascii(pos, val2, mpath.MAX_PATH_LEN)
-	return pdp13.copy_file(pos, path1, path2) and 1 or 0
+	return (pdp13.copy_file(pos, path1, path2) and 1 or 0), 10000
 end
 
 local function move_file(pos, address, val1, val2)
@@ -203,12 +203,12 @@ end
 
 local function make_dir(pos, address, val1, val2)
 	local dir = vm16.read_ascii(pos, val1, mpath.MAX_DIR_LEN)
-	return pdp13.make_dir(pos, dir) and 1 or 0
+	return (pdp13.make_dir(pos, dir) and 1 or 0), 10000
 end
 
 local function remove_dir(pos, address, val1, val2)
 	local dir = vm16.read_ascii(pos, val1, mpath.MAX_DIR_LEN)
-	return pdp13.remove_dir(pos, dir) and 1 or 0
+	return (pdp13.remove_dir(pos, dir) and 1 or 0), 10000
 end
 
 local function get_files(pos, address, val1, val2)
@@ -216,7 +216,7 @@ local function get_files(pos, address, val1, val2)
 	local uid, dir, t1, t2 = pdp13.get_files(pos, path)
 	if t2 then
 		pdp13.push_pipe(pos, t2)
-		return #t2 > 0 and 1 or 0
+		return (#t2 > 0 and 1 or 0), 10000
 	end
 	return 0
 end
@@ -234,7 +234,7 @@ end
 
 local function format_disk(pos, address, val1, val2)
 	local drive = string.char(val1)
-	return pdp13.format_disk(pos, drive) and 1 or 0
+	return (pdp13.format_disk(pos, drive) and 1 or 0), 10000
 end
 
 
@@ -285,14 +285,3 @@ pdp13.register_SystemHandler(0x61, remove_dir)
 pdp13.register_SystemHandler(0x62, get_files)
 pdp13.register_SystemHandler(0x63, disk_space)
 pdp13.register_SystemHandler(0x64, format_disk)
-
-vm16.register_sys_cycles(0x52, 10000)
-vm16.register_sys_cycles(0x54, 10000)
-vm16.register_sys_cycles(0x57, 10000)
-vm16.register_sys_cycles(0x58, 10000)
-vm16.register_sys_cycles(0x59, 10000)
-vm16.register_sys_cycles(0x5A, 10000)
-vm16.register_sys_cycles(0x60, 10000)
-vm16.register_sys_cycles(0x61, 10000)
-vm16.register_sys_cycles(0x62, 10000)
-vm16.register_sys_cycles(0x64, 10000)

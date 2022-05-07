@@ -50,7 +50,7 @@ local function sys_print_char(cpu_pos, address, val1)
 		mem.stdout = mem.stdout..
 				string.char(pdp13.range(val1, 32, 127, 46))
 	end
-	return 1
+	return 1, 100
 end
 
 local function sys_print_number(cpu_pos, address, val1, val2)
@@ -61,7 +61,7 @@ local function sys_print_number(cpu_pos, address, val1, val2)
 	else
 		mem.stdout = mem.stdout..tostring(val1)
 	end
-	return 1
+	return 1, 200
 end
 
 local function sys_print_string(cpu_pos, address, val1)
@@ -69,7 +69,7 @@ local function sys_print_string(cpu_pos, address, val1)
 	
 	local s = vm16.read_ascii(cpu_pos, val1, NUM_CHARS)
 	mem.stdout = mem.stdout..s
-	return 1
+	return 1, 200
 end
 
 local function sys_print_string_ln(cpu_pos, address, val1)
@@ -179,7 +179,3 @@ pdp13.register_SystemHandler(0x18, sys_print_pipe)
 pdp13.register_SystemHandler(0x19, sys_flush_stdout)
 pdp13.register_SystemHandler(0x1A, sys_prompt)
 pdp13.register_SystemHandler(0x1B, sys_beep)
-
-vm16.register_sys_cycles(0x11, 100)
-vm16.register_sys_cycles(0x12, 200)
-vm16.register_sys_cycles(0x13, 200)

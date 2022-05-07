@@ -78,7 +78,7 @@ end
 
 local function push_pipe(cpu_pos, address, val1)
 	local s = vm16.read_ascii(cpu_pos, val1, pdp13.MAX_LINE_LEN)
-	return pdp13.push_pipe(cpu_pos, {s})
+	return pdp13.push_pipe(cpu_pos, {s}), 500
 end
 
 local function pop_pipe(cpu_pos, address, val1)
@@ -86,17 +86,17 @@ local function pop_pipe(cpu_pos, address, val1)
 	if next(items) then
 		--print("pop_pipe", items[1])
 		vm16.write_ascii(cpu_pos, val1, items[1])
-		return 1
+		return 1, 500
 	end
 	return 0
 end
 
 local function pipe_size(cpu_pos, address, val1)
-	return pdp13.pipe_size(cpu_pos)
+	return pdp13.pipe_size(cpu_pos), 200
 end
 
 local function flush_pipe(cpu_pos, address, val1)
-	return pdp13.delete_pipe(cpu_pos) or 1
+	return (pdp13.delete_pipe(cpu_pos) or 1), 500
 end
 
 local help = [[+-----+----------------+-------------+------+
@@ -111,9 +111,3 @@ pdp13.register_SystemHandler(0x80, push_pipe, help)
 pdp13.register_SystemHandler(0x81, pop_pipe)
 pdp13.register_SystemHandler(0x82, pipe_size)
 pdp13.register_SystemHandler(0x83, flush_pipe)
-
-vm16.register_sys_cycles(0x80, 500)
-vm16.register_sys_cycles(0x81, 500)
-vm16.register_sys_cycles(0x82, 200)
-vm16.register_sys_cycles(0x83, 500)
-

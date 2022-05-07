@@ -71,7 +71,7 @@ end
 --
 -- CPU/VM16 event handlers
 --
-local function on_output(pos, addr, val1, val2)
+function pdp13.on_output(pos, addr, val1, val2)
 	local own_num = M(pos):get_string("node_number")
 	own_num = tonumber(own_num) or 0
 	Outputs[own_num] = Outputs[own_num] or {}
@@ -103,14 +103,11 @@ local function on_output(pos, addr, val1, val2)
 	return true  -- output changed
 end
 
-local function on_input(pos, addr)
+function pdp13.on_input(pos, addr)
 	local own_num = M(pos):get_string("node_number")
 	own_num = tonumber(own_num) or 0
 	return (Inputs[own_num] or {})[addr] or 0xFFFF -- nothing reveived or invalid addr
 end
-
--- Overwrite two of the five event handlers
-vm16.register_callbacks(on_input, on_output)
 
 --
 -- API functions

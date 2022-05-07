@@ -32,7 +32,7 @@ function pdp13.register_SystemHandler(address, func, desc)
 	end
 end
 
-local function on_system(pos, address, val1, val2)
+function pdp13.on_system(pos, address, val1, val2)
 	if SystemHandlers[address] then
 		local sts, resp = pcall(SystemHandlers[address], pos, address, val1, val2)
 		if sts then
@@ -43,9 +43,6 @@ local function on_system(pos, address, val1, val2)
 	end
 	return 0xFFFF
 end
-
--- Overwrite one of the five event handlers
-vm16.register_callbacks(nil, nil, on_system)
 
 -- For fake calls from Lua
 -- if val is a string, addr is the VM address for the string in val
@@ -62,5 +59,5 @@ function pdp13.sys_call(pos, address, val1, val2, addr1, addr2)
 			val2 = addr2
 		end
 	end
-	return on_system(pos, address, val1, val2)
+	return pdp13.on_system(pos, address, val1, val2)
 end

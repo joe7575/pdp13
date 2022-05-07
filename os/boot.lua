@@ -86,7 +86,7 @@ local function sys_warm_start(pos, address, val1, val2)
 	regs.PC = pdp13.WARMSTART_ADDR
 	regs.SP = 0
 	vm16.set_cpu_reg(pos, regs)
-	return 1
+	return 1, 10000
 end
 
 function pdp13.cold_start(pos)
@@ -123,7 +123,7 @@ function pdp13.cold_start(pos)
 	regs.PC = 0
 	regs.SP = 0
 	vm16.set_cpu_reg(pos, regs)
-	return 1
+	return 1, 10000
 end
 
 local function sys_get_rom_size(pos, address, val1, val2)
@@ -141,21 +141,21 @@ end
 local function sys_load_comfile(pos, address, val1, val2)
 	local path = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
 	if path then
-		return load_comfile(pos, path)
+		return load_comfile(pos, path), 10000
 	end
 end
 
 local function sys_load_h16file(pos, address, val1, val2)
 	local path = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
 	if path then
-		return load_h16file(pos, path)
+		return load_h16file(pos, path), 10000
 	end
 end
 
 local function sys_load_batfile(pos, address, val1, val2)
 	local path = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
 	if path then
-		return load_batfile(pos, path)
+		return load_batfile(pos, path), 10000
 	end
 end
 
@@ -179,9 +179,9 @@ local function sys_store_as_com(pos, address, val1, val2)
 	local path = pdp13.get_exe_path(pos, fname)
 	local s = vm16.read_mem_bin(pos, pdp13.START_ADDR, val2)
 	if path and s then
-		return pdp13.write_file(pos, path, s) and 1 or 0
+		return (pdp13.write_file(pos, path, s) and 1 or 0), 10000
 	end
-	return 0
+	return 0, 10000
 end
 
 -- Fileame via A Reg
@@ -191,15 +191,15 @@ local function sys_store_as_h16(pos, address, val1, val2)
 	local path = pdp13.get_exe_path(pos, fname)
 	local s = vm16.read_h16(pos. pdp13.START_ADDR, val2)
 	if path and s then
-		return pdp13.write_file(pos, path, s) and 1 or 0
+		return (pdp13.write_file(pos, path, s) and 1 or 0), 10000
 	end
-	return 0
+	return 0, 10000
 end
 
 
 local function sys_file_exists(pos, address, val1, val2)
 	local fname = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
-	return file_exists(pos, fname)
+	return file_exists(pos, fname), 10000
 end
 
 local help = [[+-----+----------------+-------------+------+
@@ -230,15 +230,6 @@ pdp13.register_SystemHandler(0x79, sys_store_as_h16)
 pdp13.register_SystemHandler(0x7A, sys_store_as_com)
 pdp13.register_SystemHandler(0x7B, sys_load_batfile)
 pdp13.register_SystemHandler(0x7C, sys_file_exists)
-
-vm16.register_sys_cycles(0x70, 10000)
-vm16.register_sys_cycles(0x71, 10000)
-vm16.register_sys_cycles(0x75, 10000)
-vm16.register_sys_cycles(0x76, 10000)
-vm16.register_sys_cycles(0x79, 10000)
-vm16.register_sys_cycles(0x7A, 10000)
-vm16.register_sys_cycles(0x7B, 10000)
-
 
 pdp13.boot = {}
 pdp13.boot.file_exists = file_exists

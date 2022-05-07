@@ -386,6 +386,7 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 			if vm16.on_power_on(pos, ram_size/4) then
 				fs_power_on(pos, mem)
 			end
+			mem.breakpoints = {}
 			local number = meta:get_string("node_number")
 			pdp13.io_store(pos, number)
 			selftest(pos, mem, number)
@@ -446,10 +447,17 @@ local function on_update(pos, resp, cpu)
 	end
 end
 
--- store all data when CPU gets unloaded
-local function on_unload(pos)
-	--pdp13.io_store(pos) geht so nicht
-end
+local cpu_def = {
+	cycle_time = 0.1, -- timer cycle time
+	instr_per_cycle = 10000,
+	input_costs = 1000,  -- number of instructions
+	output_costs = 5000, -- number of instructions
+	system_costs = 2000, -- number of instructions
+	on_input = pdp13.on_input,
+	on_output = pdp13.on_output,
+	on_system = pdp13.on_system,
+	on_update = on_update,
+}
 
 function pdp13.start_cpu(pos)
 	local number = M(pos):get_string("node_number")
@@ -464,9 +472,10 @@ function pdp13.stop_cpu(pos)
 end
 
 function pdp13.single_step_cpu(pos)
+	local mem = pdp13.get_nvm(pos)
 	local number = M(pos):get_string("node_number")
 	pdp13.reset_output_buffer(number)
-	return vm16.run(pos, 1)
+	return vm16.run(pos, cpu_def, mem.breakpoints)
 end
 
 function pdp13.exit_monitor(pos)
@@ -485,8 +494,6 @@ function pdp13.cpu_freeze(pos, freeze)
 		minetest.get_node_timer(pos):start(CYCLE_TIME)
 	end
 end
-
-vm16.register_callbacks(nil, nil, nil, on_update, on_unload)
 
 local function on_receive_fields_stopped(pos, formname, fields, player)
 	if minetest.is_protected(pos, player:get_player_name()) then
@@ -657,7 +664,8 @@ minetest.register_node("pdp13:cpu1_on", {
 		},
 	},
 	on_timer = function(pos, elapsed)
-		return vm16.run(pos) < vm16.HALT
+		local mem = pdp13.get_nvm(pos)
+		return vm16.run(pos, cpu_def, mem.breakpoints) < vm16.HALT
 	end,
 	on_receive_fields = on_receive_fields_started,
 	pdp13_on_receive = pdp13_on_receive,

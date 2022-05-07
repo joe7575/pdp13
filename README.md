@@ -40,7 +40,7 @@ The English translation was made by Flitzpiepe
 
 ### License
 
-Copyright (C) 2019-2021 Joe (iauit@gmx.de)
+Copyright (C) 2019-2022 Joe (iauit@gmx.de)
 Code: Licensed under the GNU AGPL version 3 or later. See LICENSE.txt  
 Textures: CC BY-SA 3.0  
 Sound: `271163__alienxxx__beep-008.wav` from freesound.org,  
@@ -68,4 +68,5 @@ Required: default, vm16, techage or tubelib
 - 2021-08-28  v0.10  * Change exe/asm search paths, add new commands to J/OS v0.2
 - 2021-08-31  v0.11  * Prepared for TechPack
 - 2021-09-05  v0.12  * Rework the exams
+- 2022-05-07  v0.13  * Adapt to vm16 v3.5
 
