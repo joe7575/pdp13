@@ -179,6 +179,51 @@ move B, #8      ; value 0..16 in B
 out #00, A      ; output on port #0
 ```
 
+## PDP-13 14-Segment
+
+Über diesen 14-Segment Anzeige können beliebige Kombinationen der 14 Segmente ausgegeben und so verschiedene Zeichen und Buchstaben dargestellt werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. 
+
+Dies geht auch mit dem Techage Lua Controller: `$send_cmnd(num, "value", number)`
+
+**Anordnung der Segmente:**
+
+```
+       1                            
+   --------- 
+  |\   |   /|
+ 6| 7  8  9 |2
+  |  \ | /  |
+  |   \|/   |
+  --E-  --A--
+  |   /|\   |
+  |  / | \  |
+ 5| D  C  B |3
+  |/   |   \|
+   ---------
+       4
+```
+
+
+
+**Zuordnung der Werte zu den Segmenten:**
+
+| Hex-Wert | Segment |
+| -------- | ------- |
+| 0x0001   | 1       |
+| 0x0002   | 2       |
+| 0x0004   | 3       |
+| 0x0008   | 4       |
+| 0x0010   | 5       |
+| 0x0020   | 6       |
+| 0x0040   | 7       |
+| 0x0080   | 8       |
+| 0x0100   | 9       |
+| 0x0200   | A       |
+| 0x0400   | B       |
+| 0x0800   | C       |
+| 0x1000   | D       |
+| 0x2000   | E       |
+
 
 
 ## PDP-13 Color Lamp

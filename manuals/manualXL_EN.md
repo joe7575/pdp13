@@ -182,6 +182,53 @@ out #00, A      ; output on port #0
 
 
 
+## PDP-13 14-Segment
+
+Any combination of the 14 segments can be output via this 14-segment display and thus different characters and letters can be displayed. The block must be connected to the CPU via an I/O rack.
+
+This also works with the Techage Lua controller: `$send_cmnd(num, "value", number)`
+
+**Order of the segments:**
+
+```
+       1
+   ---------
+  |\   |   /|
+ 6| 7  8  9 |2
+  |  \ | /  |
+  |   \|/   |
+  --E-  --A--
+  |   /|\   |
+  |  / | \  |
+ 5| D  C  B |3
+  |/   |   \|
+   ---------
+       4
+```
+
+
+
+**Assignment of the values to the segments:**
+
+| hex value | Segment |
+| -------- | ------- |
+| 0x0001 | 1 |
+| 0x0002 | 2 |
+| 0x0004 | 3 |
+| 0x0008 | 4 |
+| 0x0010 | 5 |
+| 0x0020 | 6 |
+| 0x0040 | 7 |
+| 0x0080 | 8 |
+| 0x0100 | 9 |
+| 0x0200 | A |
+| 0x0400 | B |
+| 0x0800 | C |
+| 0x1000 | D |
+| 0x2000 | E |
+
+
+
 ## PDP-13 Color Lamp
 
 This lamp block can light up in different colors. To do this, values from 1-64 must be sent to the block using the `value` command. The block must be connected to the CPU via an I/O rack. The value 0 switches the lamp off.

@@ -77,13 +77,21 @@ for i = 0,16 do
 				pos, src, topic, payload = pos, "000", src, topic
 			end
 			if topic == "value" then
-				payload = tonumber(payload) or 0
+				payload = math.min(tonumber(payload) or 0, 16)
 				swap_node(pos, payload)
 			else
 				return "unsupported"
 			end
 		end,
-	})		
+		on_beduino_receive_cmnd = function(pos, src, topic, payload)
+			if topic == 15 then
+				swap_node(pos, math.min(payload[1] or 0, 16))
+				return 0
+			else
+				return 2
+			end
+		end,
+	})
 end
 
 if minetest.global_exists("techage") then
