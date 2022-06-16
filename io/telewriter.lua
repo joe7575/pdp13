@@ -479,7 +479,7 @@ minetest.register_node("pdp13:telewriter_prog", {
 for _, name in ipairs({"pdp13:telewriter", "pdp13:telewriter_prog"}) do
 	pdp13.register_node({name}, {
 		on_recv_message = function(pos, src, topic, payload)
-			print("on_recv_message", src, topic)
+			--print("on_recv_message", src, topic)
 			if pdp13.tubelib then
 				pos, src, topic, payload = pos, "000", src, topic
 			end

@@ -475,7 +475,7 @@ function pdp13.single_step_cpu(pos)
 	local mem = pdp13.get_nvm(pos)
 	local number = M(pos):get_string("node_number")
 	pdp13.reset_output_buffer(number)
-	return vm16.run(pos, cpu_def, mem.breakpoints)
+	return vm16.run(pos, cpu_def, mem.breakpoints, 1)
 end
 
 function pdp13.exit_monitor(pos)
