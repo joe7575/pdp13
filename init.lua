@@ -12,11 +12,6 @@
 
 ]]--
 
-local IE = minetest.request_insecure_environment()
-if not IE then
-	error("Please add pdp13 to the list of 'secure.trusted_mods' in minetest.conf!")
-end
-
 if vm16.version < 3.5 then
 	error("Pdp13 requires vm16 v3.5 or newer!")
 end

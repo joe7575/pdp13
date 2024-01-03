@@ -351,6 +351,34 @@ local function add_periphery_settings(pos, meta, cmnd, data)
 	end
 end
 
+-- For curious admins
+local function log_expansion_stage(pos)
+	local meta = M(pos)
+	spos = P2S(pos)
+	local owner = meta:get_string("owner")
+	local rom_size = meta:get_int("rom_size")
+	local ram_size = meta:get_int("ram_size")
+	local tape_drive = meta:get_int("has_tape") == 1 and 1 or 0
+	local hard_disk  = meta:get_int("has_hdd") == 1 and 1 or 0
+
+	local total_num1 = 0 
+	local total_num2 = 0
+	local total_size1 = 0
+	local total_size2 = 0
+
+	if tape_drive == 1 then
+		total_num1, total_size1 = pdp13.total_num_and_size(pos, "t")
+	end
+	if hard_disk == 1 then
+		total_num2, total_size2 = pdp13.total_num_and_size(pos, "h")
+	end
+		
+	local s1 = "Owner: " .. owner .. ", Pos: " .. spos .. ", ROM size: " .. rom_size .. ", RAM size: " .. ram_size
+	local s2 = "Tape drive (files/size): " .. total_num1 .. "/" .. pdp13.kbyte(total_size1)
+	local s3 = "Hard disk (files/size): " .. total_num2 .. "/" .. pdp13.kbyte(total_size2)
+	minetest.log("action", "PDP-13: " .. s1 .. ", " .. s2 .. ", " .. s3)
+end
+
 local function selftest(pos, mem, number)
 	if pos and mem then
 		local rom_size = pdp13.tROM_SIZE[M(pos):get_int("rom_size")]
@@ -726,6 +754,7 @@ minetest.register_lbm({
 		else
 			fs_power_off(pos, mem)
 		end
+		--minetest.after(2, log_expansion_stage, pos)
 	end
 })
 

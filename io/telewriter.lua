@@ -469,6 +469,7 @@ minetest.register_node("pdp13:telewriter_prog", {
 	can_dig = can_dig,
 	after_dig_node = after_dig_node,
 	paramtype = "light",
+	use_texture_alpha = "clip",
 	paramtype2 = "facedir",
 	groups = {cracky=2, crumbly=2, choppy=2},
 	on_rotate = screwdriver.disallow,

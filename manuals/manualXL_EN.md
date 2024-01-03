@@ -387,6 +387,7 @@ Once task 2 has been completed, the "BIOS ROM" chip is produced and placed in th
 - Terminal programmer for programming / troubleshooting via assembler (monitor ROM chip is required)
 
 Both terminals can be connected to one CPU, whereby there can be a maximum of one device per type, i.e. a maximum of two in total. The Terminal Programmer replaces the Telewriter Programmer, so only one Programmer device can be used.
+A Telewriter Operator can still be used to read/write punch tapes.
 
 The terminal also has additional keys with the following coding: `RTN` = 26,` ESC` = 27, `F1` = 28,` F2` = 29, `F3` = 30,` F4` = 31.
 `RTN` or the value 26 is sent if only "enter" has been pressed without first entering characters in the input line.
@@ -470,19 +471,23 @@ The OS tapes are required to be able to install the operating system. However, t
 - the computer must be switched on
 - the computer has "monitor" and "BIOS" ROM chips
 - a tape drive must be "connected" and started
+- be “connected” to a telewriter operator
 - be "connected" to a terminal operator
 
 To install the operating system, you have to do the following:
 
 - Stop the computer if it is running
 - Insert the tape "J/OS Installation Tape" in the Telewriter and copy it to the computer
+- Use the "main" menu on the Telewriter to check whether the copying process was successful
 - Start the computer on the CPU with Reset / Start
-- Follow the instructions on the terminal
-- After completing the installation, stop the computer on the CPU and start the operating system with the "boot" command
-- Enter "ls" at the terminal to check whether the installed files are available
+- Follow the instructions on the terminal, i.e. insert the tapes into the Telewriter one after the other (just insert them!)
+  and click “Enter” on the terminal
+- After completing the installation on the CPU, start the operating system using the “boot” command
+​- Enter "ls" at the terminal to check whether the installed files are available
 
 That's it! You have successfully installed J/OS! 
 
+**Note: If “Tape error 0” is output on the terminal, the tape drive has not started. The files cannot be copied to the tape this way!**
 
 
 ### Commands on the console

@@ -1,4 +1,4 @@
-; J/OS Installation Tape v1.0
+; J/OS Installation Tape v1.1
 
 ; Write tape to RAM and start program at address 0
 ;--------------------------------------
@@ -13,6 +13,10 @@ $macro read_tape 2
     move  A, #$500          ; any address
     sys   #5                ; read tape name (A <- 1)
     move  B, #%2            ; error number
+    bze   A, error
+
+    sys   #$74              ; tape drive running?
+    move  B, #0             ; error number 0
     bze   A, error
 
     move  A, #COPY

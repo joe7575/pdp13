@@ -138,6 +138,10 @@ local function sys_get_ram_size(pos, address, val1, val2)
 	return ram_size
 end
 
+local function sys_t_drive_running(pos, address, val1, val2)
+	return pdp13.file_exists(pos, "t/boot") and 1 or 0
+end
+
 local function sys_load_comfile(pos, address, val1, val2)
 	local path = vm16.read_ascii(pos, val1, pdp13.path.MAX_PATH_LEN)
 	if path then
@@ -209,6 +213,7 @@ local help = [[+-----+----------------+-------------+------+
  $71   warm start        -      -     NO RET
  $72   ROM size          -      -     size K
  $73   RAM size          -      -     size K
+ $74   t-drive running   -      -     1=ok
  $75   load .h16 file   @fname  -     1=ok
  $76   load .com file   @fname  -     1=ok
  $77   size .h16 file   @fname  -     size
@@ -222,6 +227,7 @@ pdp13.register_SystemHandler(0x70, pdp13.cold_start, help)
 pdp13.register_SystemHandler(0x71, sys_warm_start)
 pdp13.register_SystemHandler(0x72, sys_get_rom_size)
 pdp13.register_SystemHandler(0x73, sys_get_ram_size)
+pdp13.register_SystemHandler(0x74, sys_t_drive_running)
 pdp13.register_SystemHandler(0x75, sys_load_h16file)
 pdp13.register_SystemHandler(0x76, sys_load_comfile)
 pdp13.register_SystemHandler(0x77, sys_h16_size)

@@ -386,6 +386,7 @@ Sofern das BIOS ROM verfügbar ist, kann am Rechner auch ein Terminal angeschlos
 - Terminal Programmer für die Programmierung/Fehlersuche über Assembler (Monitor ROM Chip wird benötigt)
 
 Beide Terminals können an einer CPU angeschlossen sein, wobei es pro Typ wieder maximal ein Gerät sein darf, also in der Summe maximal zwei. Das Terminal Programmer ersetzt dabei den Telewriter Programmer, es kann also nur ein Programmer Gerät genutzt werden.
+Ein Telewriter Operator kann weiterhin zum Lesen/Schreiben von Punch Tapes genutzt werden.
 
 Das Terminal besitzt zusätzliche Tasten mit folgenden Codierung:  `RTN` = 26, `ESC` = 27, `F1` = 28, `F2` = 29, `F3` = 30, `F4` = 31.
 `RTN` oder der Wert 26 wird gesendet, wenn nur "enter" gedrückt wurde, ohne dass zuvor Zeichen in die Eingabezeile eingegeben wurden.
@@ -468,18 +469,23 @@ Um das Betriebssystem installieren zu können, werden die OS Tapes benötigt. Di
 - der Rechner eingeschaltet sein
 - der Rechner über "Monitor" und "BIOS" ROM Chips verfügen
 - ein Tape Drive "angeschlossen" und gestartet sein
+- ein Telewriter Operator "angeschlossen" sein
 - ein Terminal Operator "angeschlossen" sein
 
 Um das Betriebssystem zu installieren, musst du wie folgt vorgehen:
 
 - Den Rechner stoppen, sofern er läuft
 - Das Tape "J/OS Installation Tape" im Telewriter einlegen und in den Rechner kopieren
+- Über das "main" Menü am Telewriter prüfen, ob der Kopiervorgang erfolgreich war
 - Den Rechner an der CPU mit Reset/Start starten
-- Den Anweisungen am Terminal folgen
-- Nach Abschluss der Installation den Rechner an der CPU stoppen und das Betriebssystem über das Kommando "boot" starten
+- Den Anweisungen am Terminal folgen, also die Tapes nacheinander in den Telewriter einlegen (nur einlegen!) 
+  und am Terminal jeweils auf "Enter" klicken
+- Nach Abschluss der Installation an der CPU über das Kommando "boot" das Betriebssystem starten
 - Am Terminal "ls" eingeben um zu prüfen, ob die installieren Files vorhanden sind
 
 Das wars! Du hast J/OS erfolgreich installiert!
+
+**Hinweis: Wird am Terminal "Tape error 0" ausgegeben, ist das Tape Drive nicht gestartet. Die Files können so nicht auf das Tape kopiert werden!**
 
 
 

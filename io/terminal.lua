@@ -437,6 +437,7 @@ minetest.register_node("pdp13:terminal", {
 	after_dig_node = after_dig_node,
 	
 	paramtype = "light",
+	use_texture_alpha = "clip",
 	sunlight_propagates = true,
 	paramtype2 = "facedir",
 	groups = {choppy=2, cracky=2, crumbly=2},
@@ -462,6 +463,7 @@ minetest.register_node("pdp13:terminal_prog", {
 	after_dig_node = after_dig_node,
 	
 	paramtype = "light",
+	use_texture_alpha = "clip",
 	sunlight_propagates = true,
 	paramtype2 = "facedir",
 	groups = {choppy=2, cracky=2, crumbly=2},
