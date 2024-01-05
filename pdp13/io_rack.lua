@@ -38,8 +38,6 @@ if minetest.global_exists("techage") then
 	  09 - delivered    09 - fault
 	  0A - count        0A - stopped
 	  -                 0B - unloaded
-	   
-	  80 - cmd value (val in B)
 	]]
 
 	Commands = Commands:gsub("\n", ",")
@@ -90,8 +88,6 @@ else
 	  -                 0A - stopped
 	  -                 0B - full
 	  -                 0C - empty
-	   
-	  80 - cmd value (val in B)
 	]]
 
 	Commands = Commands:gsub("\n", ",")

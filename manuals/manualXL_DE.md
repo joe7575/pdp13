@@ -60,7 +60,7 @@ Hier werden Kommandos aber über die 6 Tasten links und Maschinenbefehle über d
 
 Das "help" Register zeigt die wichtigsten Assemblerbefehle und jeweils den Maschinencode dazu. Mit diesem Subset an Befehlen kann man bereits arbeiten. Weitere Informationen zum Befehlssatz findest du [hier](https://github.com/joe7575/vm16/blob/master/doc/introduction.md) und [hier](https://github.com/joe7575/vm16/blob/master/doc/opcodes.md).
 
-Am Ende der Tabelle werden die System-Kommandos aufgeführt. Dies sind quasi Betriebssystemtaufrufe, welche zusätzliche Befehle ausführen, die sonst nicht möglich, oder aufwändig zu implementieren wären, wie bspw. einen Text auf dem Telewriter auszugeben. 
+Am Ende der Tabelle werden die System-Kommandos aufgeführt. Dies sind quasi Betriebssystemaufrufe, welche zusätzliche Befehle ausführen, die sonst nicht möglich, oder aufwändig zu implementieren wären, wie bspw. einen Text auf dem Telewriter auszugeben. 
 
 ### Performance
 
@@ -77,7 +77,7 @@ Ansonsten läuft die CPU "full speed", aber nur solange der Bereich der Welt gel
 Die CPU beinhaltet eine Selbsttest Routine, die beim Einschalten des Rechners ausgeführt und das Ergebnis an der CPU ausgegeben wird (dies dient zur Überprüfung, ob man alles korrekt angeschlossen hat):
 
 ```
-RAM=4K   ROM=8K   I/O=8
+RAM=4K   ROM=0K   I/O=8
 Telewriter..ok
 Programmer..ok
 ```
@@ -169,8 +169,6 @@ Die Punch Tapes besitzen ein Menü, so dass diese auch von Hand beschrieben werd
 
 Über diesen Block kann eine HEX-Ziffer, also 0-9 und A-F ausgegeben werden, indem Werte von 0 bis 15 über das Kommando `value` an den Block gesendet werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. Werte größer 15 löschen die Ausgabe.
 
-Dies geht auch mit dem Techage Lua Controller: `$send_cmnd(num, "value", 0..16)`
-
 Asm:
 
 ```assembly
@@ -182,8 +180,6 @@ out #00, A      ; output on port #0
 ## PDP-13 14-Segment
 
 Über diesen 14-Segment Anzeige können beliebige Kombinationen der 14 Segmente ausgegeben und so verschiedene Zeichen und Buchstaben dargestellt werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. 
-
-Dies geht auch mit dem Techage Lua Controller: `$send_cmnd(num, "value", number)`
 
 **Anordnung der Segmente:**
 
@@ -224,13 +220,19 @@ Dies geht auch mit dem Techage Lua Controller: `$send_cmnd(num, "value", number)
 | 0x1000   | D       |
 | 0x2000   | E       |
 
+Asm:
+
+```assembly
+move A, #$80    ; 'value' command
+move B, #$29    ; value for the char 'A'
+out #00, A      ; output on port #0
+```
+
 
 
 ## PDP-13 Color Lamp
 
 Dieser Lampenblock kann in verschiedenen Farben leuchten. Dazu müssen Werte von 1-64 über das Kommando `value` an den Block gesendet werden. Der Block muss dazu über ein I/O-Rack mit der CPU verbunden sein. Der Werte 0 schaltet die Lampe aus.
-
-Dies geht auch mit dem Techage Lua Controller: `$send_cmnd(num, "value", 0..64)`
 
 Asm:
 
@@ -239,6 +241,10 @@ move A, #$80    ; 'value' command
 move B, #8      ; value 0..64 in B
 out #00, A      ; output on port #0
 ```
+
+
+
+Anmerkung: Alle 3 PDP-13 Ausgabeblöcke können auch von einem Techage Lua Controller angesteuert werden: `$send_cmnd(num, "value", <num>)`
 
 
 
@@ -254,7 +260,7 @@ Das Inventar des Speicherblocks lässt sich nur in der vorgegebenen Reihenfolge 
 
 ## Minimal Beispiel
 
-Hier ein konkretes Beispiel, das den Umgang mit der Mod zeigt. Ziel ist es, die TechAge Signallampe oder Tubelib Lampe (nicht die PDP-13 Color Lamp!) einzuschalten. Dazu muss man den Wert 1 über ein `out` Befehl an dem Port ausgeben, wo die Lampe "angeschlossen" ist. Das Assembler-Programm dazu sieht aus wie folgt:
+Hier ein konkretes Beispiel, das den Umgang mit der Mod zeigt. Ziel ist es, die TechAge Farblampe oder Tubelib Lampe (nicht die PDP-13 Color Lamp!) einzuschalten. Dazu muss man den Wert 1 über ein `out` Befehl an dem Port ausgeben, wo die Lampe "angeschlossen" ist. Das Assembler-Programm dazu sieht aus wie folgt:
 
 ```assembly
 move A, #1   ; Lade das A-Register mit den Wert 1
@@ -279,7 +285,7 @@ Diese 5 Maschinenbefehle müssen bei der CPU eingegeben werden, wobei für `0000
 Dazu sind die folgenden Schritte notwendig:
 
 - Rechner mit Power, CPU, und einem IO-Rack aufbauen wie oben beschrieben
-- TechAge Signallampe in die Nähe setzen und die Nummer des Blockes im Menü des I/O-Racks in der obersten Zeile bei Adresse #0 eingeben
+- TechAge Farblampe in die Nähe setzen und die Nummer des Blockes im Menü des I/O-Racks in der obersten Zeile bei Adresse #0 eingeben
 - Den Rechner am Power Block einschalten
 - Die CPU gegebenenfalls stoppen und mit "reset" auf die Adresse 0 setzen
 - Den 1. Befehl eingeben und mit "enter" bestätigen: `2010 1`
@@ -647,7 +653,25 @@ Die Datei `boot` wird bei Booten immer zuerst auf `t`, dann `h` und zuletzt in `
 
 ### Datei `shell1.h16`
 
-Damit wird als nächstes die Datei `shell1.16` vom Tape Drive geladen und ab Adresse $0000 ausgeführt. `shell1.h16` ist ein Ladeprogramm, das sich im Adressbereich $0000 - $00BF einnistet und dort auch verbleibt. Jede Anwendung muss, sofern sie beendet wird, wieder zu diesem Ladeprogramm zurückkehren. Dies erfolgt normalerweise über die Anweisung `sys #$71`.
+Damit wird als nächstes die Datei `shell1.16` vom Tape Drive geladen und ab Adresse $0000 ausgeführt. `shell1.h16` ist ein Ladeprogramm, das sich im Adressbereich $0000 - $00BF einnistet und dort auch verbleibt. Jede Anwendung muss, sofern sie beendet wird, wieder zu diesem  zurückkehren. Dies erfolgt normalerweise über die Anweisung `sys #$71`.
+
+
+
+### Datei `shell2.com`
+
+Da das Ladeprogramm über keine Kommandos verfügt (der Adressbereich $0000 - $00BF ist dafür viel zu klein), wird nach einem Kaltstart ein zweiter Teil in den Adressbereich ab $0100 nachgeladen. Dieses Programm besitzt eine Kommandozeile mit Kommandos und kann andere Programme von einem Laufwerk laden und ausführen.
+
+Es werden 3 Typen von ausführbaren Programmen unterstützt:
+
+- `.h16` Files sind Textfiles im H16  Format. Dieses Format erlaubt ein Programm an eine definierte Adresse zu laden, wie dies bspw. bei `shell1.h16` der Fall ist. Auch alle Punch Tape Programme sind im H16 Format. Nur in diesem Format lassen sich auch Programme über Punch Tapes austauschen.
+- `.com` Files sind Files im Binärformat. Das Binärformat ist deutlich kompakter (ca. Faktor 3) und deshalb für Programme die bessere Wahl. `.com` Files werden immer ab Adresse $0100 geladen und müssen dafür entsprechend vorbereitet sein (Anweisung `.org $100`).
+- `.bat` Files sind Textfiles mit einem ausführbaren Kommando in der ersten Zeile (mehr geht bis jetzt noch nicht). Bspw. die Datei `help.bat` beinhaltet den Text `cat help.txt` . Wird `help` eingegeben, wird das Batchfile geöffnet und das Kommando `cat help.txt`  ausgeführt, so dass der Hilfetext ausgegeben wird.
+
+Für `.com` und `.h16` Files gilt:  Die Anwendung muss bei Adresse $0100 starten, darf den Adressbereich unterhalb von $00C0 nicht verändern und muss am Ende über `sys #$71` wieder zum Betriebssystem zurückkehren.
+
+
+
+### "Hello world" für J/OS
 
 Hier das berühmte "Hello World" Programm für J/OS-13 in Assembler:
 
@@ -670,19 +694,7 @@ TEXT:
 
 Die Zeile `move  A, B` macht nichts sinnvolles, außer dass der Wert $2001 im Speicher generiert wird. Steht dieser Wert am Anfang eines `.com` Files, wird dieses File als ausführbare Datei akzeptiert, geladen und ausgeführt (com v1 version tag) .
 
-
-
-### Datei `shell2.com`
-
-Da das Ladeprogramm über keine Kommandos verfügt (der Adressbereich $0000 - $00BF ist dafür viel zu klein), wird nach einem Kaltstart ein zweiter Teil in den Adressbereich ab $0100 nachgeladen. Dieses Programm besitzt eine Kommandozeile mit Kommandos und kann andere Programme von einem Laufwerk laden und ausführen.
-
-Es werden 3 Typen von ausführbaren Programmen unterstützt:
-
-- `.h16` Files sind Textfiles im H16  Format. Dieses Format erlaubt ein Programm an eine definierte Adresse zu laden, wie dies bspw. bei `shell1.h16` der Fall ist. Auch alle Punch Tape Programme sind im H16 Format. Nur in diesem Format lassen sich auch Programme über Punch Tapes austauschen.
-- `.com` Files sind Files im Binärformat. Das Binärformat ist deutlich kompakter (ca. Faktor 3) und deshalb für Programme die bessere Wahl. `.com` Files werden immer ab Adresse $0100 geladen und müssen dafür entsprechend vorbereitet sein (Anweisung `.org $100`).
-- `.bat` Files sind Textfiles mit einem ausführbaren Kommando in der ersten Zeile (mehr geht bis jetzt noch nicht). Bspw. die Datei `help.bat` beinhaltet den Text `cat help.txt` . Wird `help` eingegeben, wird das Batchfile geöffnet und das Kommando `cat help.txt`  ausgeführt, so dass der Hilfetext ausgegeben wird.
-
-Für `.com` und `.h16` Files gilt:  Die Anwendung muss bei Adresse $0100 starten, darf den Adressbereich unterhalb von $00C0 nicht verändern und muss am Ende über `sys #$71` wieder zum Betriebssystem zurückkehren.
+Die Anweisung `sys #$71` ist wichtig. Nur dadurch kehrt man wieder zum Ladeprogramm `shell1.h16` zurück.
 
 
 

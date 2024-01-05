@@ -77,7 +77,7 @@ Otherwise the CPU runs "full speed", but only as long as the area of the world i
 The CPU contains a self-test routine which is executed when the computer is switched on and the result is output on the CPU (this is used to check whether everything has been connected correctly):
 
 ```
-RAM=4K   ROM=8K   I/O=8
+RAM=4K   ROM=0K   I/O=8
 Telewriter..ok
 Programmer..ok
 ```
@@ -170,8 +170,6 @@ The punch tapes have a menu so that they can also be written on by hand. This is
 
 A HEX number, i.e. 0-9 and A-F, can be output via this block by sending values from 0 to 15 to the block using the `value` command. The block must be connected to the CPU via an I/O rack. Values greater than 15 delete the output.
 
-This also works with the Techage Lua controller: `$send_cmnd(num, "value", 0..16)`
-
 Asm:
 
 ```assembly
@@ -185,8 +183,6 @@ out #00, A      ; output on port #0
 ## PDP-13 14-Segment
 
 Any combination of the 14 segments can be output via this 14-segment display and thus different characters and letters can be displayed. The block must be connected to the CPU via an I/O rack.
-
-This also works with the Techage Lua controller: `$send_cmnd(num, "value", number)`
 
 **Order of the segments:**
 
@@ -227,13 +223,19 @@ This also works with the Techage Lua controller: `$send_cmnd(num, "value", numbe
 | 0x1000 | D |
 | 0x2000 | E |
 
+Asm:
+
+```assembly
+move A, #$80    ; 'value' command
+move B, #$29    ; value for the char 'A'
+out #00, A      ; output on port #0
+```
+
 
 
 ## PDP-13 Color Lamp
 
 This lamp block can light up in different colors. To do this, values from 1-64 must be sent to the block using the `value` command. The block must be connected to the CPU via an I/O rack. The value 0 switches the lamp off.
-
-This also works with the Techage Lua controller: `$send_cmnd(num, "value", 0..64) `
 
 Asm:
 
@@ -242,6 +244,8 @@ move A, #$80    ; 'value' command
 move B, #8      ; value 0..64 in B
 out #00, A      ; output on port #0
 ```
+
+Note: All 3 PDP-13 output blocks can also be controlled by a Techage Lua controller: `$send_cmnd(num, "value", <num>)`
 
 
 
@@ -257,7 +261,7 @@ The inventory of the memory block can only be filled in the given order from lef
 
 ## Very Short Example
 
-Here is a concrete example that shows how to use the mod. The aim is to switch on the TechAge signal lamp or Tubelib Lamp (not the PDP-13 Color Lamp!). To do this, you have to output the value 1 via an `out` command at the port where the lamp is "connected". The assembler program for this looks like this: 
+Here is a concrete example that shows how to use the mod. The aim is to switch on the TechAge Color lamp or Tubelib Lamp (not the PDP-13 Color Lamp!). To do this, you have to output the value 1 via an `out` command at the port where the lamp is "connected". The assembler program for this looks like this: 
 
 ```assembly
 move A, #1   ; Load the A register with value 1
@@ -282,7 +286,7 @@ These 5 machine commands must be entered on the CPU, whereby only `0` may be ent
 The following steps are necessary for this:
 
 - Set up computer with power, CPU and an IO rack as described above
-- Put the TechAge signal lamp close by and enter the number of the block in the menu of the I/O rack in the top line at address #0
+- Put the TechAge Color lamp close by and enter the number of the block in the menu of the I/O rack in the top line at address #0
 - Switch on the computer at the power block
 - If necessary, stop the CPU and set it to address 0 with "reset"
 - Enter the 1st command and confirm with "enter": `2010 1`
@@ -650,6 +654,24 @@ When booting, the file `boot` is always searched for first on `t`, then `h` and 
 
 The next step is to load the file `shell1.16` from the tape drive and execute it from address $0000. `shell1.h16` is a loader program that nests in the address range $0000 - $00BF and remains there. Every application must return to this loader if it is terminated. This is usually done with the instruction `sys #$71`.
 
+
+
+### File `shell2.com`
+
+Since the loading program does not have any commands (the address range $0000 - $00BF is much too small for this), a second part is reloaded into the address range from $0100 after a cold start. This program has a command line with commands and can load and execute other programs from a drive.
+
+3 types of executable programs are supported:
+
+- `.h16` files are text files in H16 format. This format allows a program to be loaded to a defined address, as is the case with `shell1.h16`, for example. All punch tape programs are also in H16 format. Programs can only be exchanged using punch tapes in this format.
+- `.com` files are files in binary format. The binary format is much more compact (approx. Factor 3) and therefore the better choice for programs. `.com` files are always loaded from address $0100 and must be prepared accordingly (instruction `.org $100`).
+- `.bat` files are text files with an executable command in the first line (more is not possible yet). E.g. the file `help.bat` contains the text `cat help.txt`. If `help` is entered, the batch file is opened and the command `cat help.txt` is executed so that the help text is displayed.
+
+The following applies to `.com` and `.h16` files: The application must start at address $0100, must not change the address range below $00C0 and must return to the operating system at the end via `sys #$71`.
+
+
+
+### "Hello world" for J/OS
+
 Here is the famous "Hello World" program for J/OS-13 in assembler: 
 
 ```assembly
@@ -671,19 +693,7 @@ TEXT:
 
 The line `move A, B` does nothing useful except that the value $2001 is generated in memory. If this value is at the beginning of a `.com` file, this file is accepted, loaded and executed as an executable file (com v1 version tag).
 
-
-
-### File `shell2.com`
-
-Since the loading program does not have any commands (the address range $0000 - $00BF is much too small for this), a second part is reloaded into the address range from $0100 after a cold start. This program has a command line with commands and can load and execute other programs from a drive.
-
-3 types of executable programs are supported:
-
-- `.h16` files are text files in H16 format. This format allows a program to be loaded to a defined address, as is the case with `shell1.h16`, for example. All punch tape programs are also in H16 format. Programs can only be exchanged using punch tapes in this format.
-- `.com` files are files in binary format. The binary format is much more compact (approx. Factor 3) and therefore the better choice for programs. `.com` files are always loaded from address $0100 and must be prepared accordingly (instruction `.org $100`).
-- `.bat` files are text files with an executable command in the first line (more is not possible yet). E.g. the file `help.bat` contains the text `cat help.txt`. If `help` is entered, the batch file is opened and the command `cat help.txt` is executed so that the help text is displayed.
-
-The following applies to `.com` and `.h16` files: The application must start at address $0100, must not change the address range below $00C0 and must return to the operating system at the end via `sys #$71`.
+The `sys #$71` instruction is important. This is the only way to return to the loading program `shell1.h16`.
 
 
 

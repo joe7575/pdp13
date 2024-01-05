@@ -383,6 +383,7 @@ local function selftest(pos, mem, number)
 	if pos and mem then
 		local rom_size = pdp13.tROM_SIZE[M(pos):get_int("rom_size")]
 		local ram_size = M(pos):get_int("ram_size")
+		if ram_size == 0 then ram_size = 4 end
 		local io_size = (mem.num_ioracks or 0) * 8
 		local telewriter = M(pos):get_string("telewriter_number") ~= "" and "Telewriter..ok  " or ""
 		local terminal   = M(pos):get_string("terminal_pos") ~= "" and "Terminal..ok" or ""
