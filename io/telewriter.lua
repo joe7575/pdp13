@@ -451,33 +451,6 @@ minetest.register_node("pdp13:telewriter", {
 	on_rotate = screwdriver.disallow,
 	is_ground_content = false,
 	sounds = default.node_sound_wood_defaults(),
-})
-
-minetest.register_node("pdp13:telewriter_prog", {
-	description = "PDP-13 Telewriter Programmer",
-	tiles = Tiles,
-	drawtype = "nodebox",
-	node_box = Node_box,
-	after_place_node = function(pos, placer, itemstack, pointed_thing)
-		after_place_node(pos, placer, itemstack, "pdp13:telewriter_prog", "reg_prog", "Programmer")
-		M(pos):set_int("monitor", 1)
-	end,
-	allow_metadata_inventory_put = allow_metadata_inventory_put,
-	on_receive_fields = on_receive_fields,
-	pdp13_on_receive = pdp13_on_receive,
-	on_timer = node_timer,
-	can_dig = can_dig,
-	after_dig_node = after_dig_node,
-	paramtype = "light",
-	use_texture_alpha = "clip",
-	paramtype2 = "facedir",
-	groups = {cracky=2, crumbly=2, choppy=2},
-	on_rotate = screwdriver.disallow,
-	is_ground_content = false,
-	sounds = default.node_sound_wood_defaults(),
-})
-
-for _, name in ipairs({"pdp13:telewriter", "pdp13:telewriter_prog"}) do
 	pdp13.register_node({name}, {
 		on_recv_message = function(pos, src, topic, payload)
 			--print("on_recv_message", src, topic)
@@ -552,7 +525,105 @@ for _, name in ipairs({"pdp13:telewriter", "pdp13:telewriter_prog"}) do
 			end
 		end,
 	})	
-end
+})
+
+minetest.register_node("pdp13:telewriter_prog", {
+	description = "PDP-13 Telewriter Programmer",
+	tiles = Tiles,
+	drawtype = "nodebox",
+	node_box = Node_box,
+	after_place_node = function(pos, placer, itemstack, pointed_thing)
+		after_place_node(pos, placer, itemstack, "pdp13:telewriter_prog", "reg_prog", "Programmer")
+		M(pos):set_int("monitor", 1)
+	end,
+	allow_metadata_inventory_put = allow_metadata_inventory_put,
+	on_receive_fields = on_receive_fields,
+	pdp13_on_receive = pdp13_on_receive,
+	on_timer = node_timer,
+	can_dig = can_dig,
+	after_dig_node = after_dig_node,
+	paramtype = "light",
+	use_texture_alpha = "clip",
+	paramtype2 = "facedir",
+	groups = {cracky=2, crumbly=2, choppy=2},
+	on_rotate = screwdriver.disallow,
+	is_ground_content = false,
+	sounds = default.node_sound_wood_defaults(),
+	pdp13.register_node({name}, {
+		on_recv_message = function(pos, src, topic, payload)
+			--print("on_recv_message", src, topic)
+			if pdp13.tubelib then
+				pos, src, topic, payload = pos, "000", src, topic
+			end
+			if topic == "println" then
+				payload = tostring(payload) or ""
+				local mem = pdp13.get_nvm(pos)
+				add_line_to_fifo(pos, mem, payload)
+				return 1
+			elseif topic == "print" then
+				payload = tostring(payload) or ""
+				local mem = pdp13.get_nvm(pos)
+				add_string_to_fifo(pos, mem, payload)
+				return 1
+			elseif topic == "input" then
+				local mem = pdp13.get_nvm(pos)
+				if mem.input then
+					local s = string.trim(mem.input)
+					mem.input = nil
+					return s
+				end
+			elseif topic == "monitor" then
+				local mem = pdp13.get_nvm(pos)
+				if payload then
+					mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
+					add_line_to_fifo(pos, mem, "### Monitor v1.0 ###")
+				elseif mem.monitor then
+					add_line_to_fifo(pos, mem, "end.")
+				end
+				mem.monitor = payload
+				return true
+			elseif topic == "stopped" then  -- CPU stopped
+				local mem = pdp13.get_nvm(pos)
+				mem.cpu_pos = S2P(M(pos):get_string("cpu_pos"))
+				local lines = pdp13.monitor_stopped(mem.cpu_pos, mem, payload, false)
+				add_lines_to_fifo(pos, mem, lines or {})
+				return true
+			elseif topic == "punch" then  -- punch "dongle" tape from exams
+				local mem = pdp13.get_nvm(pos)
+				mem.reader = true
+				gen_rom_tape(pos, payload)
+				return true
+			elseif topic == "read_tape" then  -- provide the tape string
+				local mem = pdp13.get_nvm(pos)
+				if not mem.reader then
+					mem.reader = true
+					start_tape(pos, mem)
+					return get_tape_code(pos)
+				end			
+			elseif topic == "write_tape" then  -- write string to tape
+				local mem = pdp13.get_nvm(pos)
+				if not mem.writer then
+					if write_tape_code(pos, payload) then
+						mem.writer = true
+						start_tape(pos, mem)
+						return 1
+					end
+				end			
+			elseif topic == "tape_name" then
+				local mem = pdp13.get_nvm(pos)
+				return get_tape_name(pos)
+			elseif topic == "tape_sound" then
+				local mem = pdp13.get_nvm(pos)
+				if not mem.reader then
+					mem.reader = true
+					start_tape(pos, mem)
+					return 1
+				end			
+				return 0
+			end
+		end,
+	})	
+})
 
 minetest.register_lbm({
     label = "PDP13 unlock telewriter",
