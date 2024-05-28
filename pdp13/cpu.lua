@@ -648,6 +648,30 @@ minetest.register_node("pdp13:cpu1", {
 	on_rotate = screwdriver.disallow,
 	is_ground_content = false,
 	sounds = default.node_sound_wood_defaults(),
+	on_recv_message = function(pos, src, topic, payload)
+		if pdp13.tubelib then
+			pos, src, topic, payload = pos, "000", src, topic
+		end
+		if topic == "on" then
+			local number = M(pos):get_string("node_number")
+			pdp13.on_cmnd_input(number, src, 1)
+		elseif topic == "off" then
+			local number = M(pos):get_string("node_number")
+			pdp13.on_cmnd_input(number, src, 0)
+		elseif topic == "write_h16" then
+			local node = minetest.get_node(pos)
+			if node.name == "pdp13:cpu1" then
+				return vm16.write_h16(pos, payload)
+			end
+		elseif topic == "read_h16" then
+			local node = minetest.get_node(pos)
+			if node.name == "pdp13:cpu1" then
+				return vm16.read_h16(pos)
+			end
+		else
+			return "unsupported"
+		end
+	end,
 })
 
 local function on_receive_fields_started(pos, formname, fields, player)
@@ -704,9 +728,6 @@ minetest.register_node("pdp13:cpu1_on", {
 	on_rotate = screwdriver.disallow,
 	is_ground_content = false,
 	sounds = default.node_sound_wood_defaults(),
-})
-
-pdp13.register_node({"pdp13:cpu1", "pdp13:cpu1_on"}, {
 	on_recv_message = function(pos, src, topic, payload)
 		if pdp13.tubelib then
 			pos, src, topic, payload = pos, "000", src, topic
@@ -731,7 +752,7 @@ pdp13.register_node({"pdp13:cpu1", "pdp13:cpu1_on"}, {
 			return "unsupported"
 		end
 	end,
-})	
+})
 
 minetest.register_lbm({
     label = "PDP13 Load CPU",
