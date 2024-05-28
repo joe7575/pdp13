@@ -58,6 +58,22 @@ minetest.register_node("pdp13:lamp_off", {
 	is_ground_content = false,
 	groups = {snappy = 2, choppy = 2, oddly_breakable_by_hand = 3},
 	sounds = default.node_sound_defaults(),
+	on_recv_message = function(pos, src, topic, payload)
+		if pdp13.tubelib then
+			pos, src, topic, payload = pos, "000", src, topic
+		end
+		if topic == "value" then
+			payload = tonumber(payload)
+			local node = tubelib2.get_node_lvm(pos)
+			if payload and payload > 0 then
+				switch_on(pos, node, payload - 1)
+			else
+				switch_off(pos, node)
+			end
+		else
+			return "unsupported"
+		end
+	end,
 })
 
 
@@ -76,9 +92,6 @@ minetest.register_node("pdp13:lamp_on", {
 	is_ground_content = false,
 	groups = {not_in_creative_inventory = 1},
 	sounds = default.node_sound_defaults(),
-})
-
-pdp13.register_node({"pdp13:lamp_off", "pdp13:lamp_on"}, {
 	on_recv_message = function(pos, src, topic, payload)
 		if pdp13.tubelib then
 			pos, src, topic, payload = pos, "000", src, topic
@@ -95,7 +108,7 @@ pdp13.register_node({"pdp13:lamp_off", "pdp13:lamp_on"}, {
 			return "unsupported"
 		end
 	end,
-})	
+})
 
 minetest.register_craft({
 	output = "pdp13:lamp_off",
