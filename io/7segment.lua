@@ -69,9 +69,6 @@ for i = 0,16 do
 		light_source = 4,
 		drop = "pdp13:7segment10",
 		sounds = default.node_sound_wood_defaults(),
-	})
-
-	pdp13.register_node({"pdp13:7segment"..c}, {
 		on_recv_message = function(pos, src, topic, payload)
 			if pdp13.tubelib then
 				pos, src, topic, payload = pos, "000", src, topic
