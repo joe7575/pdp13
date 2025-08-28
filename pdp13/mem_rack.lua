@@ -63,8 +63,8 @@ local function formspec()
 	"container[2,0.2]"..
 	"label[0.1,0.1;4K]"..
 	"label[1.1,0.1;8K]"..
-	"label[2.1,0.1;16K]"..
-	"label[3.1,0.1;32K]"..
+	"label[2.1,0.1;---]"..
+	"label[3.1,0.1;---]"..
 	"list[context;ram;0,0.6;4,4;]"..
 	"container_end[]"..
 	"label[0.5,3.0;ROM]"..
