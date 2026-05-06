@@ -403,6 +403,11 @@ local function selftest(pos, mem, number)
 	end
 end
 
+-- RAM size (in K) to vm16 size parameter
+-- vm16_calc_size(size) = 64 << size, so:
+-- 4K = 4096 = 64 << 6, 8K = 8192 = 64 << 7, 16K = 16384 = 64 << 8, etc.
+local tRAM_TO_VM16_SIZE = {[4]=6, [8]=7, [16]=8, [32]=9, [64]=10}
+
 -- For Rack communication
 local function pdp13_on_receive(pos, src_pos, cmnd, data)
 	--print("pdp13_on_receive", cmnd, data)
@@ -410,9 +415,22 @@ local function pdp13_on_receive(pos, src_pos, cmnd, data)
 		if data == "on" then
 			local mem = pdp13.get_nvm(pos)
 			local meta = M(pos)
-			local ram_size = meta:get_int("ram_size") + 4
+			local ram_k = meta:get_int("ram_size")
+			if ram_k == 0 then ram_k = 4 end  -- default 4K internal RAM
 			local rom_size = meta:get_int("rom_size")
-			if vm16.on_power_on(pos, ram_size/4) then
+			local size_param = tRAM_TO_VM16_SIZE[ram_k] or 6
+			
+			-- Check if RAM size changed (e.g. after bug fix) and recreate VM if needed
+			local old_size = meta:get_int("vm16size")
+			if old_size ~= 0 and old_size ~= size_param then
+				-- RAM size changed, destroy old VM and update size
+				if vm16.is_loaded(pos) then
+					vm16.destroy(pos)
+				end
+				meta:set_int("vm16size", size_param)
+			end
+			
+			if vm16.on_power_on(pos, size_param) then
 				fs_power_on(pos, mem)
 			end
 			mem.breakpoints = {}
